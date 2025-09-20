@@ -272,6 +272,49 @@
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        /* Мобильный заголовок чата */
+        .mobile-chat-header {
+            display: none;
+            align-items: center;
+            padding: 15px;
+            background: rgba(72, 22, 110, 0.6);
+            border-radius: 15px 15px 0 0;
+            margin: -20px -20px 20px -20px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .back-button {
+            background: rgba(110, 63, 206, 0.3);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            color: white;
+            font-size: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 15px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .back-button:hover {
+            background: rgba(110, 63, 206, 0.5);
+        }
+
+        .chat-title {
+            font-size: 18px;
+            font-weight: 600;
+            background: linear-gradient(45deg, #b967ff, #ff38d7);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .messages-container {
@@ -535,7 +578,7 @@
         .modal-input {
             width: 100%;
             padding: 12px;
-            border-radius: 10px;
+            borderRadius: 10px;
             border: none;
             background: rgba(255, 255, 255, 0.1);
             color: white;
@@ -801,6 +844,35 @@
             .chart-container {
                 height: 200px;
             }
+            
+            /* Мобильный вид чатов */
+            .chats-sidebar.mobile-hidden {
+                display: none;
+            }
+            
+            .chat-content.mobile-hidden {
+                display: none;
+            }
+            
+            .mobile-chat-header {
+                display: flex;
+            }
+            
+            .chats-container.mobile-chat-view .chats-sidebar {
+                display: none;
+            }
+            
+            .chats-container.mobile-chat-view .chat-content {
+                display: flex;
+            }
+            
+            .chats-container:not(.mobile-chat-view) .chats-sidebar {
+                display: flex;
+            }
+            
+            .chats-container:not(.mobile-chat-view) .chat-content {
+                display: none;
+            }
         }
 
         @media (max-width: 480px) {
@@ -847,6 +919,21 @@
             
             .stat-value {
                 font-size: 20px;
+            }
+            
+            .mobile-chat-header {
+                padding: 12px;
+            }
+            
+            .back-button {
+                width: 35px;
+                height: 35px;
+                font-size: 18px;
+                margin-right: 12px;
+            }
+            
+            .chat-title {
+                font-size: 16px;
             }
         }
 
@@ -1004,7 +1091,7 @@
         <h1>Чаты Gamelton Ai</h1>
         <p>Общайтесь с другими пользователями и делитесь идеями.</p>
         
-        <div class="chats-container">
+        <div class="chats-container" id="chats-container">
             <div class="chats-sidebar">
                 <div class="chats-list" id="chats-list">
                     <!-- Чаты будут добавляться динамически -->
@@ -1013,6 +1100,12 @@
             </div>
             
             <div class="chat-content">
+                <!-- Мобильный заголовок чата -->
+                <div class="mobile-chat-header">
+                    <button class="back-button" id="back-button">←</button>
+                    <div class="chat-title" id="mobile-chat-title">Название чата</div>
+                </div>
+                
                 <div class="messages-container" id="messages-container">
                     <!-- Сообщения будут добавляться динамически -->
                 </div>
@@ -1020,909 +1113,4 @@
                 <div class="message-input-container">
                     <input type="text" class="message-input" id="message-input" placeholder="Введите сообщение...">
                     <button class="send-btn" id="send-btn">
-                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0yLjAxIDIxLDIzLDEyLDIuMDEsMywyLDEwbDE1LDItMTUsMnoiPjwvcGF0aD48L3N2Zz4=" alt="Send">
-                    </button>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="stats" class="page">
-        <h1>Статистика сервера Gamelton Ai</h1>
-        <p>Мониторинг производительности и использования серверов в реальном времени.</p>
-        
-        <div class="stats-grid">
-            <div class="stat-card">
-                <h3>Онлайн игроков <span class="stat-value" id="current-online">2345</span></h3>
-                <div class="chart-container">
-                    <canvas id="online-chart"></canvas>
-                </div>
-            </div>
-            
-            <div class="stat-card">
-                <h3>Нагрузка на сервер <span class="stat-value" id="server-load">39%</span></h3>
-                <div class="chart-container">
-                    <canvas id="load-chart"></canvas>
-                </div>
-            </div>
-            
-            <div class="stat-card">
-                <h3>Отправлено сообщений <span class="stat-value" id="messages-sent">128</span></h3>
-                <div class="chart-container">
-                    <canvas id="messages-chart"></canvas>
-                </div>
-            </div>
-            
-            <div class="stat-card">
-                <h3>История активности</h3>
-                <p>Максимальная нагрузка: <span id="max-load">6000 игроков (100%)</span></p>
-                <p>Текущая нагрузка: <span id="current-load">39%</span></p>
-                <p>Сообщений сегодня: <span id="today-messages">24</span></p>
-                <p>Среднее время ответа: <span id="avg-response">0.8с</span></p>
-            </div>
-        </div>
-    </section>
-
-    <section id="settings" class="page">
-        <h1>Настройки Gamelton Ai</h1>
-        <p>Настройте платформу под свои preferences.</p>
-        
-        <div class="settings-grid">
-            <div class="settings-card">
-                <h3>Внешний вид</h3>
-                <p>Выберите фон для сайта:</p>
-                <div class="background-options">
-                    <div class="bg-option active" style="background: linear-gradient(135deg, #1a0525, #2d0b42);" data-bg="default"></div>
-                    <div class="bg-option" style="background: linear-gradient(135deg, #0d0221, #260b42);" data-bg="dark"></div>
-                    <div class="bg-option" style="background: linear-gradient(135deg, #2d0b42, #511a7b);" data-bg="purple"></div>
-                    <div class="bg-option" style="background: linear-gradient(135deg, #1b0435, #6a3fce);" data-bg="light"></div>
-                </div>
-            </div>
-            
-            <div class="settings-card">
-                <h3>Анимации</h3>
-                <p>Управление визуальными эффектами:</p>
-                <div style="margin-top: 15px;">
-                    <label>
-                        <input type="checkbox" id="show-shapes" checked> Показывать 3D фигуры
-                    </label>
-                    <br>
-                    <label>
-                        <input type="checkbox" id="flying-letters" checked> Летающие буквы "G"
-                    </label>
-                    <br>
-                    <label>
-                        <input type="checkbox" id="pulsing-g" checked> Пульсирующая буква "G"
-                    </label>
-                </div>
-            </div>
-            
-            <div class="settings-card">
-                <h3>Обучение ИИ</h3>
-                <p>Добавьте шаблоны для обучения ИИ:</p>
-                <div class="ai-training">
-                    <div class="pattern-input">
-                        <input type="text" id="pattern-input" placeholder="Вопрос > Ответ">
-                        <button class="add-pattern-btn" id="add-pattern-btn">Добавить</button>
-                    </div>
-                    <div class="patterns-list" id="patterns-list">
-                        <!-- Шаблоны будут добавляться здесь -->
-                    </div>
-                </div>
-            </div>
-
-            <div class="settings-card">
-                <h3>Сохранение данных</h3>
-                <p>Управление сохраненными данными:</p>
-                <div style="margin-top: 15px;">
-                    <button class="add-pattern-btn" id="save-data-btn" style="width: 100%; margin-bottom: 10px;">
-                        Сохранить данные сейчас
-                    </button>
-                    <button class="add-pattern-btn" id="load-data-btn" style="width: 100%; margin-bottom: 10px;">
-                        Загрузить последнее сохранение
-                    </button>
-                    <button class="delete-pattern" id="clear-data-btn" style="width: 100%;">
-                        Очистить все данные
-                    </button>
-                </div>
-            </div>
-
-            <div class="settings-card">
-                <h3>Мобильная версия</h3>
-                <p>Тестирование адаптивного дизайна:</p>
-                <div style="margin-top: 15px;">
-                    <label>
-                        <input type="checkbox" id="enable-mobile-view"> Включить мобильный просмотр
-                    </label>
-                    <div id="mobile-size-buttons" style="margin-top: 10px; display: none;">
-                        <p>Выберите размер устройства:</p>
-                        <div style="display: flex; gap: 5px; flex-wrap: wrap; margin-top: 5px;">
-                            <button class="device-btn" data-width="320">iPhone SE</button>
-                            <button class="device-btn" data-width="375">iPhone 12</button>
-                            <button class="device-btn" data-width="414">iPhone 11 Pro</button>
-                            <button class="device-btn" data-width="768">iPad</button>
-                            <button class="device-btn active" data-width="100%">Сброс</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <script>
-        // Хранилище данных
-        const appData = {
-            shapesEnabled: true,
-            currentChat: null,
-            chats: [],
-            aiPatterns: [],
-            messages: {},
-            onlineHistory: [],
-            loadHistory: [],
-            messagesHistory: [],
-            lastSave: null,
-            mobileView: false,
-            mobileWidth: '100%'
-        };
-
-        // Графики
-        let onlineChart, loadChart, messagesChart;
-
-        // Инициализация данных
-        function initData() {
-            // Загрузка сохраненных данных
-            const savedData = localStorage.getItem('gameltonAiData');
-            if (savedData) {
-                try {
-                    const parsedData = JSON.parse(savedData);
-                    Object.assign(appData, parsedData);
-                    
-                    // Восстанавливаем чаты
-                    if (appData.chats.length > 0) {
-                        appData.chats.forEach(chat => {
-                            addChatToSidebar(chat.name, chat.id);
-                        });
-                    }
-                    
-                    // Восстанавливаем шаблоны ИИ
-                    if (appData.aiPatterns.length > 0) {
-                        appData.aiPatterns.forEach(pattern => {
-                            addPatternToUI(pattern.question, pattern.answer);
-                        });
-                    }
-                    
-                    // Восстанавливаем мобильный вид, если был включен
-                    if (appData.mobileView) {
-                        document.getElementById('enable-mobile-view').checked = true;
-                        document.getElementById('mobile-size-buttons').style.display = 'block';
-                        enableMobilePreview(appData.mobileWidth);
-                    }
-                    
-                    console.log('Данные успешно загружены');
-                } catch (e) {
-                    console.error('Ошибка загрузки данных:', e);
-                }
-            }
-            
-            // Инициализация истории онлайна, если она пуста
-            if (appData.onlineHistory.length === 0) {
-                for (let i = 0; i < 20; i++) {
-                    appData.onlineHistory.push(Math.floor(Math.random() * 1000) + 1000);
-                    appData.loadHistory.push(Math.floor(Math.random() * 20) + 10);
-                    appData.messagesHistory.push(Math.floor(Math.random() * 50) + 10);
-                }
-            }
-            
-            // Инициализация графиков
-            initCharts();
-            
-            // Запуск автосохранения
-            setInterval(saveData, 30000); // Сохраняем каждые 30 секунд
-            
-            // Запуск обновления статистики
-            setInterval(updateStats, 2000);
-        }
-
-        // Сохранение данных
-        function saveData() {
-            try {
-                localStorage.setItem('gameltonAiData', JSON.stringify(appData));
-                appData.lastSave = new Date().toLocaleString();
-                console.log('Данные сохранены:', appData.lastSave);
-            } catch (e) {
-                console.error('Ошибка сохранения данных:', e);
-            }
-        }
-
-        // Инициализация графиков
-        function initCharts() {
-            const onlineCtx = document.getElementById('online-chart').getContext('2d');
-            onlineChart = new Chart(onlineCtx, {
-                type: 'line',
-                data: {
-                    labels: Array.from({length: 20}, (_, i) => ''),
-                    datasets: [{
-                        label: 'Онлайн',
-                        data: appData.onlineHistory,
-                        borderColor: '#b967ff',
-                        backgroundColor: 'rgba(185, 103, 255, 0.1)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            },
-                            ticks: {
-                                color: '#d8bfd8'
-                            }
-                        },
-                        x: {
-                            grid: {
-                                display: false
-                            },
-                            ticks: {
-                                display: false
-                            }
-                        }
-                    }
-                }
-            });
-
-            const loadCtx = document.getElementById('load-chart').getContext('2d');
-            loadChart = new Chart(loadCtx, {
-                type: 'line',
-                data: {
-                    labels: Array.from({length: 20}, (_, i) => ''),
-                    datasets: [{
-                        label: 'Нагрузка (%)',
-                        data: appData.loadHistory,
-                        borderColor: '#ff38d7',
-                        backgroundColor: 'rgba(255, 56, 215, 0.1)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 100,
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            },
-                            ticks: {
-                                color: '#d8bfd8'
-                            }
-                        },
-                        x: {
-                            grid: {
-                                display: false
-                            },
-                            ticks: {
-                                display: false
-                            }
-                        }
-                    }
-                }
-            });
-
-            const messagesCtx = document.getElementById('messages-chart').getContext('2d');
-            messagesChart = new Chart(messagesCtx, {
-                type: 'bar',
-                data: {
-                    labels: Array.from({length: 20}, (_, i) => ''),
-                    datasets: [{
-                        label: 'Сообщения',
-                        data: appData.messagesHistory,
-                        backgroundColor: 'rgba(110, 63, 206, 0.5)',
-                        borderColor: 'rgba(110, 63, 206, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            },
-                            ticks: {
-                                color: '#d8bfd8'
-                            }
-                        },
-                        x: {
-                            grid: {
-                                display: false
-                            },
-                            ticks: {
-                                display: false
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        // Обновление статистики
-        function updateStats() {
-            // Обновляем онлайн
-            const onlineCount = Math.floor(Math.random() * 5000) + 1000;
-            document.getElementById('online-count').textContent = onlineCount;
-            document.getElementById('current-online').textContent = onlineCount;
-            
-            // Рассчитываем нагрузку на сервер (0-100%)
-            const serverLoad = Math.min(100, Math.floor(onlineCount / 60));
-            document.getElementById('server-load').textContent = serverLoad + '%';
-            document.getElementById('current-load').textContent = serverLoad + '%';
-            
-            // Рассчитываем количество отправленных сообщений
-            const messagesSent = Math.floor(onlineCount * 0.05 + Math.random() * 20);
-            document.getElementById('messages-sent').textContent = messagesSent;
-            document.getElementById('today-messages').textContent = Math.floor(messagesSent * 0.8 + Math.random() * 10);
-            
-            // Обновляем графики
-            appData.onlineHistory.push(onlineCount);
-            appData.onlineHistory.shift();
-            
-            appData.loadHistory.push(serverLoad);
-            appData.loadHistory.shift();
-            
-            appData.messagesHistory.push(messagesSent);
-            appData.messagesHistory.shift();
-            
-            onlineChart.update();
-            loadChart.update();
-            messagesChart.update();
-        }
-
-        // Функция для включения мобильного превью
-        function enableMobilePreview(width) {
-            const container = document.getElementById('device-size-selector');
-            const previewBtn = document.getElementById('mobile-preview-btn');
-            
-            if (width === '100%') {
-                document.body.style.width = '';
-                document.body.style.maxWidth = '';
-                document.body.style.margin = '';
-                previewBtn.textContent = '📱';
-                appData.mobileView = false;
-            } else {
-                document.body.style.width = width + 'px';
-                document.body.style.maxWidth = width + 'px';
-                document.body.style.margin = '0 auto';
-                document.body.style.overflowX = 'hidden';
-                previewBtn.textContent = '✕';
-                appData.mobileView = true;
-                appData.mobileWidth = width;
-            }
-            
-            // Сохраняем данные
-            saveData();
-        }
-
-        // Инициализация мобильного меню
-        function initMobileMenu() {
-            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-            const navMenu = document.getElementById('nav-menu');
-            
-            mobileMenuBtn.addEventListener('click', function() {
-                navMenu.classList.toggle('active');
-                mobileMenuBtn.classList.toggle('active');
-            });
-            
-            // Закрываем меню при клике на ссылку
-            document.querySelectorAll('nav a').forEach(link => {
-                link.addEventListener('click', function() {
-                    navMenu.classList.remove('active');
-                    mobileMenuBtn.classList.remove('active');
-                });
-            });
-        }
-
-        // Динамическое изменение количества онлайн-пользователей
-        function updateOnlineCounter() {
-            const onlineCount = Math.floor(Math.random() * 5000) + 1000;
-            document.getElementById('online-count').textContent = onlineCount;
-        }
-        
-        // Навигация между страницами
-        document.querySelectorAll('nav a').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const targetPage = this.getAttribute('data-page');
-                
-                // Скрыть все страницы
-                document.querySelectorAll('.page').forEach(page => {
-                    page.classList.remove('active');
-                });
-                
-                // Показать целевую страницу
-                document.getElementById(targetPage).classList.add('active');
-                
-                // Если переходим на страницу статистики, обновляем графики
-                if (targetPage === 'stats') {
-                    onlineChart.update();
-                    loadChart.update();
-                    messagesChart.update();
-                }
-            });
-        });
-        
-        // Создание 3D сцены с фигурами
-        const sceneContainer = document.getElementById('scene-container');
-        const shapes = [];
-        
-        // Создаем различные фигуры
-        function createShapes() {
-            sceneContainer.innerHTML = '';
-            shapes.length = 0;
-            
-            if (!appData.shapesEnabled) return;
-            
-            const shapesData = [
-                { type: 'cube', class: 'cube' },
-                { type: 'sphere', class: 'sphere' },
-                { type: 'pyramid', class: 'pyramid' },
-                { type: 'torus', class: 'torus' }
-            ];
-            
-            // Создаем 10 фигур случайных типов
-            for (let i = 0; i < 10; i++) {
-                const randomShape = shapesData[Math.floor(Math.random() * shapesData.length)];
-                const shape = document.createElement('div');
-                shape.className = `shape ${randomShape.class}`;
-                
-                // Случайное позиционирование
-                const x = Math.random() * 100;
-                const y = Math.random() * 100;
-                
-                shape.style.left = `${x}vw`;
-                shape.style.top = `${y}vh`;
-                
-                // Случайная анимация плавания
-                shape.style.animation = `float ${6 + Math.random() * 10}s ease-in-out infinite`;
-                shape.style.animationDelay = `${Math.random() * 5}s`;
-                
-                sceneContainer.appendChild(shape);
-                shapes.push({
-                    element: shape,
-                    x: x,
-                    y: y,
-                    rotation: 0
-                });
-            }
-        }
-        
-        // Обработка движения мыши для параллакс-эффекта
-        function handleMouseMove(e) {
-            const mouseX = e.clientX / window.innerWidth - 0.5;
-            const mouseY = e.clientY / window.innerHeight - 0.5;
-            
-            shapes.forEach(shape => {
-                const moveX = mouseX * 20;
-                const moveY = mouseY * 20;
-                
-                shape.element.style.transform = `translate(${moveX}px, ${moveY}px) rotate(${shape.rotation}deg)`;
-            });
-        }
-        
-        // Обработка скролла для вращения фигур
-        function handleScroll() {
-            const scrollY = window.scrollY;
-            
-            shapes.forEach(shape => {
-                shape.rotation = scrollY / 20;
-                shape.element.style.transform = `rotate(${shape.rotation}deg)`;
-            });
-        }
-        
-        // Функция для создания летающих букв G
-        function createFlyingLetters() {
-            if (!document.getElementById('flying-letters').checked) return;
-            
-            const flyingG = document.createElement('div');
-            flyingG.className = 'flying-g';
-            flyingG.textContent = 'G';
-            
-            // Начальная позиция (нижний левый угол)
-            const startX = 0;
-            const startY = window.innerHeight;
-            
-            flyingG.style.left = `${startX}px`;
-            flyingG.style.top = `${startY}px`;
-            
-            // Случайная скорость анимации
-            const duration = 10 + Math.random() * 20;
-            
-            flyingG.style.animation = `fly ${duration}s linear`;
-            
-            document.body.appendChild(flyingG);
-            
-            // Удаляем элемент после завершения анимации
-            setTimeout(() => {
-                flyingG.remove();
-            }, duration * 1000);
-        }
-        
-        // Обработка выбора фона
-        document.querySelectorAll('.bg-option').forEach(option => {
-            option.addEventListener('click', function() {
-                document.querySelectorAll('.bg-option').forEach(opt => {
-                    opt.classList.remove('active');
-                });
-                
-                this.classList.add('active');
-                
-                // Применяем выбранный фон
-                const bgStyle = this.getAttribute('data-bg');
-                let gradient;
-                
-                switch(bgStyle) {
-                    case 'dark':
-                        gradient = 'linear-gradient(135deg, #0d0221, #260b42)';
-                        break;
-                    case 'purple':
-                        gradient = 'linear-gradient(135deg, #2d0b42, #511a7b)';
-                        break;
-                    case 'light':
-                        gradient = 'linear-gradient(135deg, #1b0435, #6a3fce)';
-                        break;
-                    default:
-                        gradient = 'linear-gradient(135deg, #1a0525, #2d0b42)';
-                }
-                
-                document.body.style.background = gradient;
-                
-                // Сохраняем выбор фона
-                appData.background = bgStyle;
-                saveData();
-            });
-        });
-        
-        // Управление видимостью пульсирующей буквы G
-        document.getElementById('pulsing-g').addEventListener('change', function() {
-            document.querySelector('.pulsing-g').style.display = this.checked ? 'block' : 'none';
-            appData.pulsingG = this.checked;
-            saveData();
-        });
-        
-        // Управление видимостью фигур
-        document.getElementById('show-shapes').addEventListener('change', function() {
-            appData.shapesEnabled = this.checked;
-            createShapes();
-            saveData();
-        });
-        
-        // Управление летающими буквами
-        document.getElementById('flying-letters').addEventListener('change', function() {
-            appData.flyingLetters = this.checked;
-            saveData();
-        });
-        
-        // Функционал создания чатов
-        document.getElementById('create-chat-btn').addEventListener('click', function() {
-            document.getElementById('create-chat-modal').style.display = 'flex';
-        });
-        
-        document.getElementById('cancel-chat').addEventListener('click', function() {
-            document.getElementById('create-chat-modal').style.display = 'none';
-            document.getElementById('chat-name-input').value = '';
-        });
-        
-        document.getElementById('confirm-chat').addEventListener('click', function() {
-            const chatName = document.getElementById('chat-name-input').value.trim();
-            if (chatName) {
-                createNewChat(chatName);
-                document.getElementById('create-chat-modal').style.display = 'none';
-                document.getElementById('chat-name-input').value = '';
-            }
-        });
-        
-        function createNewChat(name) {
-            const chatId = 'chat-' + Date.now();
-            const chat = {
-                id: chatId,
-                name: name
-            };
-            
-            appData.chats.push(chat);
-            appData.messages[chatId] = [];
-            
-            // Добавляем чат в список
-            addChatToSidebar(name, chatId);
-            
-            // Активируем новый чат
-            document.querySelector(`.chat-item[data-chat-id="${chatId}"]`).click();
-            
-            // Сохраняем данные
-            saveData();
-        }
-        
-        function addChatToSidebar(name, chatId) {
-            const chatItem = document.createElement('div');
-            chatItem.className = 'chat-item';
-            chatItem.textContent = name;
-            chatItem.setAttribute('data-chat-id', chatId);
-            
-            chatItem.addEventListener('click', function() {
-                // Убираем активный класс у всех чатов
-                document.querySelectorAll('.chat-item').forEach(item => {
-                    item.classList.remove('active');
-                });
-                
-                // Добавляем активный класс к текущему чату
-                this.classList.add('active');
-                
-                // Загружаем сообщения чата
-                loadChat(chatId);
-            });
-            
-            document.getElementById('chats-list').appendChild(chatItem);
-        }
-        
-        function loadChat(chatId) {
-            appData.currentChat = chatId;
-            const messagesContainer = document.getElementById('messages-container');
-            messagesContainer.innerHTML = '';
-            
-            // Загружаем сообщения
-            if (appData.messages[chatId]) {
-                appData.messages[chatId].forEach(msg => {
-                    addMessageToChat(msg.text, msg.type);
-                });
-            }
-        }
-        
-        function addMessageToChat(text, type) {
-            const messagesContainer = document.getElementById('messages-container');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${type}`;
-            messageDiv.textContent = text;
-            messagesContainer.appendChild(messageDiv);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
-        
-        // Отправка сообщений
-        document.getElementById('send-btn').addEventListener('click', sendMessage);
-        document.getElementById('message-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
-        
-        function sendMessage() {
-            const input = document.getElementById('message-input');
-            const message = input.value.trim();
-            
-            if (message && appData.currentChat) {
-                // Получаем текущую нагрузку на сервер
-                const serverLoad = parseInt(document.getElementById('server-load').textContent);
-                
-                // Если нагрузка высокая, с шансом 30% показываем сообщение об ошибке
-                if (serverLoad > 70 && Math.random() < 0.3) {
-                    const notification = document.getElementById('high-load-notification');
-                    notification.style.display = 'block';
-                    
-                    setTimeout(() => {
-                        notification.style.display = 'none';
-                    }, 3000);
-                    
-                    return;
-                }
-                
-                // Добавляем исходящее сообщение
-                addMessageToChat(message, 'outgoing');
-                appData.messages[appData.currentChat].push({
-                    text: message,
-                    type: 'outgoing'
-                });
-                
-                // Очищаем поле ввода
-                input.value = '';
-                
-                // Проверяем шаблоны ИИ для ответа
-                setTimeout(() => {
-                    let response = "Извините, я не понимаю. Добавьте шаблоны в настройках обучения ИИ.";
-                    
-                    for (const pattern of appData.aiPatterns) {
-                        if (pattern.question.toLowerCase() === message.toLowerCase()) {
-                            response = pattern.answer;
-                            break;
-                        }
-                    }
-                    
-                    // Добавляем входящее сообщение (ответ ИИ)
-                    addMessageToChat(response, 'incoming');
-                    appData.messages[appData.currentChat].push({
-                        text: response,
-                        type: 'incoming'
-                    });
-                    
-                    // Сохраняем данные
-                    saveData();
-                }, 1000);
-            }
-        }
-        
-        // Функционал обучения ИИ
-        document.getElementById('add-pattern-btn').addEventListener('click', addPattern);
-        
-        function addPattern() {
-            const input = document.getElementById('pattern-input');
-            const patternText = input.value.trim();
-            
-            if (patternText.includes('>')) {
-                const parts = patternText.split('>');
-                if (parts.length >= 2) {
-                    const question = parts[0].trim();
-                    const answer = parts[1].trim();
-                    
-                    if (question && answer) {
-                        // Добавляем шаблон в массив
-                        appData.aiPatterns.push({ question, answer });
-                        
-                        // Добавляем шаблон в список
-                        addPatternToUI(question, answer);
-                        
-                        // Очищаем поле ввода
-                        input.value = '';
-                        
-                        // Сохраняем данные
-                        saveData();
-                    }
-                }
-            }
-        }
-        
-        function addPatternToUI(question, answer) {
-            const patternItem = document.createElement('div');
-            patternItem.className = 'pattern-item';
-            
-            const patternText = document.createElement('span');
-            patternText.textContent = `${question} → ${answer}`;
-            
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'delete-pattern';
-            deleteBtn.textContent = 'Удалить';
-            deleteBtn.addEventListener('click', function() {
-                const index = appData.aiPatterns.findIndex(p => p.question === question && p.answer === answer);
-                if (index !== -1) {
-                    appData.aiPatterns.splice(index, 1);
-                }
-                patternItem.remove();
-                saveData();
-            });
-            
-            patternItem.appendChild(patternText);
-            patternItem.appendChild(deleteBtn);
-            document.getElementById('patterns-list').appendChild(patternItem);
-        }
-        
-        // Управление сохранением данных
-        document.getElementById('save-data-btn').addEventListener('click', function() {
-            saveData();
-            alert('Данные успешно сохранены!');
-        });
-        
-        document.getElementById('load-data-btn').addEventListener('click', function() {
-            const savedData = localStorage.getItem('gameltonAiData');
-            if (savedData) {
-                try {
-                    const parsedData = JSON.parse(savedData);
-                    Object.assign(appData, parsedData);
-                    
-                    // Перезагружаем интерфейс
-                    location.reload();
-                } catch (e) {
-                    alert('Ошибка загрузки данных: ' + e.message);
-                }
-            } else {
-                alert('Нет сохраненных данных для загрузки.');
-            }
-        });
-        
-        document.getElementById('clear-data-btn').addEventListener('click', function() {
-            if (confirm('Вы уверены, что хотите очистить все данные? Это действие нельзя отменить.')) {
-                localStorage.removeItem('gameltonAiData');
-                location.reload();
-            }
-        });
-        
-        // Функционал мобильного просмотра
-        document.getElementById('enable-mobile-view').addEventListener('change', function() {
-            const mobileSizeButtons = document.getElementById('mobile-size-buttons');
-            if (this.checked) {
-                mobileSizeButtons.style.display = 'block';
-                enableMobilePreview('375');
-            } else {
-                mobileSizeButtons.style.display = 'none';
-                enableMobilePreview('100%');
-            }
-        });
-        
-        // Обработка выбора размера устройства
-        document.querySelectorAll('#mobile-size-buttons .device-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('#mobile-size-buttons .device-btn').forEach(b => {
-                    b.classList.remove('active');
-                });
-                this.classList.add('active');
-                enableMobilePreview(this.getAttribute('data-width'));
-            });
-        });
-        
-        // Инициализация
-        initData();
-        initMobileMenu();
-        createShapes();
-        document.addEventListener('mousemove', handleMouseMove);
-        window.addEventListener('scroll', handleScroll);
-        
-        // Создаем первую летающую букву при загрузке
-        createFlyingLetters();
-        setInterval(createFlyingLetters, 2000);
-        
-        // Создаем несколько начальных чатов, если их нет
-        if (appData.chats.length === 0) {
-            createNewChat("Общий чат");
-            createNewChat("Техподдержка");
-        } else {
-            // Загружаем первый чат
-            if (appData.chats.length > 0) {
-                document.querySelector(`.chat-item[data-chat-id="${appData.chats[0].id}"]`).click();
-            }
-        }
-        
-        // Восстанавливаем настройки фона
-        if (appData.background) {
-            const bgOption = document.querySelector(`.bg-option[data-bg="${appData.background}"]`);
-            if (bgOption) {
-                bgOption.click();
-            }
-        }
-        
-        // Восстанавливаем настройки анимаций
-        if (appData.pulsingG !== undefined) {
-            document.getElementById('pulsing-g').checked = appData.pulsingG;
-            document.querySelector('.pulsing-g').style.display = appData.pulsingG ? 'block' : 'none';
-        }
-        
-        if (appData.shapesEnabled !== undefined) {
-            document.getElementById('show-shapes').checked = appData.shapesEnabled;
-            createShapes();
-        }
-        
-        if (appData.flyingLetters !== undefined) {
-            document.getElementById('flying-letters').checked = appData.flyingLetters;
-        }
-    </script>
-</body>
-			</html>
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAw
