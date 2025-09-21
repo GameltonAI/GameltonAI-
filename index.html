@@ -4,26 +4,85 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Air Draw с жестами</title>
+  <title>Gamelton AI - Camera Draw</title>
   <style>
-    body {margin:0; background:#0f1724; color:#fff; font-family:sans-serif; display:flex; flex-direction:column; height:100vh}
-    #stage {position:relative; flex:1; overflow:hidden}
-    video, canvas {position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
-    video {transform:scaleX(-1)} /* зеркало */
-    #controls {padding:8px; background:#111827; display:flex; gap:10px; align-items:center}
-    .btn {padding:6px 10px; border:1px solid #333; background:#1f2937; color:#fff; border-radius:6px; cursor:pointer}
+    body {margin:0; background:#0f1724; color:#fff; font-family:'Segoe UI',sans-serif; overflow:hidden;}/* Splash Screen */
+#splash {position:fixed; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center; background:#0f1724; z-index:999;}
+.title {font-size:48px; font-weight:bold; opacity:0; animation:fadeIn 2s forwards;}
+.title span.ai {margin-left:8px; display:inline-block; background:linear-gradient(270deg, red, orange, yellow, green, cyan, blue, violet);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  animation: rainbow 3s linear infinite, rotate 3s linear infinite;
+}
+.subtitle {font-size:20px; margin-top:10px; opacity:0; animation:fadeUp 2s forwards 2.5s; color:#a78bfa;}
+
+@keyframes rainbow {0%{filter:hue-rotate(0deg);}100%{filter:hue-rotate(360deg);}}
+@keyframes rotate {0%{transform:rotate(0);}100%{transform:rotate(360deg);}}
+@keyframes fadeIn {to{opacity:1;}}
+@keyframes fadeUp {from{opacity:0; transform:translateY(20px);}to{opacity:1; transform:translateY(0);}}
+
+/* After rainbow stops */
+.title span.ai.final {background:none; -webkit-text-fill-color:#a78bfa; animation:none;}
+
+/* Intro Screen */
+#intro {position:fixed; inset:0; background:#0f1724; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:998; opacity:0; pointer-events:none; transition:opacity 1s;}
+#intro.active {opacity:1; pointer-events:auto;}
+#intro p {max-width:400px; text-align:center; font-size:18px; line-height:1.4; margin-bottom:20px;}
+#intro button {padding:10px 20px; font-size:18px; background:#a78bfa; border:none; border-radius:8px; color:#fff; cursor:pointer; transition:background 0.3s;}
+#intro button:hover {background:#7c3aed;}
+
+/* App */
+#app {display:none; flex-direction:column; height:100vh;}
+#stage {position:relative; flex:1; overflow:hidden}
+video, canvas {position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
+video {transform:scaleX(-1)}
+#controls {padding:8px; background:#111827; display:flex; gap:10px; align-items:center}
+.btn {padding:6px 10px; border:1px solid #333; background:#1f2937; color:#fff; border-radius:6px; cursor:pointer}
+
   </style>
 </head>
 <body>
-  <div id="stage">
-    <video id="video" autoplay playsinline muted></video>
-    <canvas id="draw"></canvas>
-    <canvas id="overlay"></canvas>
-  </div>
-  <div id="controls">
-    <button class="btn" id="clear">Очистить</button>
-    <span id="status">Запуск камеры...</span>
+  <!-- Splash Screen -->
+  <div id="splash">
+    <div class="title">Gamelton <span class="ai">AI</span></div>
+    <div class="subtitle">Camera Draw</div>
+  </div>  <!-- Intro Screen -->  <div id="intro">
+    <p>Добро пожаловать в <b>Gamelton AI Camera Draw</b> — приложение, где вы можете рисовать прямо в воздухе, используя жесты рук. <br><br>
+    ✍️ Указательный палец — рисование.<br>
+    ✊ Кулак — ластик.<br>
+    ✌️ Два пальца — очистка.</p>
+    <button id="startBtn">Попробовать</button>
+  </div>  <!-- Основное приложение -->  <div id="app">
+    <div id="stage">
+      <video id="video" autoplay playsinline muted></video>
+      <canvas id="draw"></canvas>
+      <canvas id="overlay"></canvas>
+    </div>
+    <div id="controls">
+      <button class="btn" id="clear">Очистить</button>
+      <button class="btn" id="save">Сохранить</button>
+      <span id="status">Жесты не определены</span>
+    </div>
   </div>  <!-- MediaPipe Hands -->  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.min.js"></script>  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.min.js"></script>  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.min.js"></script>  <script>
+    const splash = document.getElementById('splash');
+    const intro = document.getElementById('intro');
+    const app = document.getElementById('app');
+
+    // После 3.5 секунд убираем радужную анимацию и включаем intro
+    setTimeout(()=>{
+      document.querySelector('.title span.ai').classList.add('final');
+    }, 3500);
+    setTimeout(()=>{
+      splash.style.display='none';
+      intro.classList.add('active');
+    }, 5000);
+
+    document.getElementById('startBtn').addEventListener('click', ()=>{
+      intro.style.display='none';
+      app.style.display='flex';
+      startApp();
+    });
+
+    // ---- Приложение ----
     const video = document.getElementById('video');
     const canvas = document.getElementById('draw');
     const overlay = document.getElementById('overlay');
@@ -31,98 +90,67 @@
     const octx = overlay.getContext('2d');
     const status = document.getElementById('status');
 
-    let drawing = false;
-    let last = null;
-    let isEraser = false;
+    let last=null;
 
     function resize(){
-      [canvas, overlay].forEach(c=>{
-        c.width = stage.clientWidth;
-        c.height = stage.clientHeight;
-      });
+      canvas.width = overlay.width = app.clientWidth;
+      canvas.height = overlay.height = app.clientHeight-50;
     }
     window.addEventListener('resize', resize);
-    resize();
-
-    // Жесты: кулак = ластик, 2 пальца = очистка
+    
     function detectGesture(landmarks){
-      const tips = [8, 12, 16, 20]; // кончики пальцев (кроме большого)
-      const mcp = [5, 9, 13, 17]; // суставы
-      let extended = tips.map((tip, i)=> landmarks[tip].y < landmarks[mcp[i]].y);
-      const extendedCount = extended.filter(v=>v).length;
-      if (extendedCount === 0) return 'fist'; // кулак
-      if (extended[0] && extended[1] && !extended[2] && !extended[3]) return 'two'; // 2 пальца
-      if (extended[0] && !extended[1] && !extended[2] && !extended[3]) return 'draw'; // только указательный
+      const tips=[8,12,16,20], mcp=[5,9,13,17];
+      let extended = tips.map((tip,i)=>landmarks[tip].y<landmarks[mcp[i]].y);
+      const ext=extended.filter(v=>v).length;
+      if(ext===0) return 'fist';
+      if(extended[0]&&extended[1]&&!extended[2]&&!extended[3]) return 'two';
+      if(extended[0]&&!extended[1]&&!extended[2]&&!extended[3]) return 'draw';
       return 'none';
     }
 
-    function drawLine(from, to, erase=false){
+    function drawLine(from,to,erase=false){
       ctx.save();
-      ctx.globalCompositeOperation = erase ? 'destination-out' : 'source-over';
-      ctx.strokeStyle = erase ? 'rgba(0,0,0,1)' : '#ff4655';
-      ctx.lineWidth = erase ? 40 : 6;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(from.x, from.y);
-      ctx.lineTo(to.x, to.y);
-      ctx.stroke();
+      ctx.globalCompositeOperation=erase?'destination-out':'source-over';
+      ctx.strokeStyle=erase?'rgba(0,0,0,1)':'#ff4655';
+      ctx.lineWidth=erase?40:6;
+      ctx.lineCap='round';
+      ctx.beginPath(); ctx.moveTo(from.x,from.y); ctx.lineTo(to.x,to.y); ctx.stroke();
       ctx.restore();
     }
+    function norm(p){return {x:p.x*canvas.width,y:p.y*canvas.height};}
 
-    function normalizedToCanvas(p){
-      return {x:p.x * canvas.width, y:p.y * canvas.height};
+    function startApp(){
+      resize();
+      const hands = new Hands({locateFile:(f)=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`});
+      hands.setOptions({maxNumHands:1,modelComplexity:1,minDetectionConfidence:0.7,minTrackingConfidence:0.5});
+      hands.onResults(res=>{
+        octx.clearRect(0,0,overlay.width,overlay.height);
+        if(res.multiHandLandmarks&&res.multiHandLandmarks.length>0){
+          const lm=res.multiHandLandmarks[0];
+          drawConnectors(octx,lm,HAND_CONNECTIONS,{color:'#0ff',lineWidth:1});
+          drawLandmarks(octx,lm,{color:'#f0f',lineWidth:1});
+          const g=detectGesture(lm);
+          status.textContent='Жест: '+g;
+          if(g==='draw'){
+            const tip=norm(lm[8]); if(last) drawLine(last,tip,false); last=tip;
+          }else if(g==='fist'){
+            const tip=norm(lm[8]); if(last) drawLine(last,tip,true); last=tip;
+          }else if(g==='two'){
+            ctx.clearRect(0,0,canvas.width,canvas.height); last=null;
+          }else last=null;
+        }
+      });
+      const camera=new Camera(video,{onFrame:async()=>{await hands.send({image:video});},width:640,height:480});
+      camera.start();
     }
 
-    // MediaPipe Hands
-    const hands = new Hands({locateFile: (file)=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
-    hands.setOptions({
-      maxNumHands: 1,
-      modelComplexity: 1,
-      minDetectionConfidence: 0.7,
-      minTrackingConfidence: 0.5
-    });
-
-    hands.onResults(results=>{
-      octx.clearRect(0,0,overlay.width,overlay.height);
-      if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0){
-        const landmarks = results.multiHandLandmarks[0];
-        drawConnectors(octx, landmarks, HAND_CONNECTIONS, {color:'#0ff', lineWidth:1});
-        drawLandmarks(octx, landmarks, {color:'#f0f', lineWidth:1});
-
-        const gesture = detectGesture(landmarks);
-        status.textContent = 'Жест: ' + gesture;
-
-        if (gesture === 'draw'){
-          const tip = normalizedToCanvas(landmarks[8]);
-          if (last){
-            drawLine(last, tip, false);
-          }
-          last = tip;
-        } else if (gesture === 'fist'){
-          const tip = normalizedToCanvas(landmarks[8]);
-          if (last){
-            drawLine(last, tip, true);
-          }
-          last = tip;
-        } else if (gesture === 'two'){
-          ctx.clearRect(0,0,canvas.width,canvas.height);
-          last = null;
-        } else {
-          last = null;
-        }
-      }
-    });
-
-    // Камера
-    const camera = new Camera(video, {
-      onFrame: async()=>{ await hands.send({image:video}); },
-      width: 640,
-      height: 480
-    });
-    camera.start();
-
-    document.getElementById('clear').addEventListener('click', ()=>{
-      ctx.clearRect(0,0,canvas.width,canvas.height);
+    document.getElementById('clear').addEventListener('click',()=>ctx.clearRect(0,0,canvas.width,canvas.height));
+    document.getElementById('save').addEventListener('click',()=>{
+      const out=document.createElement('canvas'); out.width=canvas.width; out.height=canvas.height;
+      const octx2=out.getContext('2d');
+      octx2.drawImage(video,0,0,out.width,out.height);
+      octx2.drawImage(canvas,0,0,out.width,out.height);
+      const a=document.createElement('a'); a.href=out.toDataURL('image/png'); a.download='gamelton-draw.png'; a.click();
     });
   </script></body>
 </html>
