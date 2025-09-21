@@ -7,7 +7,8 @@
 <title>Gamelton AI Halloween</title>
 <style>
 body {margin:0; background:#0f1724; color:#fff; font-family:'Segoe UI',sans-serif; overflow:hidden;}
-#splash {position:fixed; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center; background:#0f1724; z-index:999;}
+#splash, #mainMenu {position:fixed; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:999;}
+#splash {background:#0f1724; z-index:1000;}
 .title {font-size:52px; font-weight:bold; opacity:0; animation:fadeIn 2s forwards;}
 .title span.ai {margin-left:8px; display:inline-block; background:linear-gradient(270deg, red, orange, yellow, green, cyan, blue, violet); background-size:400% 400%; -webkit-background-clip:text; -webkit-text-fill-color:transparent; animation: spinGradient 2s linear infinite;}
 .subtitle {font-size:20px; margin-top:10px; opacity:0; animation:fadeUp 2s forwards 2.5s; color:#a78bfa;}
@@ -15,10 +16,9 @@ body {margin:0; background:#0f1724; color:#fff; font-family:'Segoe UI',sans-seri
 @keyframes fadeUp {from{opacity:0; transform:translateY(20px);}to{opacity:1; transform:translateY(0);}}
 @keyframes spinGradient {0%{background-position:0% 50%;}100%{background-position:100% 50%;}}
 .title span.ai.final {background:none; -webkit-text-fill-color:#a78bfa; animation:none;}
-#mainMenu {position:fixed; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center; background:#0f1724; z-index:998; display:none;}
+#mainMenu {background:#0f1724; z-index:999; display:none;}
 .menuBtn {padding:10px 20px; margin:8px; border:none; border-radius:50px; background:rgba(255,255,255,0.15); color:#fff; backdrop-filter:blur(20px); cursor:pointer; transition:0.3s; font-size:18px;}
 .menuBtn:hover {background:rgba(255,255,255,0.25);}
-.menuBtn.active {background:rgba(167,139,250,0.4); box-shadow:0 0 10px #a78bfa;}
 #app {display:none; flex-direction:column; height:100vh;}
 #stage {position:relative; flex:1; overflow:hidden}
 video, canvas {position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
@@ -26,7 +26,6 @@ video {transform:scaleX(-1)}
 #controls {position:absolute; bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:8px; padding:8px 12px; border-radius:30px; background:rgba(255,255,255,0.1); backdrop-filter:blur(20px); box-shadow:0 4px 20px rgba(0,0,0,0.4);}
 .btn {padding:6px 12px; border:none; border-radius:50px; cursor:pointer; background:rgba(255,255,255,0.15); color:#fff; backdrop-filter:blur(20px); transition:all 0.3s; font-size:14px;}
 .btn.active {background:rgba(167,139,250,0.4); box-shadow:0 0 10px #a78bfa;}
-.btn:hover {background:rgba(255,255,255,0.25);}
 #submenu {position:absolute; bottom:60px; left:50%; transform:translateX(-50%); display:flex; gap:6px; padding:6px 12px; border-radius:50px; background:rgba(255,255,255,0.1); backdrop-filter:blur(20px); box-shadow:0 4px 15px rgba(0,0,0,0.3); display:none;}
 .subbtn {padding:4px 12px; border:none; border-radius:50px; cursor:pointer; background:rgba(255,255,255,0.15); color:#fff; backdrop-filter:blur(20px); transition:0.3s; font-size:14px;}
 .subbtn.active {background:rgba(167,139,250,0.4); box-shadow:0 0 8px #a78bfa;}
@@ -83,20 +82,24 @@ let cameraInstance=null;
 let usingFront=true;
 let uploadedImage=null;
 const cutCanvas=document.createElement('canvas');
-const cutCtx=cutCanvas.getContext('2d');setTimeout(()=>{document.querySelector('.title span.ai').classList.add('final');},3000); setTimeout(()=>{splash.style.display='none'; mainMenu.style.display='flex';},4500);
+const cutCtx=cutCanvas.getContext('2d');
+let ghostInterval=null;setTimeout(()=>{document.querySelector('.title span.ai').classList.add('final');},3000); setTimeout(()=>{splash.style.display='none'; mainMenu.style.display='flex';},4500);
 
 function resize(){canvas.width=overlay.width=app.clientWidth; canvas.height=overlay.height=app.clientHeight-80;} window.addEventListener('resize',resize);
 
-async function startCamera(){ if(cameraInstance)cameraInstance.stop(); const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:usingFront?'user':'environment'}}); video.srcObject=stream; }
+async function startCamera(){ if(cameraInstance)cameraInstance.stop(); const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:usingFront?'user':'environment'}}); video.srcObject=stream; await video.play(); }
 
-function activateMode(selectedMode){ mode=selectedMode; mainMenu.style.display='none'; app.style.display='flex'; ctx.clearRect(0,0,canvas.width,canvas.height); octx.clearRect(0,0,overlay.width,overlay.height); submenu.style.display='none'; objectCutControls.style.display=(mode==='object')?'flex':'none'; resize(); startApp(); }
+function activateMode(selectedMode){ mode=selectedMode; mainMenu.style.display='none'; app.style.display='flex'; ctx.clearRect(0,0,canvas.width,canvas.height); octx.clearRect(0,0,overlay.width,overlay.height); submenu.style.display='none'; objectCutControls.style.display=(mode==='object')?'flex':'none'; resize(); if(ghostInterval)clearInterval(ghostInterval); startApp(); }
 
 document.querySelectorAll('.menuBtn').forEach(btn=>{btn.addEventListener('click',()=>activateMode(btn.dataset.mode));});
 
-// Ghosts Mode function renderGhosts(){ octx.clearRect(0,0,overlay.width,overlay.height); for(let i=0;i<5;i++){ octx.beginPath(); octx.arc(Math.random()*overlay.width,Math.random()*overlay.height,30+Math.random()50,0,2Math.PI); octx.fillStyle='rgba(200,200,255,0.08)'; octx.fill(); } }
+function renderGhosts(){ octx.clearRect(0,0,overlay.width,overlay.height); for(let i=0;i<5;i++){ octx.beginPath(); octx.arc(Math.random()*overlay.width,Math.random()*overlay.height,30+Math.random()50,0,2Math.PI); octx.fillStyle='rgba(200,200,255,0.08)'; octx.fill(); } }
 
-// Object Cut Logic function handleUpload(e){ const file=e.target.files[0]; if(file){ const img=new Image(); img.onload=()=>{uploadedImage=img; cutCanvas.width=img.width; cutCanvas.height=img.height; cutCtx.drawImage(img,0,0);}; img.src=URL.createObjectURL(file); } }
+function handleUpload(e){ const file=e.target.files[0]; if(file){ const img=new Image(); img.onload=()=>{uploadedImage=img; cutCanvas.width=img.width; cutCanvas.height=img.height; cutCtx.drawImage(img,0,0);}; img.src=URL.createObjectURL(file); } }
 
-document.getElementById('uploadImage').addEventListener('change',handleUpload); document.getElementById('cutObject').addEventListener('click',()=>{ if(!uploadedImage)return; const seg=new SelfieSegmentation({locateFile:f=>https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${f}}); seg.setOptions({modelSelection:1}); seg.onResults(results=>{ cutCtx.clearRect(0,0,cutCanvas.width,cutCanvas.height); cutCtx.drawImage(results.segmentationMask,0,0,cutCanvas.width,cutCanvas.height); cutCtx.globalCompositeOperation='source-in'; cutCtx.drawImage(uploadedImage,0,0); }); seg.send({image:uploadedImage}); }); document.getElementById('downloadCut').addEventListener('click',()=>{ const a=document.createElement('a'); a.href=cutCanvas.toDataURL('image/png'); a.download='object.png'; a.click(); });
+document.getElementById('uploadImage').addEventListener('change',handleUpload); document.getElementById('cutObject').addEventListener('click',async ()=>{ if(!uploadedImage)return; const seg=new SelfieSegmentation({locateFile:f=>https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${f}}); seg.setOptions({modelSelection:1}); seg.onResults(results=>{ cutCtx.clearRect(0,0,cutCanvas.width,cutCanvas.height); cutCtx.drawImage(results.segmentationMask,0,0,cutCanvas.width,cutCanvas.height); cutCtx.globalCompositeOperation='source-in'; cutCtx.drawImage(uploadedImage,0,0); }); await seg.send({image:uploadedImage}); }); document.getElementById('downloadCut').addEventListener('click',()=>{ const a=document.createElement('a'); a.href=cutCanvas.toDataURL('image/png'); a.download='object.png'; a.click(); });
 
-// Start App function startApp(){ startCamera(); resize(); if(mode==='ghosts'){setInterval(renderGhosts,500);} // Filters and Background mode
+async function startApp(){ await startCamera(); resize(); if(mode==='ghosts'){ ghostInterval=setInterval(renderGhosts,500); } // Filters and Background setup can be added here } </script>
+
+</body>
+</html>
