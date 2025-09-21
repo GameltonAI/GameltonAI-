@@ -1,1927 +1,696 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gamelton Ai</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Gamelton Ai — demo</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
-        }
-
-        :root {
-            --primary-gradient: linear-gradient(45deg, #b967ff, #6e3fce, #ff38d7);
-            --glass-bg: rgba(72, 22, 110, 0.4);
-            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
+        /* ----------------------
+           Reset & base
+           ---------------------- */
+        * { box-sizing: border-box; margin:0; padding:0; font-family: Inter, "SF Pro Display", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
+        html,body { height:100%; }
         body {
-            background: linear-gradient(135deg, #1a0525 0%, #2d0b42 100%);
-            color: #fff;
-            overflow-x: hidden;
-            min-height: 100vh;
+            min-height:100vh;
+            background: linear-gradient(135deg,#0f0420 0%, #2a0b3b 100%);
+            color:#fff;
+            overflow-x:hidden;
         }
 
-        /* Размытый верхний бар в стиле Apple с улучшенным стеклянным эффектом */
-        header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            padding: 20px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 1000;
-            backdrop-filter: blur(15px) saturate(180%);
-            -webkit-backdrop-filter: blur(15px) saturate(180%);
-            background: rgba(58, 12, 91, 0.5);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        /* ----------------------
+           Header
+           ---------------------- */
+        header{
+            position:fixed; left:0; right:0; top:0;
+            height:72px; display:flex; align-items:center; gap:20px;
+            padding:12px 28px;
+            backdrop-filter: blur(10px);
+            background: rgba(24,6,38,0.48);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            z-index:1000;
         }
-
         .logo {
-            font-size: 28px;
-            font-weight: 700;
-            background: var(--primary-gradient);
-            background-size: 200% 200%;
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: gradientShift 3s ease infinite, textGlow 2s ease-in-out infinite alternate;
+            font-weight:800; font-size:22px;
+            background: linear-gradient(90deg,#b967ff,#6e3fce,#ff38d7);
+            -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+            background-size:200% 200%; animation:gradShift 4s linear infinite;
         }
 
-        @keyframes textGlow {
-            0% { text-shadow: 0 0 5px rgba(185, 103, 255, 0.5); }
-            100% { text-shadow: 0 0 15px rgba(185, 103, 255, 0.8), 0 0 25px rgba(255, 56, 215, 0.6); }
-        }
-
+        nav { margin-left:auto; }
         nav ul {
-            display: flex;
-            list-style: none;
-            gap: 30px;
+            display:flex; gap:22px; align-items:center; list-style:none;
         }
-
         nav a {
-            color: #e2c6ff;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s;
-            position: relative;
-            padding: 5px 0;
+            color:#e7cffc; text-decoration:none; font-weight:600; position:relative;
         }
-
-        nav a:hover {
-            color: #fff;
-        }
-
         nav a::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: var(--primary-gradient);
-            transition: width 0.3s;
+            content:""; position:absolute; left:0; bottom:-6px; height:2px; width:0;
+            background: linear-gradient(90deg,#b967ff,#ff38d7); transition:width .25s;
         }
-
-        nav a:hover::after {
-            width: 100%;
-        }
+        nav a:hover::after { width:100%; }
 
         .online-counter {
-            background: rgba(110, 63, 206, 0.3);
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 14px;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            animation: counterPulse 2s infinite;
-        }
-
-        /* Контейнер для 3D сцены */
-        #scene-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            overflow: hidden;
-        }
-
-        /* Стили для 3D фигур */
-        .shape {
-            position: absolute;
-            opacity: 0.6;
-            transition: transform 0.5s ease-out;
-        }
-
-        .cube {
-            width: 100px;
-            height: 100px;
-            background: linear-gradient(45deg, #8a2be2, #da70d6);
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(218, 112, 214, 0.5);
-        }
-
-        .sphere {
-            width: 120px;
-            height: 120px;
-            background: radial-gradient(circle at 30% 30%, #9370db, #6a5acd);
-            border-radius: 50%;
-            box-shadow: 0 0 25px rgba(106, 90, 205, 0.6);
-        }
-
-        .pyramid {
-            width: 0;
-            height: 0;
-            border-left: 70px solid transparent;
-            border-right: 70px solid transparent;
-            border-bottom: 120px solid #9932cc;
-            opacity: 0.7;
-        }
-
-        .torus {
-            width: 140px;
-            height: 40px;
-            background: linear-gradient(45deg, #ba55d3, #8a2be2);
-            border-radius: 50%;
-            box-shadow: 0 0 30px rgba(186, 85, 211, 0.5);
-        }
-
-        /* Контент страниц */
-        .page {
-            display: none;
-            padding: 120px 40px 60px;
-            min-height: 100vh;
-        }
-
-        .page.active {
-            display: block;
-        }
-
-        h1 {
-            font-size: 48px;
-            margin-bottom: 20px;
-            background: var(--primary-gradient);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: textGlow 2s ease-in-out infinite alternate;
-        }
-
-        h2 {
-            font-size: 32px;
-            margin: 30px 0 20px;
-            color: #e2b4ff;
-            background: linear-gradient(45deg, #e2b4ff, #b967ff);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        p {
-            font-size: 18px;
-            line-height: 1.6;
-            max-width: 800px;
-            margin-bottom: 30px;
-            color: #d8bfd8;
-        }
-
-        .news-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 25px;
-            margin-top: 40px;
-        }
-
-        .news-card {
-            background: var(--glass-bg);
-            border-radius: 15px;
-            padding: 25px;
-            backdrop-filter: blur(15px) saturate(180%);
-            -webkit-backdrop-filter: blur(15px) saturate(180%);
-            border: var(--glass-border);
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
-
-        .news-card:hover {
-            transform: translateY(-5px) scale(1.02);
-            box-shadow: 0 12px 40px rgba(110, 63, 206, 0.3);
-        }
-
-        .news-card h3 {
-            margin-bottom: 15px;
-            color: #e2b4ff;
-        }
-
-        /* Стили для страницы чатов */
-        .chats-container {
-            display: flex;
-            height: calc(100vh - 180px);
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .chats-sidebar {
-            width: 300px;
-            background: var(--glass-bg);
-            border-radius: 15px;
-            padding: 20px;
-            backdrop-filter: blur(15px) saturate(180%);
-            -webkit-backdrop-filter: blur(15px) saturate(180%);
-            border: var(--glass-border);
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
-
-        .chats-list {
-            flex-grow: 1;
-            overflow-y: auto;
-            margin-bottom: 15px;
-        }
-
-        .chat-item {
-            padding: 12px 15px;
-            margin-bottom: 10px;
-            background: rgba(110, 63, 206, 0.2);
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .chat-item:hover {
-            background: rgba(110, 63, 206, 0.4);
-            transform: translateX(5px);
-        }
-
-        .chat-item.active {
-            background: rgba(110, 63, 206, 0.6);
-        }
-
-        .create-chat-btn {
-            padding: 12px;
-            background: var(--primary-gradient);
-            border: none;
-            border-radius: 10px;
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .create-chat-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(185, 103, 255, 0.4);
-        }
-
-        .chat-content {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            background: var(--glass-bg);
-            border-radius: 15px;
-            padding: 20px;
-            backdrop-filter: blur(15px) saturate(180%);
-            -webkit-backdrop-filter: blur(15px) saturate(180%);
-            border: var(--glass-border);
-            position: relative;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Мобильный заголовок чата */
-        .mobile-chat-header {
-            display: none;
-            align-items: center;
-            padding: 15px;
-            background: rgba(72, 22, 110, 0.6);
-            border-radius: 15px 15px 0 0;
-            margin: -20px -20px 20px -20px;
-            backdrop-filter: blur(15px) saturate(180%);
-            -webkit-backdrop-filter: blur(15px) saturate(180%);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .back-button {
-            background: rgba(110, 63, 206, 0.3);
-            border: none;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            color: white;
-            font-size: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-right: 15px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .back-button:hover {
-            background: rgba(110, 63, 206, 0.5);
-        }
-
-        .chat-title {
-            font-size: 18px;
-            font-weight: 600;
-            background: var(--primary-gradient);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .messages-container {
-            flex-grow: 1;
-            overflow-y: auto;
-            margin-bottom: 20px;
-            padding-right: 10px;
-        }
-
-        .message {
-            padding: 12px 15px;
-            margin-bottom: 15px;
-            border-radius: 15px;
-            max-width: 70%;
-            word-wrap: break-word;
-            animation: messageAppear 0.3s ease;
-        }
-
-        @keyframes messageAppear {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .message.incoming {
-            background: rgba(110, 63, 206, 0.3);
-            align-self: flex-start;
-            border-bottom-left-radius: 5px;
-        }
-
-        .message.outgoing {
-            background: var(--primary-gradient);
-            align-self: flex-end;
-            margin-left: auto;
-            border-bottom-right-radius: 5px;
-        }
-
-        .thinking-message {
-            padding: 12px 15px;
-            margin-bottom: 15px;
-            border-radius: 15px;
-            background: rgba(110, 63, 206, 0.3);
-            align-self: flex-start;
-            border-bottom-left-radius: 5px;
-            display: inline-block;
-            width: auto;
-            animation: thinkingPulse 1.5s infinite;
-        }
-
-        @keyframes thinkingPulse {
-            0% { opacity: 0.6; }
-            50% { opacity: 1; }
-            100% { opacity: 0.6; }
-        }
-
-        .message-input-container {
-            display: flex;
-            gap: 10px;
-        }
-
-        .message-input {
-            flex-grow: 1;
-            padding: 15px;
-            border-radius: 20px;
-            border: none;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            color: white;
-            font-size: 16px;
-            transition: all 0.3s;
-        }
-
-        .message-input:focus {
-            outline: none;
-            background: rgba(255, 255, 255, 0.15);
-            box-shadow: 0 0 0 2px rgba(185, 103, 255, 0.5);
-        }
-
-        .send-btn {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            border: none;
-            background: var(--primary-gradient);
-            color: white;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(185, 103, 255, 0.3);
-        }
-
-        .send-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 6px 20px rgba(185, 103, 255, 0.5);
-        }
-
-        .send-btn img {
-            width: 24px;
-            height: 24px;
-            filter: invert(1);
-        }
-
-        /* Стили для страницы настроек */
-        .settings-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 25px;
-            margin-top: 40px;
-        }
-
-        .settings-card {
-            background: var(--glass-bg);
-            border-radius: 15px;
-            padding: 25px;
-            backdrop-filter: blur(15px) saturate(180%);
-            -webkit-backdrop-filter: blur(15px) saturate(180%);
-            border: var(--glass-border);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
-
-        .settings-card h3 {
-            margin-bottom: 15px;
-            color: #e2b4ff;
-        }
-
-        .background-options {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .bg-option {
-            width: 60px;
-            height: 60px;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .bg-option:hover {
-            transform: scale(1.05);
-        }
-
-        .bg-option.active {
-            outline: 2px solid #b967ff;
-            outline-offset: 2px;
-            box-shadow: 0 0 15px rgba(185, 103, 255, 0.5);
-        }
-
-        /* Стили для обучения ИИ */
-        .ai-training {
-            margin-top: 20px;
-        }
-
-        .pattern-input {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .pattern-input input {
-            flex-grow: 1;
-            padding: 10px;
-            border-radius: 10px;
-            border: none;
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-        }
-
-        .pattern-input input:focus {
-            outline: none;
-            background: rgba(255, 255, 255, 0.15);
-        }
-
-        .add-pattern-btn {
-            padding: 10px 15px;
-            background: var(--primary-gradient);
-            border: none;
-            border-radius: 10px;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .add-pattern-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(185, 103, 255, 0.4);
-        }
-
-        .patterns-list {
-            margin-top: 20px;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .pattern-item {
-            padding: 10px;
-            background: rgba(110, 63, 206, 0.2);
-            border-radius: 10px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: all 0.3s;
-        }
+            margin-left:18px; padding:6px 10px; border-radius:20px;
+            background: rgba(110,63,206,0.25);
+            border: 1px solid rgba(255,255,255,0.06);
+            font-size:13px;
+            backdrop-filter: blur(6px);
+        }
+
+        /* mobile burger */
+        .mobile-menu-btn { display:none; width:36px; height:36px; border-radius:8px; border:none; background:transparent; cursor:pointer; align-items:center; justify-content:center; }
+        .mobile-menu-btn span { display:block; width:20px; height:2px; background:#e7cffc; border-radius:2px; margin:3px 0; transition:all .25s; }
+
+        /* ----------------------
+           Layout pages
+           ---------------------- */
+        main { padding-top:92px; }
+        .page { display:none; padding:40px 36px 80px; min-height:calc(100vh - 92px); }
+        .page.active { display:block; }
+
+        h1 { font-size:40px; margin-bottom:12px;
+            background: linear-gradient(90deg,#ffd6ff,#b967ff,#9bd0ff);
+            -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+            background-size:200% 200%; animation:gradShift 6s linear infinite;
+        }
+        p.lead { color:#d7bff1; margin-bottom:20px; max-width:900px; line-height:1.6; }
+
+        /* ----------------------
+           Chats layout
+           ---------------------- */
+        .chats { display:flex; gap:18px; align-items:flex-start; }
+        .chats .sidebar { width:320px; background: rgba(72,22,110,0.36); padding:16px; border-radius:14px; backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,0.04); }
+        .chats .content { flex:1; background: rgba(72,22,110,0.36); padding:18px; border-radius:14px; min-height:520px; display:flex; flex-direction:column; gap:12px; backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,0.04); }
+
+        .chat-item { padding:10px; margin-bottom:10px; border-radius:10px; cursor:pointer; background: rgba(110,63,206,0.18); transition:transform .15s, background .15s; }
+        .chat-item:hover { transform: translateY(-3px); background: rgba(110,63,206,0.30); }
+        .chat-item.active { background: linear-gradient(90deg, rgba(185,103,255,0.18), rgba(110,63,206,0.28)); box-shadow:0 6px 18px rgba(110,63,206,0.12); }
+
+        .messages { flex:1; overflow:auto; padding:12px; display:flex; flex-direction:column; gap:12px; }
+        .message { max-width:72%; padding:12px 14px; border-radius:14px; backdrop-filter: blur(6px); }
+        .message.incoming { background: rgba(110,63,206,0.26); align-self:flex-start; border-bottom-left-radius:6px; }
+        .message.outgoing { background: linear-gradient(90deg,#b967ff,#6e3fce); align-self:flex-end; color:#fff; border-bottom-right-radius:6px; }
+
+        /* shimmer for text and "liquid" glass effect */
+        .message .body { position:relative; z-index:2; }
+        .message .gloss {
+            position:absolute; left:0; right:0; top:0; bottom:0; border-radius:inherit;
+            background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+            mix-blend-mode: overlay; pointer-events:none; opacity:0.7;
+            animation:glassMove 4s linear infinite;
+        }
+        @keyframes glassMove { 0%{ transform:translateX(-30%);} 100%{ transform:translateX(130%);} }
+
+        /* thinking placeholder */
+        .thinking {
+            display:inline-block; padding:8px 12px; border-radius:14px; background:rgba(255,255,255,0.03);
+            color:#e6dcff; font-weight:600; position:relative;
+        }
+        .thinking .dots { display:inline-block; width:48px; text-align:left; }
+        .dot { display:inline-block; animation:blink 1s infinite; margin-right:3px; opacity:0.25; }
+        .dot:nth-child(1){ animation-delay:0s } .dot:nth-child(2){ animation-delay:.15s } .dot:nth-child(3){ animation-delay:.3s }
+        @keyframes blink { 0%,80%,100%{ opacity:0.25 } 40%{ opacity:1 } }
+
+        /* input area */
+        .input-row { display:flex; gap:8px; margin-top:6px; align-items:center; }
+        .message-input { flex:1; padding:12px 14px; border-radius:999px; border:none; background: rgba(255,255,255,0.06); color:#fff; outline:none; }
+        .btn { padding:10px 12px; border-radius:10px; border:none; cursor:pointer; font-weight:700; }
+
+        .send-btn { width:48px; height:48px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:linear-gradient(90deg,#b967ff,#6e3fce); box-shadow: 0 8px 24px rgba(110,63,206,0.18); }
+
+        /* ----------------------
+           Image generator page
+           ---------------------- */
+        .gen-panel { display:flex; gap:12px; align-items:center; margin-top:12px; margin-bottom:18px; }
+        .gen-input { flex:1; padding:12px; border-radius:10px; border:none; background: rgba(255,255,255,0.04); color:#fff; }
+        .gallery { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px; }
+        .img-card { background:rgba(255,255,255,0.03); border-radius:12px; overflow:hidden; position:relative; padding-bottom:12px; }
+        .img-card img { width:100%; display:block; height:160px; object-fit:cover; }
+        .img-actions { display:flex; gap:8px; padding:10px; align-items:center; justify-content:space-between; }
+
+        /* download badge */
+        .download-btn { padding:8px 10px; border-radius:8px; border:none; background:linear-gradient(90deg,#ffd6ff,#b967ff); color:#1b0424; font-weight:700; cursor:pointer; }
+
+        /* watermark info small */
+        .wm-note { font-size:12px; color:#d7c1f6; }
+
+        /* ----------------------
+           Settings / controls
+           ---------------------- */
+        .settings-grid { display:flex; gap:14px; flex-wrap:wrap; margin-top:12px; }
+        .card { background: rgba(72,22,110,0.32); padding:14px; border-radius:12px; border:1px solid rgba(255,255,255,0.03); min-width:220px; }
+
+        /* high load notification */
+        .high-load-notification { position:fixed; right:18px; bottom:18px; background:#ff5a5a; color:#fff; padding:12px 16px; border-radius:10px; display:none; z-index:2000; box-shadow:0 8px 30px rgba(0,0,0,0.4); }
+
+        /* responsive */
+        @media (max-width:900px){
+            nav ul { display:none; position:fixed; top:72px; right:-100%; height:100vh; width:72%; max-width:320px; background: rgba(24,6,38,0.96); flex-direction:column; padding-top:40px; gap:24px; transition:right .3s ease; z-index:999; }
+            nav ul.active { right:0; }
+            .mobile-menu-btn { display:flex; margin-left:auto; }
+            .chats { flex-direction:column; }
+            .chats .sidebar { width:100% }
+        }
 
-        .pattern-item:hover {
-            background: rgba(110, 63, 206, 0.3);
-            transform: translateX(5px);
-        }
-
-        .pattern-item span {
-            flex-grow: 1;
-            word-break: break-word;
-        }
-
-        .delete-pattern {
-            background: rgba(255, 100, 100, 0.3);
-            border: none;
-            border-radius: 5px;
-            color: white;
-            padding: 5px 10px;
-            cursor: pointer;
-            flex-shrink: 0;
-            margin-left: 10px;
-            transition: all 0.3s;
-        }
-
-        .delete-pattern:hover {
-            background: rgba(255, 100, 100, 0.5);
-            transform: scale(1.05);
-        }
-
-        /* Стили для страницы статистики */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 25px;
-            margin-top: 40px;
-        }
-
-        .stat-card {
-            background: var(--glass-bg);
-            border-radius: 15px;
-            padding: 25px;
-            backdrop-filter: blur(15px) saturate(180%);
-            -webkit-backdrop-filter: blur(15px) saturate(180%);
-            border: var(--glass-border);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
-
-        .stat-card h3 {
-            margin-bottom: 15px;
-            color: #e2b4ff;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .stat-value {
-            font-size: 24px;
-            font-weight: bold;
-            background: var(--primary-gradient);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .chart-container {
-            position: relative;
-            height: 250px;
-            width: 100%;
-            margin-top: 15px;
-        }
-
-        /* Стили для генерации изображений */
-        .image-generation-container {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            margin-top: 30px;
-        }
-
-        .generation-input {
-            display: flex;
-            gap: 10px;
-        }
-
-        .generation-input input {
-            flex-grow: 1;
-            padding: 15px;
-            border-radius: 15px;
-            border: none;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            color: white;
-            font-size: 16px;
-        }
-
-        .generation-input input:focus {
-            outline: none;
-            background: rgba(255, 255, 255, 0.15);
-        }
-
-        .generate-btn {
-            padding: 15px 25px;
-            background: var(--primary-gradient);
-            border: none;
-            border-radius: 15px;
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .generate-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(185, 103, 255, 0.4);
-        }
-
-        .image-results {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .image-result {
-            background: var(--glass-bg);
-            border-radius: 15px;
-            overflow: hidden;
-            backdrop-filter: blur(15px) saturate(180%);
-            -webkit-backdrop-filter: blur(15px) saturate(180%);
-            border: var(--glass-border);
-            transition: all 0.3s;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
-
-        .image-result:hover {
-            transform: translateY(-5px) scale(1.02);
-            box-shadow: 0 12px 40px rgba(110, 63, 206, 0.3);
-        }
-
-        .generated-image {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-        }
-
-        .image-details {
-            padding: 15px;
-        }
-
-        .image-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .download-btn {
-            flex-grow: 1;
-            padding: 8px 15px;
-            background: var(--primary-gradient);
-            border: none;
-            border-radius: 8px;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .download-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(185, 103, 255, 0.4);
-        }
-
-        /* Модальное окно */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(5px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-            display: none;
-        }
-
-        .modal {
-            background: rgba(58, 12, 91, 0.9);
-            border-radius: 15px;
-            padding: 25px;
-            width: 400px;
-            max-width: 90%;
-            backdrop-filter: blur(15px) saturate(180%);
-            -webkit-backdrop-filter: blur(15px) saturate(180%);
-            border: var(--glass-border);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
-        }
-
-        .modal h3 {
-            margin-bottom: 15px;
-            color: #e2b4ff;
-        }
-
-        .modal-input {
-            width: 100%;
-            padding: 12px;
-            border-radius: 10px;
-            border: none;
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            margin-bottom: 15px;
-        }
-
-        .modal-input:focus {
-            outline: none;
-            background: rgba(255, 255, 255, 0.15);
-        }
-
-        .modal-buttons {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-        }
-
-        .modal-btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .modal-btn.cancel {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-        }
-
-        .modal-btn.cancel:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .modal-btn.confirm {
-            background: var(--primary-gradient);
-            color: white;
-        }
-
-        .modal-btn.confirm:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(185, 103, 255, 0.4);
-        }
-
-        /* Уведомление о высокой нагрузке */
-        .high-load-notification {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(255, 100, 100, 0.9);
-            color: white;
-            padding: 15px 20px;
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            z-index: 1000;
-            display: none;
-            animation: slideIn 0.5s ease;
-        }
-
-        @keyframes slideIn {
-            from { transform: translateX(100px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-
-        /* Летающие буквы G */
-        .flying-g {
-            position: fixed;
-            font-size: 24px;
-            font-weight: bold;
-            color: #b967ff;
-            z-index: -1;
-            opacity: 0.7;
-            pointer-events: none;
-        }
-
-        /* Пульсирующая буква G в центре */
-        .pulsing-g {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 120px;
-            font-weight: bold;
-            z-index: -1;
-            opacity: 0.2;
-            pointer-events: none;
-            animation: pulseBorder 3s infinite;
-            color: transparent;
-            -webkit-text-stroke: 2px #b967ff;
-            text-stroke: 2px #b967ff;
-        }
-
-        /* Анимации */
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        @keyframes counterPulse {
-            0% { box-shadow: 0 0 5px rgba(185, 103, 255, 0.5); }
-            50% { box-shadow: 0 0 20px rgba(185, 103, 255, 0.8); }
-            100% { box-shadow: 0 0 5px rgba(185, 103, 255, 0.5); }
-        }
-
-        @keyframes float {
-            0% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(10deg); }
-            100% { transform: translateY(0) rotate(0deg); }
-        }
-
-        @keyframes fly {
-            0% {
-                transform: translate(0, 0) rotate(0deg);
-                opacity: 0;
-            }
-            10% {
-                opacity: 0.7;
-            }
-            90% {
-                opacity: 0.7;
-            }
-            100% {
-                transform: translate(100vw, -100vh) rotate(360deg);
-                opacity: 0;
-            }
-        }
-
-        @keyframes pulse {
-            0% { transform: translate(-50%, -50%) scale(1); opacity: 0.2; }
-            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.3; }
-            100% { transform: translate(-50%, -50%) scale(1); opacity: 0.2; }
-        }
-
-        @keyframes pulseBorder {
-            0% { 
-                -webkit-text-stroke: 2px #b967ff;
-                text-stroke: 2px #b967ff;
-                opacity: 0.2;
-            }
-            50% { 
-                -webkit-text-stroke: 4px #ff38d7;
-                text-stroke: 4px #ff38d7;
-                opacity: 0.4;
-            }
-            100% { 
-                -webkit-text-stroke: 2px #b967ff;
-                text-stroke: 2px #b967ff;
-                opacity: 0.2;
-            }
-        }
-
-        /* Мобильное меню */
-        .mobile-menu-btn {
-            display: none;
-            flex-direction: column;
-            justify-content: space-around;
-            width: 30px;
-            height: 30px;
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            padding: 0;
-            z-index: 10;
-        }
-
-        .mobile-menu-btn span {
-            width: 30px;
-            height: 3px;
-            background: #e2c6ff;
-            border-radius: 5px;
-            transition: all 0.3s linear;
-            position: relative;
-            transform-origin: 1px;
-        }
-
-        /* Адаптивность для мобильных устройств */
-        @media (max-width: 1024px) {
-            header {
-                padding: 15px 20px;
-            }
-            
-            .page {
-                padding: 100px 20px 40px;
-            }
-            
-            .chats-container {
-                flex-direction: column;
-                height: auto;
-            }
-            
-            .chats-sidebar {
-                width: 100%;
-                margin-bottom: 20px;
-            }
-            
-            .news-grid,
-            .settings-grid,
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .message {
-                max-width: 85%;
-            }
-            
-            nav ul {
-                gap: 15px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            header {
-                padding: 12px 15px;
-            }
-            
-            .page {
-                padding: 80px 15px 30px;
-            }
-            
-            h1 {
-                font-size: 36px;
-            }
-            
-            h2 {
-                font-size: 28px;
-            }
-            
-            .mobile-menu-btn {
-                display: flex;
-            }
-            
-            nav ul {
-                position: fixed;
-                top: 0;
-                right: -100%;
-                height: 100vh;
-                width: 70%;
-                max-width: 300px;
-                background: rgba(58, 12, 91, 0.95);
-                backdrop-filter: blur(15px) saturate(180%);
-                -webkit-backdrop-filter: blur(15px) saturate(180%);
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                gap: 30px;
-                transition: right 0.3s ease;
-                z-index: 5;
-            }
-            
-            nav ul.active {
-                right: 0;
-            }
-            
-            .online-counter {
-                font-size: 12px;
-                padding: 6px 12px;
-            }
-            
-            .logo {
-                font-size: 22px;
-            }
-            
-            .message {
-                max-width: 90%;
-            }
-            
-            .pattern-input {
-                flex-direction: column;
-            }
-            
-            .chart-container {
-                height: 200px;
-            }
-            
-            /* Мобильный вид чатов */
-            .chats-sidebar.mobile-hidden {
-                display: none;
-            }
-            
-            .chat-content.mobile-hidden {
-                display: none;
-            }
-            
-            .mobile-chat-header {
-                display: flex;
-            }
-            
-            .chats-container.mobile-chat-view .chats-sidebar {
-                display: none;
-            }
-            
-            .chats-container.mobile-chat-view .chat-content {
-                display: flex;
-            }
-            
-            .chats-container:not(.mobile-chat-view) .chats-sidebar {
-                display: flex;
-            }
-            
-            .chats-container:not(.mobile-chat-view) .chat-content {
-                display: none;
-            }
-        }
-
-        @media (max-width: 480px) {
-            header {
-                padding: 10px;
-            }
-            
-            .page {
-                padding: 70px 10px 20px;
-            }
-            
-            h1 {
-                font-size: 32px;
-            }
-            
-            h2 {
-                font-size: 24px;
-            }
-            
-            .online-counter {
-                display: none;
-            }
-            
-            .message {
-                max-width: 95%;
-                padding: 10px 12px;
-                font-size: 14px;
-            }
-            
-            .message-input {
-                padding: 12px;
-            }
-            
-            .send-btn {
-                width: 45px;
-                height: 45px;
-            }
-            
-            .stat-card h3 {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
-            
-            .stat-value {
-                font-size: 20px;
-            }
-            
-            .mobile-chat-header {
-                padding: 12px;
-            }
-            
-            .back-button {
-                width: 35px;
-                height: 35px;
-                font-size: 18px;
-                margin-right: 12px;
-            }
-            
-            .chat-title {
-                font-size: 16px;
-            }
-        }
-
-        /* Стили для переключателя мобильной версии */
-        .mobile-preview-container {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .mobile-preview-btn {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: var(--primary-gradient);
-            border: none;
-            color: white;
-            font-size: 20px;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 4px 15px rgba(185, 103, 255, 0.4);
-            transition: all 0.3s;
-        }
-
-        .mobile-preview-btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 20px rgba(185, 103, 255, 0.6);
-        }
-
-        .device-size-selector {
-            background: rgba(72, 22, 110, 0.8);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 15px;
-            display: none;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .device-size-selector.active {
-            display: flex;
-        }
-
-        .device-btn {
-            padding: 8px 15px;
-            background: rgba(110, 63, 206, 0.3);
-            border: none;
-            border-radius: 8px;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .device-btn:hover {
-            background: rgba(110, 63, 206, 0.5);
-        }
-
-        .device-btn.active {
-            background: var(--primary-gradient);
-        }
+        /* animations */
+        @keyframes gradShift { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
     </style>
 </head>
 <body>
-    <!-- Размытый верхний бар -->
     <header>
         <div class="logo">Gamelton Ai</div>
-        <button class="mobile-menu-btn" id="mobile-menu-btn">
-            <span></span>
-            <span></span>
-            <span></span>
+
+        <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="menu">
+            <span></span><span></span><span></span>
         </button>
+
         <nav>
             <ul id="nav-menu">
                 <li><a href="#" data-page="home">Главная</a></li>
                 <li><a href="#" data-page="news">Новости</a></li>
                 <li><a href="#" data-page="chats">Чаты</a></li>
-                <li><a href="#" data-page="image-generation">Генерация картинок</a></li>
-                <li><a href="#" data-page="stats">Статистика</a></li>
+                <li><a href="#" data-page="imagegen">Генерация картинок</a></li>
                 <li><a href="#" data-page="settings">Настройки</a></li>
             </ul>
         </nav>
-        <div class="online-counter">Онлайн: <span id="online-count">2345</span></div>
+
+        <div class="online-counter">Онлайн: <strong id="online-count">2 345</strong></div>
     </header>
 
-    <!-- Контейнер для 3D фигур -->
-    <div id="scene-container">
-        <!-- 3D фигуры будут добавлены через JavaScript -->
-    </div>
+    <main>
+        <section id="home" class="page active">
+            <h1>Добро пожаловать в Gamelton Ai</h1>
+            <p class="lead">Интерактивная демо-страница: теперь меню работает, в чате есть эффект «Думаю…», генерация картинок — отдельный раздел и чат-команда, а также плавные анимации и водяной знак на скачиваемых изображениях.</p>
+        </section>
 
-    <!-- Пульсирующая буква G в центре -->
-    <div class="pulsing-g">G</div>
+        <section id="news" class="page">
+            <h1>Новости</h1>
+            <p class="lead">Новости платформы — сюда можно подтягивать реальные данные через API.</p>
+            <div class="card">
+                <h3>Запуск бета</h3>
+                <p class="wm-note">Мы добавили функционал генерации картинок и улучшили анимации.</p>
+            </div>
+        </section>
 
-    <!-- Кнопка мобильного превью и селектор размера -->
-    <div class="mobile-preview-container">
-        <button class="mobile-preview-btn" id="mobile-preview-btn">📱</button>
-        <div class="device-size-selector" id="device-size-selector">
-            <button class="device-btn" data-width="320">iPhone SE</button>
-            <button class="device-btn" data-width="375">iPhone 12</button>
-            <button class="device-btn" data-width="414">iPhone 11 Pro</button>
-            <button class="device-btn" data-width="768">iPad</button>
-            <button class="device-btn active" data-width="100%">Сброс</button>
-        </div>
-    </div>
-
-    <!-- Уведомление о высокой нагрузке -->
-    <div class="high-load-notification" id="high-load-notification">
-        Слишком большая нагрузка на сервер. Попробуйте отправить сообщение позже.
-    </div>
-
-    <!-- Модальное окно для создания чата -->
-    <div class="modal-overlay" id="create-chat-modal">
-        <div class="modal">
-            <h3>Создать новый чат</h3>
-            <input type="text" class="modal-input" id="chat-name-input" placeholder="Введите название чата">
-            <div class="modal-buttons">
-                <button class="modal-btn cancel" id="cancel-chat">Отмена</button>
-                <button class="modal-btn confirm" id="confirm-chat">Создать</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Страницы -->
-    <section id="home" class="page active">
-        <h1>Добро пожаловать в Gamelton Ai</h1>
-        <p>Gamelton Ai — это инновационная платформа, использующая искусственный интеллект для создания уникальных игровых вселенных и персонажей. Погрузитесь в мир бесконечных возможностей и творчества.</p>
-        <p>Наша технология позволяет генерировать реалистичные игровые миры, адаптивные сюжетные линии и персонажей с продвинутым ИИ, которые развиваются вместе с вами.</p>
-    </section>
-
-    <section id="news" class="page">
-        <h1>Новости Gamelton Ai</h1>
-        <p>Будьте в курсе последних событий и обновлений нашей платформы.</p>
-        
-        <div class="news-grid">
-            <div class="news-card">
-                <h3>Запуск бета-тестирования</h3>
-                <p>Мы рады сообщить о начале открытого бета-тестирования нашей платформы. Присоединяйтесь и станьте одним из первых!</p>
-            </div>
-            <div class="news-card">
-                <h3>Новые алгоритмы ИИ</h3>
-                <p>Наша команда разработала революционные алгоритмы генерации игровых миров, которые теперь еще более реалистичны.</p>
-            </div>
-            <div class="news-card">
-                <h3>Партнерство с ведущими студиями</h3>
-                <p>Gamelton Ai начинает сотрудничество с крупнейшими игровыми студиями для интеграции нашей технологии.</p>
-            </div>
-        </div>
-    </section>
-
-    <section id="chats" class="page">
-        <h1>Чаты Gamelton Ai</h1>
-        <p>Общайтесь с другими пользователями и делитесь идеями.</p>
-        
-        <div class="chats-container" id="chats-container">
-            <div class="chats-sidebar">
-                <div class="chats-list" id="chats-list">
-                    <!-- Чаты будут добавляться динамически -->
-                </div>
-                <button class="create-chat-btn" id="create-chat-btn">Создать новый чат</button>
-            </div>
-            
-            <div class="chat-content">
-                <!-- Мобильный заголовок чата -->
-                <div class="mobile-chat-header">
-                    <button class="back-button" id="back-button">←</button>
-                    <div class="chat-title" id="mobile-chat-title">Название чата</div>
-                </div>
-                
-                <div class="messages-container" id="messages-container">
-                    <!-- Сообщения будут добавляться динамически -->
-                </div>
-                
-                <div class="message-input-container">
-                    <input type="text" class="message-input" id="message-input" placeholder="Введите сообщение...">
-                    <button class="send-btn" id="send-btn">
-                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0yLjAxIDIxLDIzLDEyLDIuMDEsMywyLDEwbDE1LDItMTUsMnoiPjwvcGF0aD48L3N2Zz4=" alt="Send">
-                    </button>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="image-generation" class="page">
-        <h1>Генерация картинок</h1>
-        <p>Создавайте уникальные изображения с помощью искусственного интеллекта Gamelton Ai.</p>
-        
-        <div class="image-generation-container">
-            <div class="generation-input">
-                <input type="text" id="image-prompt" placeholder="Опишите, что вы хотите увидеть на картинке...">
-                <button class="generate-btn" id="generate-btn">Сгенерировать</button>
-            </div>
-            
-            <div class="image-results" id="image-results">
-                <!-- Результаты генерации будут добавляться здесь -->
-            </div>
-        </div>
-    </section>
-
-    <section id="stats" class="page">
-        <h1>Статистика сервера Gamelton Ai</h1>
-        <p>Мониторинг производительности и использования серверов в реальном времени.</p>
-        
-        <div class="stats-grid">
-            <div class="stat-card">
-                <h3>Онлайн игроков <span class="stat-value" id="current-online">2345</span></h3>
-                <div class="chart-container">
-                    <canvas id="online-chart"></canvas>
-                </div>
-            </div>
-            
-            <div class="stat-card">
-                <h3>Нагрузка на сервер <span class="stat-value" id="server-load">39%</span></h3>
-                <div class="chart-container">
-                    <canvas id="load-chart"></canvas>
-                </div>
-            </div>
-            
-            <div class="stat-card">
-                <h3>Отправлено сообщений <span class="stat-value" id="messages-sent">128</span></h3>
-                <div class="chart-container">
-                    <canvas id="messages-chart"></canvas>
-                </div>
-            </div>
-            
-            <div class="stat-card">
-                <h3>История активности</h3>
-                <p>Максимальная нагрузка: <span id="max-load">6000 игроков (100%)</span></p>
-                <p>Текущая нагрузка: <span id="current-load">39%</span></p>
-                <p>Сообщений сегодня: <span id="today-messages">24</span></p>
-                <p>Среднее время ответа: <span id="avg-response">0.8с</span></p>
-            </div>
-        </div>
-    </section>
-
-    <section id="settings" class="page">
-        <h1>Настройки Gamelton Ai</h1>
-        <p>Настройте платформу под свои preferences.</p>
-        
-        <div class="settings-grid">
-            <div class="settings-card">
-                <h3>Внешний вид</h3>
-                <p>Выберите фон для сайта:</p>
-                <div class="background-options">
-                    <div class="bg-option active" style="background: linear-gradient(135deg, #1a0525, #2d0b42);" data-bg="default"></div>
-                    <div class="bg-option" style="background: linear-gradient(135deg, #0d0221, #260b42);" data-bg="dark"></div>
-                    <div class="bg-option" style="background: linear-gradient(135deg, #2d0b42, #511a7b);" data-bg="purple"></div>
-                    <div class="bg-option" style="background: linear-gradient(135deg, #1b0435, #6a3fce);" data-bg="light"></div>
-                </div>
-            </div>
-            
-            <div class="settings-card">
-                <h3>Анимации</h3>
-                <p>Управление визуальными эффектами:</p>
-                <div style="margin-top: 15px;">
-                    <label>
-                        <input type="checkbox" id="show-shapes" checked> Показывать 3D фигуры
-                    </label>
-                    <br>
-                    <label>
-                        <input type="checkbox" id="flying-letters" checked> Летающие буквы "G"
-                    </label>
-                    <br>
-                    <label>
-                        <input type="checkbox" id="pulsing-g" checked> Пульсирующая буква "G"
-                    </label>
-                </div>
-            </div>
-            
-            <div class="settings-card">
-                <h3>Обучение ИИ</h3>
-                <p>Добавьте шаблоны для обучения ИИ:</p>
-                <div class="ai-training">
-                    <div class="pattern-input">
-                        <input type="text" id="pattern-input" placeholder="Вопрос > Ответ">
-                        <button class="add-pattern-btn" id="add-pattern-btn">Добавить</button>
+        <section id="chats" class="page">
+            <h1>Чаты Gamelton Ai</h1>
+            <div class="chats">
+                <aside class="sidebar">
+                    <div style="display:flex; gap:8px; margin-bottom:12px;">
+                        <input id="new-chat-name" placeholder="Название чата" style="flex:1; padding:10px; border-radius:8px; border:none; background:rgba(255,255,255,0.03); color:#fff" />
+                        <button class="btn" id="create-chat-btn" style="background:linear-gradient(90deg,#b967ff,#6e3fce); color:#fff; border-radius:8px;">Создать</button>
                     </div>
-                    <div class="patterns-list" id="patterns-list">
-                        <!-- Шаблоны будут добавляться здесь -->
+                    <div id="chats-list"></div>
+                </aside>
+
+                <div class="content">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div><strong id="current-chat-title">— Выберите чат —</strong></div>
+                        <div style="font-size:13px; color:#d7c1f6;">avg response: <b id="avg-response-display">—</b></div>
+                    </div>
+
+                    <div class="messages" id="messages-container">
+                        <!-- messages -->
+                    </div>
+
+                    <div class="input-row">
+                        <input id="message-input" class="message-input" placeholder="Введите сообщение. Для генерации картинки: 'сгенерируй картинку: лес туман' " />
+                        <button class="send-btn" id="send-btn" title="Отправить">
+                            <!-- paper plane svg -->
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden><path d="M2 21l21-9L2 3v7l15 2-15 2v7z" fill="white"/></svg>
+                        </button>
                     </div>
                 </div>
             </div>
+        </section>
 
-            <div class="settings-card">
-                <h3>Сохранение данных</h3>
-                <p>Управление сохраненными данными:</p>
-                <div style="margin-top: 15px;">
-                    <button class="add-pattern-btn" id="save-data-btn" style="width: 100%; margin-bottom: 10px;">
-                        Сохранить данные сейчас
-                    </button>
-                    <button class="add-pattern-btn" id="load-data-btn" style="width: 100%; margin-bottom: 10px;">
-                        Загрузить последнее сохранение
-                    </button>
-                    <button class="delete-pattern" id="clear-data-btn" style="width: 100%;">
-                        Очистить все данные
-                    </button>
-                </div>
+        <section id="imagegen" class="page">
+            <h1>Генерация картинок</h1>
+            <p class="lead">Введи ключевые слова — мы попытаемся найти/сгенерировать картинку из интернета по ключевым словам.</p>
+
+            <div class="gen-panel">
+                <input id="gen-input" class="gen-input" placeholder="Например: лес, туман, мужчина" />
+                <button id="gen-btn" class="btn" style="background:linear-gradient(90deg,#b967ff,#6e3fce);">Сгенерировать</button>
             </div>
 
-            <div class="settings-card">
-                <h3>Мобильная версия</h3>
-                <p>Тестирование адаптивного дизайна:</p>
-                <div style="margin-top: 15px;">
-                    <label>
-                        <input type="checkbox" id="enable-mobile-view"> Включить мобильный просмотр
-                    </label>
-                    <div id="mobile-size-buttons" style="margin-top: 10px; display: none;">
-                        <p>Выберите размер устройства:</p>
-                        <div style="display: flex; gap: 5px; flex-wrap: wrap; margin-top: 5px;">
-                            <button class="device-btn" data-width="320">iPhone SE</button>
-                            <button class="device-btn" data-width="375">iPhone 12</button>
-                            <button class="device-btn" data-width="414">iPhone 11 Pro</button>
-                            <button class="device-btn" data-width="768">iPad</button>
-                            <button class="device-btn active" data-width="100%">Сброс</button>
-                        </div>
-                    </div>
+            <div class="gallery" id="image-gallery"></div>
+        </section>
+
+        <section id="settings" class="page">
+            <h1>Настройки</h1>
+            <div class="settings-grid">
+                <div class="card">
+                    <h3>Загрузки / Нагрузка сервера</h3>
+                    <p class="wm-note">Симуляция загрузки сервера влияет на среднее время ответа в чате (avgResponseTime).</p>
+                    <label>Загрузка сервера: <span id="server-load-display">20</span>%</label>
+                    <input id="server-load" type="range" min="0" max="100" value="20" style="width:100%; margin-top:8px;" />
+                </div>
+
+                <div class="card">
+                    <h3>Параметры</h3>
+                    <p class="wm-note">avgResponseTime рассчитывается так: base + load * multiplier</p>
+                    <p>Базовое время: <span id="base-time-display">800</span> ms</p>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
+    </main>
+
+    <div class="high-load-notification" id="high-load-notification">Слишком большая нагрузка на сервер — задержки увеличены.</div>
 
     <script>
-        // Хранилище данных
-        const appData = {
-            shapesEnabled: true,
-            currentChat: null,
-            chats: [],
-            aiPatterns: [],
-            messages: {},
-            onlineHistory: [],
-            loadHistory: [],
-            messagesHistory: [],
-            lastSave: null,
-            mobileView: false,
-            mobileWidth: '100%',
-            generatedImages: []
-        };
+    // -------------------------
+    // Core variables and helpers
+    // -------------------------
+    const pages = document.querySelectorAll('.page');
+    const navMenu = document.getElementById('nav-menu');
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const navUL = document.getElementById('nav-menu');
+    const AVG_BASE = 800; // ms base
+    let avgBase = 800;
+    let serverLoad = Number(document.getElementById('server-load').value); // 0..100
 
-        // Графики
-        let onlineChart, loadChart, messagesChart;
+    function updateAvgDisplay(){
+        const avg = computeAvgResponse();
+        document.getElementById('avg-response-display').textContent = avg + ' ms';
+        // show/hide high load
+        const highLoadEl = document.getElementById('high-load-notification');
+        if(serverLoad > 80){ highLoadEl.style.display = 'block'; } else { highLoadEl.style.display = 'none'; }
+    }
+    function computeAvgResponse(){
+        // base + serverLoad * multiplier
+        const multiplier = 30; // ms per load percent
+        return Math.round(avgBase + serverLoad * multiplier);
+    }
 
-        // Инициализация данных
-        function initData() {
-            // Загрузка сохраненных данных
-            const savedData = localStorage.getItem('gameltonAiData');
-            if (savedData) {
-                try {
-                    const parsedData = JSON.parse(savedData);
-                    Object.assign(appData, parsedData);
-                    
-                    // Восстанавливаем чаты
-                    if (appData.chats.length > 0) {
-                        appData.chats.forEach(chat => {
-                            addChatToSidebar(chat.name, chat.id);
-                        });
-                    }
-                    
-                    // Восстанавливаем шаблоны ИИ
-                    if (appData.aiPatterns.length > 0) {
-                        appData.aiPatterns.forEach(pattern => {
-                            addPatternToUI(pattern.question, pattern.answer);
-                        });
-                    }
-                    
-                    // Восстанавливаем мобильный вид, если был включен
-                    if (appData.mobileView) {
-                        document.getElementById('enable-mobile-view').checked = true;
-                        document.getElementById('mobile-size-buttons').style.display = 'block';
-                        enableMobilePreview(appData.mobileWidth);
-                    }
-                    
-                    console.log('Данные успешно загружены');
-                } catch (e) {
-                    console.error('Ошибка загрузки данных:', e);
+    // -------------------------
+    // Navigation & mobile menu
+    // -------------------------
+    function showPage(id){
+        pages.forEach(p => p.classList.toggle('active', p.id === id));
+        // close mobile menu if open
+        if(window.innerWidth <= 900){
+            navUL.classList.remove('active');
+        }
+    }
+
+    document.querySelectorAll('[data-page]').forEach(a=>{
+        a.addEventListener('click', e=>{
+            e.preventDefault();
+            const page = a.dataset.page;
+            showPage(page);
+        });
+    });
+
+    // mobile
+    mobileMenuBtn.addEventListener('click', ()=>{
+        navUL.classList.toggle('active');
+    });
+
+    // close menu when clicking a nav link on mobile
+    navUL.querySelectorAll('a').forEach(a=>{
+        a.addEventListener('click', ()=> navUL.classList.remove('active'));
+    });
+
+    // -------------------------
+    // Chats logic
+    // -------------------------
+    const chatsListEl = document.getElementById('chats-list');
+    const createChatBtn = document.getElementById('create-chat-btn');
+    const newChatName = document.getElementById('new-chat-name');
+    const messagesContainer = document.getElementById('messages-container');
+    const messageInput = document.getElementById('message-input');
+    const sendBtn = document.getElementById('send-btn');
+    const currentChatTitle = document.getElementById('current-chat-title');
+
+    // In-memory chats store (persist in localStorage for convenience)
+    let chats = JSON.parse(localStorage.getItem('gamelton_chats') || '[]'); // array of {id, name, messages: [{from:'user'|'ai', type:'text'|'image', content:...}]}
+    let currentChatId = null;
+
+    function saveChats(){ localStorage.setItem('gamelton_chats', JSON.stringify(chats)); }
+    function renderChatsList(){
+        chatsListEl.innerHTML = '';
+        chats.forEach(c=>{
+            const div = document.createElement('div');
+            div.className = 'chat-item' + (c.id === currentChatId ? ' active' : '');
+            div.textContent = c.name;
+            div.onclick = ()=> selectChat(c.id);
+            chatsListEl.appendChild(div);
+        });
+    }
+
+    function createChat(name){
+        const id = 'chat_' + Date.now();
+        chats.unshift({ id, name: name || 'Чат ' + (chats.length + 1), messages: [] });
+        saveChats();
+        renderChatsList();
+        selectChat(id);
+    }
+
+    function selectChat(id){
+        currentChatId = id;
+        renderChatsList();
+        const chat = chats.find(c => c.id === id);
+        if(!chat) return;
+        currentChatTitle.textContent = chat.name;
+        renderMessages(chat);
+    }
+
+    function renderMessages(chat){
+        messagesContainer.innerHTML = '';
+        chat.messages.forEach(msg => {
+            const el = createMessageElement(msg);
+            messagesContainer.appendChild(el);
+        });
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function createMessageElement(msg){
+        const div = document.createElement('div');
+        div.className = 'message ' + (msg.from === 'user' ? 'outgoing' : 'incoming');
+        if(msg.type === 'text'){
+            div.innerHTML = `<div class="body">${escapeHtml(msg.content)}</div><div class="gloss"></div>`;
+        } else if(msg.type === 'image'){
+            const img = document.createElement('img');
+            img.src = msg.content.src;
+            img.alt = msg.content.alt || 'image';
+            img.style.maxWidth = '100%';
+            img.style.borderRadius = '8px';
+            img.style.display = 'block';
+            const caption = msg.content.caption ? `<div style="margin-top:8px; font-size:13px; color:#e9dfff">${escapeHtml(msg.content.caption)}</div>` : '';
+            const imgWrap = document.createElement('div');
+            imgWrap.style.borderRadius = '12px';
+            imgWrap.style.overflow = 'hidden';
+            imgWrap.appendChild(img);
+            div.appendChild(imgWrap);
+            if(caption) div.insertAdjacentHTML('beforeend', caption);
+            div.appendChild(createImageDownloadButton(msg.content.src));
+            const gloss = document.createElement('div'); gloss.className='gloss'; div.appendChild(gloss);
+        }
+        return div;
+    }
+
+    function createImageDownloadButton(src){
+        const wrapper = document.createElement('div');
+        wrapper.style.marginTop = '8px';
+        wrapper.style.display = 'flex';
+        wrapper.style.justifyContent = 'flex-end';
+        const btn = document.createElement('button');
+        btn.className = 'download-btn';
+        btn.textContent = 'Скачать (с водяным знаком)';
+        btn.onclick = ()=> downloadWatermarkedImage(src);
+        wrapper.appendChild(btn);
+        return wrapper;
+    }
+
+    createChatBtn.addEventListener('click', ()=>{
+        const name = newChatName.value.trim() || ('Чат ' + (chats.length + 1));
+        createChat(name);
+        newChatName.value = '';
+    });
+
+    sendBtn.addEventListener('click', ()=> handleSendMessage());
+    messageInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') handleSendMessage(); });
+
+    function handleSendMessage(){
+        const text = messageInput.value.trim();
+        if(!text || !currentChatId) return;
+        // append user message
+        appendToChat(currentChatId, { from:'user', type:'text', content:text });
+        messageInput.value = '';
+        // If contains keyword 'сгенерируй картинку' -> start generation flow
+        const lower = text.toLowerCase();
+        const trigger = 'сгенерируй картинку';
+        if(lower.includes(trigger)){
+            // extract keywords after trigger if exist
+            let keywords = text.slice(lower.indexOf(trigger) + trigger.length).replace(/[:\-–—]/g,'').trim();
+            if(!keywords) keywords = text.replace(new RegExp(trigger, 'i'), '').trim() || 'art';
+            // show thinking placeholder and then append image as incoming
+            showThinkingThenRespondWithImage(currentChatId, keywords);
+        } else {
+            // normal text reply simulation
+            showThinkingThenRespondWithText(currentChatId, text);
+        }
+    }
+
+    function appendToChat(chatId, msg){
+        const chat = chats.find(c=>c.id===chatId);
+        if(!chat) return;
+        chat.messages.push(msg);
+        saveChats();
+        if(chatId === currentChatId){
+            const el = createMessageElement(msg);
+            messagesContainer.appendChild(el);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+    }
+
+    function showThinkingThenRespondWithText(chatId, userText){
+        // add thinking element as incoming
+        const thinkingMsg = { from:'ai', type:'text', content:'thinking-placeholder', meta:{thinking:true} };
+        appendToChat(chatId, thinkingMsg);
+        // compute delay
+        const delay = computeAvgResponse();
+        setTimeout(()=> {
+            // replace last AI message with real reply
+            const chat = chats.find(c=>c.id===chatId);
+            if(!chat) return;
+            // remove last thinking message
+            for(let i=chat.messages.length-1;i>=0;i--){
+                if(chat.messages[i].meta && chat.messages[i].meta.thinking){
+                    chat.messages.splice(i,1);
+                    break;
                 }
             }
-            
-            // Инициализация истории онлайна, если она пуста
-            if (appData.onlineHistory.length === 0) {
-                for (let i = 0; i < 20; i++) {
-                    appData.onlineHistory.push(Math.floor(Math.random() * 1000) + 1000);
-                    appData.loadHistory.push(Math.floor(Math.random() * 20) + 10);
-                    appData.messagesHistory.push(Math.floor(Math.random() * 50) + 10);
+            // generate a simple reply (placeholder)
+            const reply = `Я обработал запрос: "${userText}". (ответ через ${computeAvgResponse()} ms)`;
+            chat.messages.push({ from:'ai', type:'text', content:reply });
+            saveChats();
+            if(chatId === currentChatId) renderMessages(chat);
+        }, delay);
+        // render thinking (update UI)
+        if(currentChatId === chatId) renderThinkingElement();
+    }
+
+    function showThinkingThenRespondWithImage(chatId, keywords){
+        // add thinking message
+        appendToChat(chatId, { from:'ai', type:'text', content:'thinking-placeholder', meta:{thinking:true} });
+        if(currentChatId === chatId) renderThinkingElement();
+        const delay = computeAvgResponse() + 500; // bit more for image
+        setTimeout(async ()=>{
+            const chat = chats.find(c=>c.id===chatId);
+            if(!chat) return;
+            // remove thinking
+            for(let i=chat.messages.length-1;i>=0;i--){
+                if(chat.messages[i].meta && chat.messages[i].meta.thinking){
+                    chat.messages.splice(i,1);
+                    break;
                 }
             }
-            
-            // Инициализация графиков
-            initCharts();
-            
-            // Запуск автосохранения
-            setInterval(saveData, 30000); // Сохраняем каждые 30 секунд
-            
-            // Запуск обновления статистики
-            setInterval(updateStats, 2000);
-        }
-
-        // Сохранение данных
-        function saveData() {
-            try {
-                localStorage.setItem('gameltonAiData', JSON.stringify(appData));
-                appData.lastSave = new Date().toLocaleString();
-                console.log('Данные сохранены:', appData.lastSave);
-            } catch (e) {
-                console.error('Ошибка сохранения данных:', e);
-            }
-        }
-
-        // Инициализация графиков
-        function initCharts() {
-            const onlineCtx = document.getElementById('online-chart').getContext('2d');
-            onlineChart = new Chart(onlineCtx, {
-                type: 'line',
-                data: {
-                    labels: Array.from({length: 20}, (_, i) => ''),
-                    datasets: [{
-                        label: 'Онлайн',
-                        data: appData.onlineHistory,
-                        borderColor: '#b967ff',
-                        backgroundColor: 'rgba(185, 103, 255, 0.1)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            },
-                            ticks: {
-                                color: '#d8bfd8'
-                            }
-                        },
-                        x: {
-                            grid: {
-                                display: false
-                            },
-                            ticks: {
-                                display: false
-                            }
-                        }
-                    }
-                }
+            // generate image source (Unsplash Source fallback)
+            // NOTE: using source.unsplash.com — returns a redirect to an image for keywords
+            const safeKeywords = encodeURIComponent(keywords);
+            const rand = Math.floor(Math.random()*10000);
+            const src = `https://source.unsplash.com/800x600/?${safeKeywords}&sig=${rand}`;
+            chat.messages.push({
+                from:'ai', type:'image',
+                content: { src, caption: `Сгенерировано по запросу: ${keywords}` }
             });
+            saveChats();
+            if(chatId === currentChatId) renderMessages(chat);
+            // If the image was created via chat, we also show it in the gallery section (optional)
+            addToGallery(src, keywords);
+        }, delay);
+    }
 
-            const loadCtx = document.getElementById('load-chart').getContext('2d');
-            loadChart = new Chart(loadCtx, {
-                type: 'line',
-                data: {
-                    labels: Array.from({length: 20}, (_, i) => ''),
-                    datasets: [{
-                        label: 'Нагрузка (%)',
-                        data: appData.loadHistory,
-                        borderColor: '#ff38d7',
-                        backgroundColor: 'rgba(255, 56, 215, 0.1)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 100,
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            },
-                            ticks: {
-                                color: '#d8bfd8'
-                            }
-                        },
-                        x: {
-                            grid: {
-                                display: false
-                            },
-                            ticks: {
-                                display: false
-                            }
-                        }
-                    }
-                }
-            });
-
-            const messagesCtx = document.getElementById('messages-chart').getContext('2d');
-            messagesChart = new Chart(messagesCtx, {
-                type: 'bar',
-                data: {
-                    labels: Array.from({length: 20}, (_, i) => ''),
-                    datasets: [{
-                        label: 'Сообщения',
-                        data: appData.messagesHistory,
-                        backgroundColor: 'rgba(110, 63, 206, 0.5)',
-                        borderColor: 'rgba(110, 63, 206, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            },
-                            ticks: {
-                                color: '#d8bfd8'
-                            }
-                        },
-                        x: {
-                            grid: {
-                                display: false
-                            },
-                            ticks: {
-                                display: false
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        // Обновление статистики
-        function updateStats() {
-            // Обновляем онлайн
-            const onlineCount = Math.floor(Math.random() * 5000) + 1000;
-            document.getElementById('online-count').textContent = onlineCount;
-            document.getElementById('current-online').textContent = onlineCount;
-            
-            // Рассчитываем нагрузку на сервер (0-100%)
-            const serverLoad = Math.min(100, Math.floor(onlineCount / 60));
-            document.getElementById('server-load').textContent = serverLoad + '%';
-            document.getElementById('current-load').textContent = serverLoad + '%';
-            
-            // Рассчитываем количество отправленных сообщений
-            const messagesSent = Math.floor(onlineCount * 0.05 + Math.random() * 20);
-            document.getElementById('messages-sent').textContent = messagesSent;
-            document.getElementById('today-messages').textContent = Math.floor(messagesSent * 0.8 + Math.random() * 10);
-            
-            // Рассчитываем среднее время ответа (зависит от нагрузки)
-            const avgResponse = (0.5 + serverLoad / 200).toFixed(1);
-            document.getElementById('avg-response').textContent = avgResponse + 'с';
-            
-            // Обновляем графики
-            appData.onlineHistory.push(onlineCount);
-            appData.onlineHistory.shift();
-            
-            appData.loadHistory.push(serverLoad);
-            appData.loadHistory.shift();
-            
-            appData.messagesHistory.push(messagesSent);
-            appData.messagesHistory.shift();
-            
-            onlineChart.update();
-            loadChart.update();
-            messagesChart.update();
-        }
-
-        // Функция для включения мобильного превью
-        function enableMobilePreview(width) {
-            const container = document.getElementById('device-size-selector');
-            const previewBtn = document.getElementById('mobile-preview-btn');
-            
-            if (width === '100%') {
-                document.body.style.width = '';
-                document.body.style.maxWidth = '';
-                document.body.style.margin = '';
-                previewBtn.textContent = '📱';
-                appData.mobileView = false;
+    function renderThinkingElement(){
+        // replace any AI messages with meta.thinking by a friendly animated "Думаю" block
+        const chat = chats.find(c=>c.id===currentChatId);
+        if(!chat) return;
+        messagesContainer.innerHTML = '';
+        chat.messages.forEach(msg => {
+            if(msg.meta && msg.meta.thinking){
+                const div = document.createElement('div');
+                div.className = 'message incoming';
+                div.innerHTML = `<div class="body thinking">Думаю <span class="dots"><span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></span></div><div class="gloss"></div>`;
+                messagesContainer.appendChild(div);
             } else {
-                document.body.style.width = width + 'px';
-                document.body.style.maxWidth = width + 'px';
-                document.body.style.margin = '0 auto';
-                document.body.style.overflowX = 'hidden';
-                previewBtn.textContent = '✕';
-                appData.mobileView = true;
-                appData.mobileWidth = width;
+                messagesContainer.appendChild(createMessageElement(msg));
             }
-            
-            // Сохраняем данные
-            saveData();
+        });
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    // -------------------------
+    // Image generator page
+    // -------------------------
+    const genInput = document.getElementById('gen-input');
+    const genBtn = document.getElementById('gen-btn');
+    const gallery = document.getElementById('image-gallery');
+
+    genBtn.addEventListener('click', ()=> {
+        const q = (genInput.value || '').trim() || 'art';
+        generateGallery(q);
+    });
+
+    function generateGallery(q){
+        gallery.innerHTML = '';
+        // create 6 variants using Unsplash source with sig param for randomness
+        for(let i=0;i<6;i++){
+            const rand = Math.floor(Math.random()*10000) + i;
+            const src = `https://source.unsplash.com/800x600/?${encodeURIComponent(q)}&sig=${rand}`;
+            const card = createImageCard(src, q);
+            gallery.appendChild(card);
+        }
+        // switch to imagegen page
+        showPage('imagegen');
+    }
+
+    function createImageCard(src, q){
+        const card = document.createElement('div'); card.className='img-card';
+        const img = document.createElement('img'); img.src = src; img.alt = q;
+        img.loading = 'lazy';
+        card.appendChild(img);
+        const actions = document.createElement('div'); actions.className='img-actions';
+        const left = document.createElement('div'); left.className='wm-note'; left.textContent = q;
+        const saveBtn = document.createElement('button'); saveBtn.className='download-btn'; saveBtn.textContent='Скачать';
+        saveBtn.onclick = ()=> downloadWatermarkedImage(src);
+        actions.appendChild(left); actions.appendChild(saveBtn);
+        card.appendChild(actions);
+        return card;
+    }
+
+    function addToGallery(src, q){
+        const card = createImageCard(src, q);
+        // prepend to gallery if exists
+        const galleryEl = document.getElementById('image-gallery');
+        if(galleryEl) galleryEl.prepend(card);
+    }
+
+    // -------------------------
+    // Watermark & download
+    // -------------------------
+    async function downloadWatermarkedImage(url){
+        try {
+            // try to load as blob (to avoid crossOrigin issues when drawing)
+            const res = await fetch(url, {mode:'cors'});
+            const blob = await res.blob();
+            const img = await createImageBitmap(blob);
+            // draw to canvas and add watermark
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width; canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0,0);
+            // watermark style
+            const wmText = 'Gamelton';
+            const fontSize = Math.max(18, Math.round(canvas.width / 18));
+            ctx.font = `bold ${fontSize}px sans-serif`;
+            ctx.textBaseline = 'bottom';
+            const padding = 12;
+            const textWidth = ctx.measureText(wmText).width;
+            // draw semi-transparent black rect for watermark
+            ctx.fillStyle = 'rgba(0,0,0,0.25)';
+            ctx.fillRect(canvas.width - textWidth - padding*2, canvas.height - fontSize - padding*1.6, textWidth + padding*1.6, fontSize + padding*0.6);
+            // draw watermark text
+            ctx.fillStyle = 'rgba(255,255,255,0.85)';
+            ctx.fillText(wmText, canvas.width - textWidth - padding, canvas.height - padding);
+            // additional faint diagonal watermark
+            ctx.save();
+            ctx.translate(canvas.width/2, canvas.height/2);
+            ctx.rotate(-Math.PI/8);
+            ctx.globalAlpha = 0.06;
+            ctx.font = `${Math.round(canvas.width/6)}px sans-serif`;
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(wmText, -ctx.measureText(wmText).width/2, 0);
+            ctx.restore();
+
+            // create link to download
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+            const a = document.createElement('a');
+            a.href = dataUrl;
+            a.download = 'gamelton_' + Date.now() + '.jpg';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        } catch(err){
+            console.warn('watermarking failed (CORS?), fallback to direct download', err);
+            // fallback: just open original URL in new tab to allow manual save
+            const a = document.createElement('a');
+            a.href = url;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            a.click();
+            a.remove();
+            alert('Не удалось наложить водяной знак из-за ограничений CORS. Открылось оригинальное изображение — сохраните его вручную.');
+        }
+    }
+
+    // -------------------------
+    // Utils & init
+    // -------------------------
+    function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+
+    // load saved chats
+    (function init(){
+        // if no chats exist, create a welcome chat
+        if(chats.length === 0) {
+            createChat('Общий чат');
+            // add welcome message
+            chats[0].messages.push({ from:'ai', type:'text', content:'Привет! Я — ваш помощник. Напишите что-нибудь или используйте команду "сгенерируй картинку: лес туман" в чате.' });
+            saveChats();
+            renderChatsList();
+            selectChat(chats[0].id);
+        } else {
+            renderChatsList();
+            selectChat(chats[0].id);
         }
 
-        // Инициализация мобильного меню
-        function initMobileMenu() {
-            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-            const navMenu = document.getElementById('nav-menu');
-            
-            mobileMenuBtn.addEventListener('click', function() {
-                navMenu.classList.toggle('active');
-                mobileMenuBtn.classList.toggle('active');
-            });
-            
-            // Закрываем меню при клике на ссылку
-            document.querySelectorAll('nav a').forEach(link => {
-                link.addEventListener('click', function() {
-                    navMenu.classList.remove('active');
-                    mobileMenuBtn.classList.remove('active');
-                });
-            });
-            
-            // Закрываем меню при клике вне его
-            document.addEventListener('click', function(e) {
-                if (!navMenu.contains(e.target) && !mobileMenuBtn.contains(e.target) && navMenu.classList.contains('active')) {
-                    navMenu.classList.remove('active');
-                    mobileMenuBtn.classList.remove('active');
-                }
-            });
-        }
+        // init server-load controls
+        document.getElementById('server-load').addEventListener('input', (e)=>{
+            serverLoad = Number(e.target.value);
+            document.getElementById('server-load-display').textContent = serverLoad;
+            updateAvgDisplay();
+        });
+        document.getElementById('server-load-display').textContent = serverLoad;
+        document.getElementById('base-time-display').textContent = avgBase;
+        updateAvgDisplay();
 
-        // Динамическое изменение количества онлайн-пользователей
-        function updateOnlineCounter() {
-            const onlineCount = Math.floor(Math.random() * 5000) + 1000;
-            document.getElementById('online-count').textContent = onlineCount;
+        // catch window resize to close mobile menu
+        window.addEventListener('resize', ()=>{ if(window.innerWidth > 900) navUL.classList.remove('active'); });
+    })();
+
+    // replace thinking-placeholder messages content on render
+    // override createMessageElement to support placeholder rendering
+    // (but handled by renderThinkingElement when meta.thinking present)
+
+    // -------------------------
+    // Keyboard shortcuts (optional)
+    // -------------------------
+    document.addEventListener('keydown', (e)=>{
+        if(e.key === 'k' && (e.ctrlKey || e.metaKey)){
+            e.preventDefault();
+            genInput.focus();
+            showPage('imagegen');
         }
-        
-        // Навигация между страницами
-        document.querySelectorAll('nav a').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const targetPage = this.getAttribute('data-page');
-                
-                // Скрыть все страницы
-                document.querySelectorAll('.page').forEach(page => {
-                    page.classList.remove('active');
-                });
-                
-                // Показать целевую страницу
-                document.getElementById(targetPage).classList.add('active');
-                
-                // Если переходим на страницу статистики, обновляем графики
-                if (targetPage === 'stats') {
-                    onlineChart.update();
-                    loadChart.update();
-                    messagesChart.update();
-                }
-            });
-        }
-        
-        // Создание 3D сцены с фигурами
-        const sceneContainer = document.getElementById('scene-container');
-        const shapes = [];
-        
-        // Создаем различные фигуры
-        function createShapes() {
-            sceneContainer.innerHTML = '';
-            shapes.length = 0;
-            
-            if (!appData.shapesEnabled) return;
-            
-            const shapesData = [
-                { type: 'cube', class: 'cube' },
-                { type: 'sphere', class: 'sphere' },
-                { type: 'pyramid', class: 'pyramid' },
-                { type: 'torus', class: 'torus' }
-            ];
-            
-            // Создаем 10 фигур случайных типов
-            for (let i = 0; i < 10; i++) {
-                const randomShape = shapesData[Math.floor(Math.random() * shapesData.length)];
-                const shape = document.createElement('div');
-                shape.className = `shape ${randomShape.class}`;
-                
-                // Случайное позиционирование
-                const x = Math.random() * 100;
-                const y = Math.random() * 100;
-                
-                shape.style.left = `${x}vw`;
-                shape.style.top = `${y}vh`;
-                
-                // Случайная анимация плавания
-                shape.style.animation = `float ${6 + Math.random() * 10}s ease-in-out infinite`;
-                shape.style.animationDelay = `${Math.random() * 5}s`;
-                
-                sceneContainer.appendChild(shape);
-                shapes.push({
-                    element: shape,
-                    x: x,
-                    y: y,
-                    rotation: 0
-                });
+    });
+
+    // -------------------------
+    // Small helper: if user generates image from imagegen page, add to chat optionally
+    // -------------------------
+    gallery && gallery.addEventListener('click', (ev)=>{
+        const t = ev.target;
+        if(t.tagName === 'IMG'){
+            // send image to current chat
+            if(!currentChatId){
+                alert('Выберите чат слева, чтобы отправить картинку в чат.');
+                return;
             }
+            const src = t.src;
+            appendToChat(currentChatId, { from:'user', type:'text', content:'/sendimage' });
+            // add thinking & then image
+            showThinkingThenRespondWithImage(currentChatId, 'изображение из галереи');
         }
-        
-        // Обработка движения мыши для параллакс-эффекта
-        function handleMouseMove(e) {
-            const mouseX = e.clientX / window.innerWidth - 0.5;
-            const mouseY = e.clientY / window.innerHeight - 0.5;
-            
-            shapes.forEach(shape => {
-                const moveX = mouseX * 20;
-                const moveY = mouseY * 20;
-                
-                shape.element.style.transform = `translate(${moveX}px, ${moveY}px) rotate(${shape.rotation}deg)`;
-            });
-        }
-        
-        // Обработка скролла для вращения фигур
-        function handleScroll() {
-            const scrollY = window.scrollY;
-            
-            shapes.forEach(shape => {
-                shape.rotation = scrollY / 20;
-                shape.element.style.transform = `rotate(${shape.rotation}deg)`;
-            });
-        }
-        
-        // Функция для создания летающих букв G
-        function createFlyingLetters() {
-            if (!document.getElementById('flying-letters').checked) return;
-            
-            const flyingG = document.createElement('div');
-            flyingG.className = 'flying-g';
-            flyingG.textContent = 'G';
-            
-            // Начальная позиция (нижний левый угол)
-            const startX = 0;
-            const startY = window.innerHeight;
-            
-            flyingG.style.left = `${startX}px`;
-            flyingG.style.top = `${startY}px`;
-            
-            // Случайная скорость анимации
-            const duration = 10 + Math.random() * 20;
-            
-            flyingG.style.animation = `fly ${duration}s linear`;
-            
-            document.body.appendChild(flyingG);
-            
-            // Удаляем элемент после завершения анимации
-            setTimeout(() => {
-                flyingG.remove();
-            }, duration * 1000);
-        }
-        
-        // Обработка выбора фона
-        document.querySelectorAll('.bg-option').forEach(option => {
-            option.addEventListener('click', function() {
-                document.querySelectorAll('.bg-option').forEach(opt => {
-                    opt.classList.remove('active');
-                });
-                
-                this.classList.add('active');
-                
-                // Применяем выбранный фон
-                const bgStyle = this.getAttribute('data-bg');
-                let gradient;
-                
-                switch(bgStyle) {
-                    case 'dark':
-                        gradient = 'linear-gradient(135deg, #0d0221, #260b42)';
-                        break;
-                    case 'purple':
-                        gradient = 'linear-gradient(135deg, #2d0b42, #511a7b)';
-                        break;
-                    case 'light':
-                        gradient = 'linear-gradient(135deg, #1b0435, #6a3fce)';
-                        break;
-                    default:
-                        gradient = 'linear-gradient(135deg, #1a0525, #2d0b42)';
-                }
-                
-                document.body.style.background = gradient;
-                
-                // Сохраняем выбор фона
-                appData.background = bgStyle;
-                saveData();
-            });
-        });
-        
-        // Управление видимостью пульсирующей буквы G
-        document.getElementById('pulsing-g').addEventListener('change', function() {
-            document.querySelector('.pulsing-g').style.display = this.checked ? 'block' : 'none';
-            appData.pulsingG = this.checked;
-            saveData();
-        });
-        
-        // Управление видимостью фигур
-        document.getElementById('show-shapes').add
+    });
+
+    </script>
+</body>
+</html>
