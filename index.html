@@ -7,119 +7,89 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* updated dark neon theme */
-            --bg-color: #000000;
-            --panel-bg: rgba(8,8,10,0.88);
-            --glass-bg: rgba(10,10,12,0.6);
-            --neon-cyan: #00f7ff;
-            --neon-magenta: #ff2aff;
-            --neon-yellow: #ffd400;
-            --accent: var(--neon-cyan);
-            --accent-glow: rgba(0,247,255,0.18);
+            --accent: #7f5af0;
+            --accent-glow: #7f5af0cc;
+            /* new theme base colors (dynamic) */
+            --bg-color-1: #181c2f;
+            --bg-color-2: #2d1a3a;
+            --bg-gradient: linear-gradient(135deg, var(--bg-color-1) 0%, var(--bg-color-2) 100%);
+            /* glass control */
+            --glass-opacity: 0.55;
+            --glass-bg: rgba(30, 34, 54, var(--glass-opacity));
             --glass-blur: blur(18px);
-            --text-main: #e8f9ff;
-            --text-muted: #9aa6b2;
+            --glass-border: 1.5px solid #7f5af055;
+            --glass-shadow: 0 4px 32px 0 #7f5af022;
+            /* portfolio pulse defaults */
             --pulse-scale: 1;
             --pulse-duration: 2.4s;
             --portfolio-glow: var(--accent-glow);
+            --success: #2ce59b;
+            --danger: #ff3c6e;
+            --text-main: #eaeaea;
+            --text-muted: #b3b3b3;
         }
-
         html, body {
             height: 100%;
             margin: 0;
             font-family: 'Inter', sans-serif;
-            background: var(--bg-color);
+            background: var(--bg-gradient);
             color: var(--text-main);
             overflow-x: hidden;
         }
-
         body {
             min-height: 100vh;
             position: relative;
         }
-
-        /* Neon background effects */
-        .crypto-symbols {
+        /* Animated Blur Background */
+        .blur-bg {
             position: fixed;
             inset: 0;
             z-index: 0;
-            overflow: hidden;
             pointer-events: none;
+            overflow: hidden;
         }
-
-        .crypto-symbol {
-            position: absolute;
-            font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-            font-weight: 800;
-            color: #fff;
-            mix-blend-mode: screen;
-            opacity: 0.28;
-            text-shadow:
-                0 0 6px rgba(255,255,255,0.06),
-                0 0 18px rgba(0,247,255,0.08),
-                0 0 36px rgba(255,42,255,0.04);
-            filter: blur(4px);
-            transform: translate3d(0,0,0);
-            will-change: transform, opacity, filter;
+        .blur-bg-canvas {
+            width: 100vw;
+            height: 100vh;
+            display: block;
+            filter: blur(32px) brightness(1.1);
+            opacity: 0.8;
+            background: transparent;
         }
-
-        .crypto-symbol.flicker {
-            animation: neonFlicker 700ms steps(2, end);
-            opacity: 0.9;
-            filter: blur(0.5px);
-            text-shadow:
-                0 0 10px var(--neon-cyan),
-                0 0 30px var(--neon-magenta),
-                0 0 60px rgba(0,247,255,0.5);
-        }
-
-        @keyframes neonFlicker {
-            0% { opacity: 0.12; transform: scale(1); filter: blur(4px); }
-            40% { opacity: 0.9; transform: scale(1.02); filter: blur(1px); }
-            60% { opacity: 0.6; transform: scale(1.01); filter: blur(2px); }
-            100% { opacity: 0.28; transform: scale(1); filter: blur(4px); }
-        }
-
-        /* New navigation */
-        .nav-bar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 100;
-            background: var(--panel-bg);
+        /* Glassmorphism Panels */
+        .glass-panel {
+            background: var(--glass-bg);
             backdrop-filter: var(--glass-blur);
-            padding: 1rem;
-            display: flex;
-            justify-content: space-between;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-radius: 18px;
+            border: var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            position: relative;
+            transition: box-shadow 0.3s, border-color 0.3s;
         }
-
-        .nav-links {
-            display: flex;
-            gap: 2rem;
+        .glass-panel.glow-success {
+            box-shadow: 0 0 24px 0 var(--success), var(--glass-shadow);
+            border-color: var(--success);
+            animation: pulse-success 1s;
         }
-
-        .nav-link {
-            color: var(--text-main);
-            text-decoration: none;
-            font-size: 1.1rem;
-            transition: color 0.3s;
+        .glass-panel.glow-danger {
+            box-shadow: 0 0 24px 0 var(--danger), var(--glass-shadow);
+            border-color: var(--danger);
+            animation: pulse-danger 1s;
         }
-
-        .nav-link:hover {
-            color: var(--neon-cyan);
-            text-shadow: 0 0 10px var(--neon-cyan);
+        @keyframes pulse-success {
+            0% { box-shadow: 0 0 0 0 var(--success); }
+            50% { box-shadow: 0 0 24px 8px var(--success); }
+            100% { box-shadow: 0 0 24px 0 var(--success); }
         }
-
-        .nav-link.active {
-            color: var(--neon-cyan);
-            text-shadow: 0 0 12px var(--neon-cyan);
+        @keyframes pulse-danger {
+            0% { box-shadow: 0 0 0 0 var(--danger); }
+            50% { box-shadow: 0 0 24px 8px var(--danger); }
+            100% { box-shadow: 0 0 24px 0 var(--danger); }
         }
-
         /* Layout */
         .container {
-            margin-top: 4rem;
             max-width: 1400px;
             margin: 0 auto;
             padding: 2rem 1rem 4rem 1rem;
@@ -129,26 +99,22 @@
             flex-direction: column;
             gap: 2rem;
         }
-
         .dashboard-grid {
             display: grid;
-            grid-template-columns: 1fr 3fr;
+            grid-template-columns: 1.2fr 2fr 1.2fr;
             gap: 2rem;
             align-items: flex-start;
         }
-
         @media (max-width: 900px) {
             .dashboard-grid {
                 grid-template-columns: 1fr;
                 gap: 1.5rem;
             }
         }
-
         /* Portfolio Panel */
         .portfolio-panel {
             min-width: 260px;
         }
-
         .portfolio-balance {
             font-size: 2.2rem;
             font-weight: 600;
@@ -156,19 +122,16 @@
             transform-origin: center;
             animation: portfolioPulse var(--pulse-duration) ease-in-out infinite;
         }
-
         @keyframes portfolioPulse {
             0% { transform: scale(1); box-shadow: 0 8px 28px var(--portfolio-glow); }
             50% { transform: scale(var(--pulse-scale)); box-shadow: 0 14px 48px var(--portfolio-glow); }
             100% { transform: scale(1); box-shadow: 0 8px 28px var(--portfolio-glow); }
         }
-
         .portfolio-pnl {
             font-size: 1.1rem;
             color: var(--success);
             margin-bottom: 1.2rem;
         }
-
         .portfolio-chart {
             width: 100%;
             height: 140px;
@@ -177,19 +140,18 @@
             align-items: center;
             justify-content: center;
         }
-
         /* Asset Cards */
         .assets-list {
             display: flex;
             flex-direction: column;
             gap: 1rem;
         }
-
         .asset-card {
-            background: var(--panel-bg);
-            border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
             border-radius: 14px;
+            border: var(--glass-border);
+            box-shadow: 0 2px 16px 0 #7f5af011;
             padding: 1rem 1.2rem;
             display: flex;
             align-items: center;
@@ -197,19 +159,16 @@
             transition: box-shadow 0.3s, border-color 0.3s;
             position: relative;
         }
-
         .asset-card .asset-symbol {
             font-weight: 600;
             font-size: 1.1rem;
             letter-spacing: 0.03em;
         }
-
         .asset-card .asset-price {
             font-size: 1.1rem;
             font-weight: 500;
             margin-left: 1.2rem;
         }
-
         .asset-card .asset-change {
             font-size: 1rem;
             margin-left: 1.2rem;
@@ -220,37 +179,31 @@
             color: var(--success);
             transition: background 0.3s, color 0.3s;
         }
-
         .asset-card.negative .asset-change {
             background: rgba(255,60,110,0.08);
             color: var(--danger);
         }
-
         /* TradingView Panel */
         .tradingview-panel {
-            min-height: 72vh;
+            min-height: 420px;
             display: flex;
             flex-direction: column;
             gap: 1rem;
         }
-
         .tradingview-header {
             display: flex;
             align-items: center;
             gap: 1rem;
             margin-bottom: 0.5rem;
         }
-
         .tradingview-header .title {
             font-size: 1.2rem;
             font-weight: 600;
         }
-
         .tradingview-tools {
             display: flex;
             gap: 0.5rem;
         }
-
         .tradingview-tools button {
             background: rgba(127,90,240,0.12);
             border: none;
@@ -261,22 +214,18 @@
             cursor: pointer;
             transition: background 0.2s;
         }
-
         .tradingview-tools button:hover {
             background: rgba(127,90,240,0.22);
         }
-
         .tradingview-iframe {
             width: 100%;
-            height: calc(72vh - 120px);
-            max-height: 92vh;
+            height: 340px;
             border: none;
             border-radius: 12px;
             overflow: hidden;
             background: rgba(24,28,47,0.7);
             box-shadow: 0 2px 24px 0 #7f5af022;
         }
-
         /* Order Book & Trade History */
         .orderbook-panel, .tradehistory-panel {
             min-width: 220px;
@@ -286,30 +235,27 @@
             flex-direction: column;
             gap: 1rem;
         }
-
         .orderbook-table, .tradehistory-table {
             width: 100%;
             border-collapse: collapse;
             font-size: 0.98rem;
         }
-
         .orderbook-table th, .orderbook-table td,
         .tradehistory-table th, .tradehistory-table td {
             padding: 0.5em 0.7em;
             text-align: right;
             border-bottom: 1px solid rgba(127,90,240,0.08);
         }
-
         .orderbook-table th, .tradehistory-table th {
             color: var(--accent);
             font-weight: 600;
             background: rgba(127,90,240,0.06);
         }
-
         /* Order Form */
         .order-form-panel {
             margin-top: 1.2rem;
-            background: var(--panel-bg);
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
             border-radius: 14px;
             border: var(--glass-border);
             box-shadow: 0 2px 16px 0 #7f5af011;
@@ -318,13 +264,11 @@
             flex-direction: column;
             gap: 0.8rem;
         }
-
         .order-form-panel label {
             font-size: 0.98rem;
             color: var(--text-muted);
             margin-bottom: 0.2em;
         }
-
         .order-form-panel input, .order-form-panel select {
             background: rgba(24,28,47,0.55);
             border: 1px solid #7f5af022;
@@ -336,11 +280,9 @@
             margin-bottom: 0.5em;
             transition: border-color 0.2s;
         }
-
         .order-form-panel input:focus, .order-form-panel select:focus {
             border-color: var(--accent);
         }
-
         .order-form-panel button {
             background: var(--accent);
             color: #fff;
@@ -353,11 +295,9 @@
             box-shadow: 0 2px 12px 0 var(--accent-glow);
             transition: background 0.2s;
         }
-
         .order-form-panel button:hover {
             background: #5f3ad6;
         }
-
         /* Emotional Market Indicator */
         .market-indicator {
             position: fixed;
@@ -371,7 +311,6 @@
             align-items: center;
             justify-content: center;
         }
-
         .market-indicator-canvas {
             width: 100%;
             height: 100%;
@@ -380,7 +319,6 @@
             box-shadow: 0 0 24px 0 var(--accent-glow);
             background: transparent;
         }
-
         /* Focus Mode */
         .focus-overlay {
             position: fixed;
@@ -392,12 +330,10 @@
             opacity: 0;
             pointer-events: none;
         }
-
         .focus-overlay.active {
             opacity: 1;
             pointer-events: auto;
         }
-
         /* Notification */
         .notification {
             position: fixed;
@@ -417,33 +353,28 @@
             transition: opacity 0.5s, transform 0.5s;
             pointer-events: none;
         }
-
         .notification.active {
             opacity: 1;
             transform: translateY(0);
             pointer-events: auto;
         }
-
         /* Academy Section */
         .academy-section {
             margin-top: 3rem;
             margin-bottom: 2rem;
         }
-
         .academy-title {
             font-size: 1.5rem;
             font-weight: 600;
             margin-bottom: 1.2rem;
             color: var(--accent);
         }
-
         .academy-cards {
             display: flex;
             gap: 1.2rem;
             overflow-x: auto;
             padding-bottom: 1rem;
         }
-
         .academy-card {
             min-width: 220px;
             background: var(--glass-bg);
@@ -458,48 +389,40 @@
             gap: 0.7rem;
             transition: box-shadow 0.3s, border-color 0.3s;
         }
-
         .academy-card .icon {
             font-size: 2rem;
             color: var(--accent);
             margin-bottom: 0.5rem;
         }
-
         .academy-card .card-title {
             font-weight: 600;
             font-size: 1.1rem;
             margin-bottom: 0.3rem;
         }
-
         .academy-card .card-desc {
             font-size: 0.98rem;
             color: var(--text-muted);
         }
-
         /* Responsive */
         @media (max-width: 600px) {
             .container {
                 padding: 1rem 0.2rem 2rem 0.2rem;
             }
-
             .market-indicator {
                 top: 1rem;
                 right: 1rem;
                 width: 52px;
                 height: 52px;
             }
-
             .notification {
                 bottom: 1rem;
                 right: 1rem;
                 min-width: 180px;
                 padding: 0.7rem 0.8rem;
             }
-
             .academy-cards {
                 gap: 0.7rem;
             }
-
             .academy-card {
                 min-width: 160px;
                 padding: 0.7rem 0.7rem;
@@ -529,7 +452,6 @@
             color: var(--text-main);
             font-size: 0.9rem;
         }
-
         .settings-panel input[type="range"] { width: 90px; }
         .settings-panel select { background: rgba(24,28,47,0.6); color: var(--text-main); border-radius: 6px; padding: 0.2rem 0.4rem; border: 1px solid #7f5af022; }
 
@@ -539,35 +461,9 @@
             height: 100vh;
             image-rendering: optimizeQuality;
         }
-
-        /* Page system (multi-page single-file router) */
-        .page { display:none; }
-        .page.active { display:block; }
     </style>
 </head>
 <body>
-    <!-- Neon Crypto Symbols Background -->
-    <div class="crypto-symbols">
-        <div class="crypto-symbol" style="top:8%;left:6%;font-size:18rem;">₿</div>
-        <div class="crypto-symbol" style="top:30%;right:8%;font-size:16rem;">Ξ</div>
-        <div class="crypto-symbol" style="bottom:18%;left:12%;font-size:14rem;">◎</div>
-        <div class="crypto-symbol" style="top:62%;right:20%;font-size:13rem;">Ð</div>
-    </div>
-
-    <!-- Navigation Bar (hash-based links) -->
-    <nav class="nav-bar">
-        <div class="nav-links">
-            <a href="#trading" class="nav-link">Trading</a>
-            <a href="#portfolio" class="nav-link">Portfolio</a>
-            <a href="#analytics" class="nav-link">Analytics</a>
-            <a href="#academy" class="nav-link">Academy</a>
-        </div>
-        <div class="nav-tools">
-            <button id="themeBtn" class="nav-link">Theme</button>
-            <button id="settingsBtn" class="nav-link">Settings</button>
-        </div>
-    </nav>
-
     <!-- Animated Blur Background -->
     <div class="blur-bg">
         <canvas id="blurBgCanvas" class="blur-bg-canvas"></canvas>
@@ -1027,96 +923,6 @@
             const states = ['calm','up','down','panic'];
             marketState = states[Math.floor(Math.random()*states.length)];
         },9000);
-
-        // Client-side router: show page based on hash
-        function route() {
-            const hash = (location.hash || '#trading').replace('#','') || 'trading';
-            document.querySelectorAll('.page').forEach(p=>{
-                p.classList.toggle('active', p.id === hash + 'Page');
-            });
-            // nav link active state
-            document.querySelectorAll('.nav-link').forEach(a=>{
-                const target = (a.getAttribute('href') || '').replace('#','') || '';
-                a.classList.toggle('active', target === hash);
-            });
-            // Small UX: when switching to trading, focus chart (optional)
-            if(hash === 'trading') {
-                const iframe = document.querySelector('.tradingview-iframe');
-                if(iframe) iframe.scrollIntoView({behavior:'smooth', block:'center'});
-            }
-        }
-        window.addEventListener('hashchange', route);
-        // initial route
-        route();
-
-        // Neon symbols movement + random flicker
-        (function neonMotionAndFlicker(){
-            const symbols = Array.from(document.querySelectorAll('.crypto-symbol'));
-            if(!symbols.length) return;
-            // gentle drift
-            function drift() {
-                symbols.forEach((el, i) => {
-                    const tx = (Math.sin(Date.now()/4000 + i)*0.02)*window.innerWidth;
-                    const ty = (Math.cos(Date.now()/3500 + i)*0.02)*window.innerHeight;
-                    el.style.transform = `translate3d(${tx}px, ${ty}px, 0)`;
-                });
-                requestAnimationFrame(drift);
-            }
-            drift();
-            // random flickers
-            function randomFlick() {
-                const idx = Math.floor(Math.random() * symbols.length);
-                const el = symbols[idx];
-                if(!el) return;
-                el.classList.add('flicker');
-                setTimeout(()=> el.classList.remove('flicker'), 400 + Math.random()*900);
-            }
-            setInterval(randomFlick, 900);
-        })();
-
-        // update trading iframe sizing on resize if needed
-        window.addEventListener('resize', ()=> {
-            // optionally re-route to force layout update
-            // route();
-        });
-
-        // Update: remove previous demo nav click handlers that interfered
-        document.querySelectorAll('.nav-link').forEach(link=>{
-            link.addEventListener('click', (e)=>{
-                // let hash navigation work naturally; for buttons with no hash, prevent default
-                const href = link.getAttribute('href');
-                if(!href || !href.startsWith('#')) {
-                    e.preventDefault();
-                }
-            });
-        });
-
-        // Add neon animation effects
-        function animateNeonSymbols() {
-            const symbols = document.querySelectorAll('.crypto-symbol');
-            symbols.forEach(symbol => {
-                const x = Math.random() * window.innerWidth;
-                const y = Math.random() * window.innerHeight;
-                const duration = 10 + Math.random() * 20;
-
-                symbol.style.transition = `all ${duration}s linear`;
-                symbol.style.transform = `translate(${x}px, ${y}px)`;
-            });
-        }
-
-        // Move symbols every 15 seconds
-        setInterval(animateNeonSymbols, 15000);
-        animateNeonSymbols();
-
-        // Handle navigation (demo)
-        document.querySelectorAll('.nav-link').forEach(link => {
-            link.addEventListener('click', (e) => {
-                if(link.getAttribute('href') === '#') {
-                    e.preventDefault();
-                    showNotification('Demo: Page navigation');
-                }
-            });
-        });
     </script>
 </body>
 </html>
