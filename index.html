@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gamelton AI</title>
 <style>
-  /* Общие стили */
   body, html {
     margin: 0;
     padding: 0;
@@ -16,7 +15,7 @@
     overflow: hidden;
   }
 
-  /* Анимация загрузки */
+  /* Загрузка */
   #loader {
     position: fixed;
     top: 0;
@@ -48,13 +47,12 @@
     100% { background-position: 100% 50%; }
   }
 
-  /* Главный контейнер */
+  /* Основной интерфейс */
   #app {
     display: none;
     height: 100%;
     display: flex;
     flex-direction: column;
-    backdrop-filter: blur(15px);
   }
 
   /* Верхний размытый бар */
@@ -144,62 +142,16 @@
     color: #fff;
     cursor: pointer;
   }
-
-  /* Настройки */
-  #settings {
-    display: none;
-    flex-direction: column;
-    padding: 20px;
-    gap: 15px;
-  }
-
-  #settings label {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-
-  /* Фон */
-  #background {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-
-  #background .neon-g {
-    font-size: 10em;
-    font-weight: bold;
-    color: purple;
-    text-shadow: 0 0 20px violet, 0 0 40px purple, 0 0 60px purple, 0 0 80px violet;
-    animation: glow 2s infinite alternate;
-  }
-
-  @keyframes glow {
-    0% { text-shadow: 0 0 20px violet, 0 0 40px purple; }
-    100% { text-shadow: 0 0 40px violet, 0 0 80px purple; }
-  }
-
 </style>
 </head>
 <body>
-
-<!-- Фон -->
-<div id="background">
-  <div class="neon-g">G</div>
-</div>
 
 <!-- Загрузка -->
 <div id="loader">
   <h1>Gamelton <span>AI</span></h1>
 </div>
 
-<!-- Основной контент -->
+<!-- Основной интерфейс -->
 <div id="app">
   <div class="top-bar">
     <button id="chatsBtn">Чаты</button>
@@ -212,22 +164,6 @@
     <input type="text" id="userInput" placeholder="Напишите сообщение...">
     <button id="sendBtn">Отправить</button>
   </div>
-
-  <div id="settings">
-    <label>
-      Выберите фон:
-      <select id="bgSelect">
-        <option value="neon">Неоновая буква G</option>
-        <option value="dark">Тёмный</option>
-        <option value="space">Космос</option>
-      </select>
-    </label>
-    <label>
-      Добавить шаблон ИИ (в формате "вопрос > ответ"):
-      <input type="text" id="newTemplate">
-      <button id="addTemplate">Добавить</button>
-    </label>
-  </div>
 </div>
 
 <script>
@@ -239,16 +175,10 @@
     }, 3000);
   });
 
-  // Чат и шаблоны ИИ
+  // Чат
   const chat = document.getElementById('chat');
   const userInput = document.getElementById('userInput');
   const sendBtn = document.getElementById('sendBtn');
-
-  let templates = {
-    "Привет!": "Привет! Я твой ИИ помощник.",
-    "Как дела?": "У меня всё отлично, спасибо что спросил!"
-    // Можно добавить до 100 шаблонов
-  };
 
   function addMessage(text, className) {
     const msg = document.createElement('div');
@@ -258,67 +188,17 @@
     chat.scrollTop = chat.scrollHeight;
   }
 
-  function processMessage(msg) {
-    if(templates[msg]) return templates[msg];
-    return "Я пока не знаю, как ответить на это.";
-  }
-
   sendBtn.addEventListener('click', () => {
     const text = userInput.value.trim();
-    if(text === '') return;
+    if(!text) return;
     addMessage(text, 'user');
-    const response = processMessage(text);
-    addMessage(response, 'ai');
+    addMessage("Привет! Я твой ИИ помощник.", 'ai'); // Пока простой ответ
     userInput.value = '';
   });
 
   userInput.addEventListener('keypress', e => {
     if(e.key === 'Enter') sendBtn.click();
   });
-
-  // Верхний бар
-  const chatsBtn = document.getElementById('chatsBtn');
-  const settingsBtn = document.getElementById('settingsBtn');
-  const settings = document.getElementById('settings');
-  const chatContainer = document.getElementById('chat');
-
-  chatsBtn.addEventListener('click', () => {
-    chatContainer.style.display = 'flex';
-    settings.style.display = 'none';
-  });
-
-  settingsBtn.addEventListener('click', () => {
-    chatContainer.style.display = 'none';
-    settings.style.display = 'flex';
-  });
-
-  // Настройки фон
-  const bgSelect = document.getElementById('bgSelect');
-  const background = document.getElementById('background');
-  bgSelect.addEventListener('change', () => {
-    if(bgSelect.value === 'neon') {
-      background.innerHTML = '<div class="neon-g">G</div>';
-    } else if(bgSelect.value === 'dark') {
-      background.innerHTML = '';
-      background.style.background = '#000';
-    } else if(bgSelect.value === 'space') {
-      background.innerHTML = '';
-      background.style.background = 'url("https://i.imgur.com/3f6R1oO.jpg") center/cover no-repeat';
-    }
-  });
-
-  // Добавление шаблона ИИ
-  const newTemplate = document.getElementById('newTemplate');
-  const addTemplateBtn = document.getElementById('addTemplate');
-  addTemplateBtn.addEventListener('click', () => {
-    const value = newTemplate.value.trim();
-    if(!value.includes('>')) return alert('Неверный формат! Используйте "вопрос > ответ"');
-    const parts = value.split('>');
-    templates[parts[0].trim()] = parts[1].trim();
-    newTemplate.value = '';
-    alert('Шаблон добавлен!');
-  });
-
 </script>
 
 </body>
