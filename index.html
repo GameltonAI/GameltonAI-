@@ -1,292 +1,138 @@
 <!doctype html>
-
 <html lang="ru">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Gamelton AI</title>
-  <style>
-    body {margin:0; background:#0f1724; color:#fff; font-family:'Segoe UI',sans-serif; overflow:hidden;}/* Splash */
-#splash {position:fixed; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center; background:#0f1724; z-index:999;}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gamelton AI Halloween</title>
+<style>
+body {margin:0; background:#0f1724; color:#fff; font-family:'Segoe UI',sans-serif; overflow:hidden;}
+#splash, #mainMenu {position:fixed; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:999;}
+#splash {background:#0f1724; z-index:1000; transition: all 1s ease;}
+#splash.glow {box-shadow:0 0 50px 10px limegreen;}
 .title {font-size:52px; font-weight:bold; opacity:0; animation:fadeIn 2s forwards;}
-.title span.ai {margin-left:8px; display:inline-block;
-  background:linear-gradient(270deg, red, orange, yellow, green, cyan, blue, violet);
-  background-size:400% 400%;
-  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-  animation: spinGradient 2s linear infinite;
-}
+.title span.ai {margin-left:8px; display:inline-block; background:linear-gradient(270deg, red, orange, yellow, green, cyan, blue, violet); background-size:400% 400%; -webkit-background-clip:text; -webkit-text-fill-color:transparent; animation: spinGradient 2s linear infinite;}
 .subtitle {font-size:20px; margin-top:10px; opacity:0; animation:fadeUp 2s forwards 2.5s; color:#a78bfa;}
 @keyframes fadeIn {to{opacity:1;}}
 @keyframes fadeUp {from{opacity:0; transform:translateY(20px);}to{opacity:1; transform:translateY(0);}}
 @keyframes spinGradient {0%{background-position:0% 50%;}100%{background-position:100% 50%;}}
-
 .title span.ai.final {background:none; -webkit-text-fill-color:#a78bfa; animation:none;}
-
-/* Intro */
-#intro {position:fixed; inset:0; background:#0f1724; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:998; opacity:0; pointer-events:none; transition:opacity 1s;}
-#intro.active {opacity:1; pointer-events:auto;}
-#intro p {max-width:400px; text-align:center; font-size:18px; line-height:1.4; margin-bottom:20px;}
-#intro button {padding:10px 20px; font-size:18px; background:#a78bfa; border:none; border-radius:8px; color:#fff; cursor:pointer; transition:background 0.3s;}
-#intro button:hover {background:#7c3aed;}
-
-/* App */
+#mainMenu {background:#0f1724; z-index:999; display:none;}
+.menuBtn {padding:10px 20px; margin:8px; border:none; border-radius:50px; background:rgba(255,255,255,0.15); color:#fff; backdrop-filter:blur(20px); cursor:pointer; transition:0.3s; font-size:18px;}
+.menuBtn:hover {background:rgba(255,255,255,0.25);}
 #app {display:none; flex-direction:column; height:100vh;}
 #stage {position:relative; flex:1; overflow:hidden}
 video, canvas {position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
 video {transform:scaleX(-1)}
-
-/* Controls */
-#controls {position:absolute; bottom:20px; left:50%; transform:translateX(-50%);
-  display:flex; gap:12px; padding:10px 20px; border-radius:20px;
-  background:rgba(255,255,255,0.1); backdrop-filter:blur(20px);
-  box-shadow:0 4px 20px rgba(0,0,0,0.4);
-}
-.btn {padding:10px 18px; font-size:16px; border:none; border-radius:14px; cursor:pointer;
-  background:rgba(255,255,255,0.15); color:#fff; backdrop-filter:blur(20px);
-  transition:all 0.3s;}
+#controls {position:absolute; bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:8px; padding:8px 12px; border-radius:30px; background:rgba(255,255,255,0.1); backdrop-filter:blur(20px); box-shadow:0 4px 20px rgba(0,0,0,0.4);}
+.btn {padding:6px 12px; border:none; border-radius:50px; cursor:pointer; background:rgba(255,255,255,0.15); color:#fff; backdrop-filter:blur(20px); transition:all 0.3s; font-size:14px;}
 .btn.active {background:rgba(167,139,250,0.4); box-shadow:0 0 10px #a78bfa;}
-.btn:hover {background:rgba(255,255,255,0.25);}
-
-  </style>
+#submenu {position:absolute; bottom:60px; left:50%; transform:translateX(-50%); display:flex; gap:6px; padding:6px 12px; border-radius:50px; background:rgba(255,255,255,0.1); backdrop-filter:blur(20px); box-shadow:0 4px 15px rgba(0,0,0,0.3); display:none;}
+.subbtn {padding:4px 12px; border:none; border-radius:50px; cursor:pointer; background:rgba(255,255,255,0.15); color:#fff; backdrop-filter:blur(20px); transition:0.3s; font-size:14px;}
+.subbtn.active {background:rgba(167,139,250,0.4); box-shadow:0 0 8px #a78bfa;}
+.subbtn:hover {background:rgba(255,255,255,0.25);}
+#objectCutControls {position:absolute; top:10px; right:10px; display:none; flex-direction:column; gap:6px;}
+#objectCutControls input,#objectCutControls button {padding:6px 10px; border-radius:20px; border:none; font-size:14px;}
+</style>
 </head>
 <body>
-  <!-- Splash -->
-  <div id="splash">
-    <div class="title">Gamelton <span class="ai">AI</span></div>
-    <div class="subtitle">Camera Experience</div>
-  </div>  <!-- Intro -->  <div id="intro">
-    <p>Добро пожаловать в <b>Gamelton AI</b> — приложение с экспериментальными возможностями:
-      ✍️ Рисование в воздухе.<br>
-      😎 AR-фильтры для лица.<br>
-      🌆 Замена фона с помощью AI.<br><br>
-      Выбирайте режим и пробуйте!</p>
-    <button id="startBtn">Попробовать</button>
-  </div>  <!-- App -->  <div id="app">
-    <div id="stage">
-      <video id="video" autoplay playsinline muted></video>
-      <canvas id="draw"></canvas>
-      <canvas id="overlay"></canvas>
-    </div>
-    <div id="controls">
-      <button class="btn active" data-mode="draw">Draw</button>
-      <button class="btn" data-mode="filters">Filters</button>
-      <button class="btn" data-mode="background">Background</button>
-      <button class="btn" id="save">💾</button>
-    </div>
-  </div>  <!-- MediaPipe -->  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.min.js"></script>  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.min.js"></script>  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.min.js"></script>  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.min.js"></script>  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.min.js"></script>  <script>
-    const splash=document.getElementById('splash');
-    const intro=document.getElementById('intro');
-    const app=document.getElementById('app');
-    const video=document.getElementById('video');
-    const canvas=document.getElementById('draw');
-    const overlay=document.getElementById('overlay');
-    const ctx=canvas.getContext('2d');
-    const octx=overlay.getContext('2d');
-    let mode="draw";
+<div id="splash">
+  <div class="title">Gamelton <span class="ai">AI</span></div>
+  <div class="subtitle">Halloween Edition</div>
+</div>
+<div id="mainMenu">
+  <button class="menuBtn" data-mode="draw">Draw</button>
+  <button class="menuBtn" data-mode="filters">Filters</button>
+  <button class="menuBtn" data-mode="background">Background</button>
+  <button class="menuBtn" data-mode="object">Object Cut</button>
+  <button class="menuBtn" data-mode="ghosts">Ghosts</button>
+</div>
+<div id="app">
+  <div id="stage">
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="draw"></canvas>
+    <canvas id="overlay"></canvas>
+  </div>
+  <div id="controls"></div>
+  <div id="submenu"></div>
+  <div id="objectCutControls">
+    <input type="file" id="uploadImage">
+    <button id="takePhoto">Take Photo</button>
+    <button id="cutObject">Cut Object</button>
+    <button id="downloadCut">Download</button>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.min.js"></script>
+<script>
+const splash=document.getElementById('splash');
+const mainMenu=document.getElementById('mainMenu');
+const app=document.getElementById('app');
+const video=document.getElementById('video');
+const canvas=document.getElementById('draw');
+const overlay=document.getElementById('overlay');
+const ctx=canvas.getContext('2d');
+const octx=overlay.getContext('2d');
+const objectCutControls=document.getElementById('objectCutControls');
+let mode='', ghostInterval=null, uploadedImage=null;
+const cutCanvas=document.createElement('canvas');
+const cutCtx=cutCanvas.getContext('2d');
 
-    setTimeout(()=>{document.querySelector('.title span.ai').classList.add('final');},3000);
-    setTimeout(()=>{splash.style.display='none'; intro.classList.add('active');},4500);
+// Splash animation
+setTimeout(()=>{splash.classList.add('glow');},1000);
+setTimeout(()=>{
+  splash.style.opacity=0;
+  setTimeout(()=>{
+    splash.style.display='none';
+    mainMenu.style.display='flex';
+  },1000);
+},3000);
 
-    document.getElementById('startBtn').addEventListener('click',()=>{
-      intro.style.display='none';
-      app.style.display='flex';
-      startApp();
-    });
+function resize(){canvas.width=overlay.width=app.clientWidth; canvas.height=overlay.height=app.clientHeight-80;}
+window.addEventListener('resize',resize);
 
-    function resize(){canvas.width=overlay.width=app.clientWidth; canvas.height=overlay.height=app.clientHeight-80;}
-    window.addEventListener('resize',resize);
+async function startCamera(){
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}});
+    video.srcObject=stream;
+    await video.play();
+  }catch(e){alert('Невозможно получить доступ к камере: '+e);}
+}
 
-    // --- DRAW MODE ---
-    let last=null;
-    function detectGesture(lm){const tips=[8,12,16,20],mcp=[5,9,13,17];let ext=tips.map((t,i)=>lm[t].y<lm[mcp[i]].y);const c=ext.filter(v=>v).length;if(c===0)return'fist';if(ext[0]&&ext[1]&&!ext[2]&&!ext[3])return'two';if(ext[0]&&!ext[1]&&!ext[2]&&!ext[3])return'draw';return'none';}
-    function drawLine(from,to,erase=false){ctx.save();ctx.globalCompositeOperation=erase?'destination-out':'source-over';ctx.strokeStyle=erase?'rgba(0,0,0,1)':'#ff4655';ctx.lineWidth=erase?40:6;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(from.x,from.y);ctx.lineTo(to.x,to.y);ctx.stroke();ctx.restore();}
-    function norm(p){return{x:p.x*canvas.width,y:p.y*canvas.height};}
+function activateMode(selectedMode){
+  mode=selectedMode;
+  mainMenu.style.display='none';
+  app.style.display='flex';
+  resize();
+  objectCutControls.style.display=(mode==='object')?'flex':'none';
+  if(ghostInterval)clearInterval(ghostInterval);
+  startApp();
+}
 
-    // --- FILTER MODE (FaceMesh) ---
-    function renderFilters(lm){if(!lm) return;drawConnectors(octx,lm,FACEMESH_TESSELATION,{color:'rgba(0,255,255,0.3)',lineWidth:0.5});}
+document.querySelectorAll('.menuBtn').forEach(btn=>{btn.addEventListener('click',()=>activateMode(btn.dataset.mode));});
 
-    // --- BACKGROUND MODE ---
-    let segmentationMask=null;
-    function renderBackground(results){if(!results.segmentationMask)return; octx.save(); octx.clearRect(0,0,overlay.width,overlay.height); octx.drawImage(results.segmentationMask,0,0,overlay.width,overlay.height); octx.globalCompositeOperation='source-in'; octx.fillStyle='rgba(100,0,200,0.5)'; octx.fillRect(0,0,overlay.width,overlay.height); octx.restore();}
+function renderGhosts(){
+  octx.clearRect(0,0,overlay.width,overlay.height);
+  for(let i=0;i<5;i++){
+    octx.beginPath();
+    octx.arc(Math.random()*overlay.width,Math.random()*overlay.height,30+Math.random()*50,0,2*Math.PI);
+    octx.fillStyle='rgba(0,255,0,0.08)';
+    octx.fill();
+  }
+}
 
-    // MediaPipe pipelines
-    const hands=new Hands({locateFile:(f)=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`});
-    hands.setOptions({maxNumHands:1,modelComplexity:1,minDetectionConfidence:0.7,minTrackingConfidence:0.5});
-    hands.onResults(res=>{if(mode!=='draw'){return;}octx.clearRect(0,0,overlay.width,overlay.height);if(res.multiHandLandmarks&&res.multiHandLandmarks.length>0){const lm=res.multiHandLandmarks[0];const g=detectGesture(lm);if(g==='draw'){const tip=norm(lm[8]);if(last)drawLine(last,tip,false);last=tip;}else if(g==='fist'){const tip=norm(lm[8]);if(last)drawLine(last,tip,true);last=tip;}else if(g==='two'){ctx.clearRect(0,0,canvas.width,canvas.height);last=null;}else last=null;}});
+function handleUpload(e){
+  const file=e.target.files[0];
+  if(file){
+    const img=new Image();
+    img.onload=()=>{uploadedImage=img; cutCanvas.width=img.width; cutCanvas.height=img.height; cutCtx.drawImage(img,0,0);};
+    img.src=URL.createObjectURL(file);
+  }
+}
 
-    const faceMesh=new FaceMesh({locateFile:(f)=>`https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`});
-    faceMesh.setOptions({maxNumFaces:1,minDetectionConfidence:0.5,minTrackingConfidence:0.5});
-    faceMesh.onResults(res=>{if(mode!=='filters'){return;}octx.clearRect(0,0,overlay.width,overlay.height);if(res.multiFaceLandmarks)res.multiFaceLandmarks.forEach(renderFilters);});
-
-    const selfieSeg=new SelfieSegmentation({locateFile:(f)=>`https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${f}`});
-    selfieSeg.setOptions({modelSelection:1});
-    selfieSeg.onResults(res=>{if(mode!=='background'){return;}renderBackground(res);});
-
-    function startApp(){resize();
-      const camera=new Camera(video,{onFrame:async()=>{
-        if(mode==='draw') await hands.send({image:video});
-        else if(mode==='filters') await faceMesh.send({image:video});
-        else if(mode==='background') await selfieSeg.send({image:video});
-      },width:640,height:480});
-      camera.start();
-    }
-
-    // Mode switch
-    document.querySelectorAll('#controls .btn[data-mode]').forEach(btn=>{
-      btn.addEventListener('click',()=>{
-        mode=btn.dataset.mode;
-        document.querySelectorAll('#controls .btn').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        ctx.clearRect(0,0,canvas.width,canvas.height);
-        octx.clearRect(0,0,overlay.width,overlay.height);
-      });
-    });
-
-    // Save
-    document.getElementById('save').addEventListener('click',()=>{
-      const out=document.createElement('canvas'); out.width=canvas.width; out.height=canvas.height;
-      const octx2=out.getContext('2d');
-      octx2.drawImage(video,0,0,out.width,out.height);
-      octx2.drawImage(canvas,0,0,out.width,out.height);
-      octx2.drawImage(overlay,0,0,out.width,out.height);
-      const a=document.createElement('a'); a.href=out.toDataURL('image/png'); a.download='gamelton-ai.png'; a.click();
-    });
-  </script></body>
-</html>    function attachDrawingHandlers(){
-      canvas.addEventListener('pointerdown', pointerDown);
-      canvas.addEventListener('pointermove', pointerMove);
-      window.addEventListener('pointerup', pointerUp);
-
-      // Для старых браузеров и тачей
-      canvas.addEventListener('touchstart', pointerDown, {passive:false});
-      canvas.addEventListener('touchmove', pointerMove, {passive:false});
-      canvas.addEventListener('touchend', pointerUp);
-    }
-
-    // Управление камерой
-    async function getCameras(){
-      try{
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const cams = devices.filter(d => d.kind === 'videoinput');
-        cameraSelect.innerHTML = '';
-        cams.forEach((c,i)=>{
-          const opt = document.createElement('option');
-          opt.value = c.deviceId;
-          opt.textContent = c.label || `Камера ${i+1}`;
-          cameraSelect.appendChild(opt);
-        });
-      }catch(err){console.warn(err)}
-    }
-
-    async function startCamera(deviceId){
-      if (currentStream){
-        currentStream.getTracks().forEach(t=>t.stop());
-        currentStream = null;
-      }
-      const constraints = {
-        video: deviceId ? {deviceId:{exact:deviceId}} : {facingMode:'environment'},
-        audio: false
-      };
-      try{
-        status.textContent = 'Запуск камеры...';
-        const stream = await navigator.mediaDevices.getUserMedia(constraints);
-        currentStream = stream;
-        video.srcObject = stream;
-        await video.play();
-        status.textContent = 'Камера включена';
-
-        // После запуска камеры скорректируем размеры canvas
-        resize();
-      }catch(err){
-        console.error(err);
-        status.textContent = 'Ошибка доступа к камере';
-      }
-    }
-
-    // Сохранение — мы рисуем кадр видео на временном canvas, затем накладываем рисунок
-    function saveImage(){
-      const out = document.createElement('canvas');
-      out.width = canvas.width; out.height = canvas.height;
-      const octx = out.getContext('2d');
-      // Важно: видео имеет transform:scaleX(-1) для зеркала, учтем это
-      octx.save();
-      // Масштабируем под devicePixelRatio
-      const ratio = window.devicePixelRatio || 1;
-      octx.scale(ratio, ratio);
-      // Нарисуем видео (не зеркально) — если page зеркален, то перевернём
-      const stageRect = canvas.getBoundingClientRect();
-      // drawImage принимает размеры в реальных пикселях, поэтому используем video.videoWidth/video.videoHeight
-      // Чтобы корректно вписать видео в canvas, используем cover-like drawing
-      const vw = video.videoWidth, vh = video.videoHeight;
-      const cw = stageRect.width, ch = stageRect.height;
-      // compute source rect to cover
-      const videoRatio = vw/vh; const canvasRatio = cw/ch;
-      let sx=0, sy=0, sw=vw, sh=vh;
-      if (videoRatio > canvasRatio){
-        // video wider -> crop sides
-        const desiredW = vh * canvasRatio;
-        sx = (vw - desiredW)/2; sw = desiredW;
-      } else {
-        // video taller -> crop top/bottom
-        const desiredH = vw / canvasRatio;
-        sy = (vh - desiredH)/2; sh = desiredH;
-      }
-      // учитываем зеркальность на странице
-      const mirrored = getComputedStyle(video).transform.includes('-1') || getComputedStyle(video).transform.includes('scaleX(-1)');
-      if (mirrored) {
-        octx.translate(cw, 0);
-        octx.scale(-1,1);
-      }
-      octx.drawImage(video, sx, sy, sw, sh, 0, 0, cw, ch);
-      octx.restore();
-
-      // затем наложим рисунок (canvas) — но remember canvas is already scaled to DPR, so draw full size
-      octx.drawImage(canvas, 0, 0, out.width, out.height);
-
-      // формируем dataURL и сохраняем
-      const data = out.toDataURL('image/png');
-      const a = document.createElement('a');
-      a.href = data; a.download = 'camera-draw.png';
-      document.body.appendChild(a); a.click(); a.remove();
-    }
-
-    // Инициализация UI
-    (async function init(){
-      attachDrawingHandlers();
-      window.addEventListener('resize', resize);
-
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-        status.textContent = 'Ваш браузер не поддерживает getUserMedia.';
-        return;
-      }
-
-      await getCameras();
-      // Запускаем камеру (попытка сначала environment)
-      await startCamera();
-
-      // Если список камер доступен, автоматически выбрать и дать возможность переключать
-      cameraSelect.addEventListener('change', ()=>{
-        startCamera(cameraSelect.value);
-      });
-
-      // Управление инструментами
-      eraserBtn.addEventListener('click', ()=>{
-        isEraser = !isEraser; eraserBtn.textContent = isEraser ? 'Карандаш' : 'Ластик';
-      });
-      clearBtn.addEventListener('click', ()=>{ ctx.clearRect(0,0,canvas.width,canvas.height); });
-      saveBtn.addEventListener('click', saveImage);
-
-      toggleMirrorBtn.addEventListener('click', ()=>{
-        const mirrored = video.style.transform === 'scaleX(-1)';
-        if (mirrored){ video.style.transform = 'scaleX(1)'; toggleMirrorBtn.textContent = 'Зеркало: Выкл'; }
-        else { video.style.transform = 'scaleX(-1)'; toggleMirrorBtn.textContent = 'Зеркало: Вкл'; }
-      });
-
-      // Предотвратить прокрутку страницы при рисовании на мобильных
-      document.body.addEventListener('touchmove', function(e){ if (e.target === canvas) e.preventDefault(); }, {passive:false});
-
-      // Начальное ресайз
-      setTimeout(resize, 250);
-    })();
-  </script></body>
-</html>
+document.getElementById('uploadImage').addEventListener('change',handleUpload);
+document.getElementById('cutObject').addEventListener('click',async ()=>{
+  if(!uploadedImage)return;
+  const seg=new SelfieSegmentation({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${f}`});
+  seg.setOptions({modelSelection:1});
+  seg.onResults(results=>{
+    cutCtx.clearRect(0,0,cutCanvas.width,cutCanvas.height);
+    cutCtx.drawImage(results.segmentation
