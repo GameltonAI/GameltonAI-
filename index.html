@@ -55,6 +55,32 @@
     flex-direction: column;
   }
 
+  /* Фон */
+  #background {
+    position: fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    z-index:-1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  #background .neon-g {
+    font-size: 10em;
+    font-weight: bold;
+    color: purple;
+    text-shadow: 0 0 20px violet, 0 0 40px purple, 0 0 60px purple;
+    animation: glow 2s infinite alternate;
+  }
+
+  @keyframes glow {
+    0% { text-shadow: 0 0 20px violet, 0 0 40px purple; }
+    100% { text-shadow: 0 0 40px violet, 0 0 80px purple; }
+  }
+
   /* Верхний размытый бар */
   .top-bar {
     backdrop-filter: blur(20px);
@@ -142,9 +168,30 @@
     color: #fff;
     cursor: pointer;
   }
+
+  /* Настройки */
+  #settings {
+    display: none;
+    flex-direction: column;
+    padding: 20px;
+    gap: 15px;
+    backdrop-filter: blur(15px);
+    background: rgba(0,0,0,0.3);
+  }
+
+  #settings label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
 </style>
 </head>
 <body>
+
+<!-- Фон -->
+<div id="background">
+  <div class="neon-g">G</div>
+</div>
 
 <!-- Загрузка -->
 <div id="loader">
@@ -163,6 +210,17 @@
   <div class="input-container">
     <input type="text" id="userInput" placeholder="Напишите сообщение...">
     <button id="sendBtn">Отправить</button>
+  </div>
+
+  <div id="settings">
+    <label>
+      Выберите фон:
+      <select id="bgSelect">
+        <option value="neon">Неоновая буква G</option>
+        <option value="dark">Тёмный</option>
+        <option value="space">Космос</option>
+      </select>
+    </label>
   </div>
 </div>
 
@@ -198,6 +256,39 @@
 
   userInput.addEventListener('keypress', e => {
     if(e.key === 'Enter') sendBtn.click();
+  });
+
+  // Верхний бар
+  const chatsBtn = document.getElementById('chatsBtn');
+  const settingsBtn = document.getElementById('settingsBtn');
+  const settings = document.getElementById('settings');
+  const chatContainer = document.getElementById('chat');
+
+  chatsBtn.addEventListener('click', () => {
+    chatContainer.style.display = 'flex';
+    settings.style.display = 'none';
+  });
+
+  settingsBtn.addEventListener('click', () => {
+    chatContainer.style.display = 'none';
+    settings.style.display = 'flex';
+  });
+
+  // Смена фона
+  const bgSelect = document.getElementById('bgSelect');
+  const background = document.getElementById('background');
+
+  bgSelect.addEventListener('change', () => {
+    if(bgSelect.value === 'neon') {
+      background.innerHTML = '<div class="neon-g">G</div>';
+      background.style.background = '';
+    } else if(bgSelect.value === 'dark') {
+      background.innerHTML = '';
+      background.style.background = '#000';
+    } else if(bgSelect.value === 'space') {
+      background.innerHTML = '';
+      background.style.background = 'url("https://i.imgur.com/3f6R1oO.jpg") center/cover no-repeat';
+    }
   });
 </script>
 
