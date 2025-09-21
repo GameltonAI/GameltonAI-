@@ -9,11 +9,20 @@
         :root {
             --accent: #7f5af0;
             --accent-glow: #7f5af0cc;
-            --bg-gradient: linear-gradient(135deg, #181c2f 0%, #2d1a3a 100%);
-            --glass-bg: rgba(30, 34, 54, 0.55);
+            /* new theme base colors (dynamic) */
+            --bg-color-1: #181c2f;
+            --bg-color-2: #2d1a3a;
+            --bg-gradient: linear-gradient(135deg, var(--bg-color-1) 0%, var(--bg-color-2) 100%);
+            /* glass control */
+            --glass-opacity: 0.55;
+            --glass-bg: rgba(30, 34, 54, var(--glass-opacity));
             --glass-blur: blur(18px);
             --glass-border: 1.5px solid #7f5af055;
             --glass-shadow: 0 4px 32px 0 #7f5af022;
+            /* portfolio pulse defaults */
+            --pulse-scale: 1;
+            --pulse-duration: 2.4s;
+            --portfolio-glow: var(--accent-glow);
             --success: #2ce59b;
             --danger: #ff3c6e;
             --text-main: #eaeaea;
@@ -110,6 +119,13 @@
             font-size: 2.2rem;
             font-weight: 600;
             margin-bottom: 0.5rem;
+            transform-origin: center;
+            animation: portfolioPulse var(--pulse-duration) ease-in-out infinite;
+        }
+        @keyframes portfolioPulse {
+            0% { transform: scale(1); box-shadow: 0 8px 28px var(--portfolio-glow); }
+            50% { transform: scale(var(--pulse-scale)); box-shadow: 0 14px 48px var(--portfolio-glow); }
+            100% { transform: scale(1); box-shadow: 0 8px 28px var(--portfolio-glow); }
         }
         .portfolio-pnl {
             font-size: 1.1rem;
@@ -412,12 +428,59 @@
                 padding: 0.7rem 0.7rem;
             }
         }
+
+        /* smooth transitions when theme variables change */
+        body, .glass-panel, .asset-card, .tradingview-iframe, .academy-card {
+            transition: background 600ms, color 600ms, box-shadow 600ms, border-color 600ms, transform 300ms;
+        }
+
+        /* Settings panel (compact) */
+        .settings-panel {
+            position: fixed;
+            left: 1rem;
+            top: 1rem;
+            z-index: 40;
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            border-radius: 12px;
+            border: var(--glass-border);
+            padding: 0.6rem 0.8rem;
+            display: flex;
+            gap: 0.6rem;
+            align-items: center;
+            box-shadow: 0 8px 24px 0 rgba(0,0,0,0.35);
+            color: var(--text-main);
+            font-size: 0.9rem;
+        }
+        .settings-panel input[type="range"] { width: 90px; }
+        .settings-panel select { background: rgba(24,28,47,0.6); color: var(--text-main); border-radius: 6px; padding: 0.2rem 0.4rem; border: 1px solid #7f5af022; }
+
+        /* Make sure blurred canvases use CSS size provided by canvas element */
+        .blur-bg-canvas, .market-indicator-canvas {
+            width: 100vw;
+            height: 100vh;
+            image-rendering: optimizeQuality;
+        }
     </style>
 </head>
 <body>
     <!-- Animated Blur Background -->
     <div class="blur-bg">
         <canvas id="blurBgCanvas" class="blur-bg-canvas"></canvas>
+    </div>
+    <!-- Settings Panel -->
+    <div class="settings-panel" id="settingsPanel">
+        <label for="themeSelect">Тема</label>
+        <select id="themeSelect">
+            <option value="auto">Авто (по активу)</option>
+            <option value="BTC">BTC</option>
+            <option value="ETH">ETH</option>
+            <option value="SOL">SOL</option>
+        </select>
+        <label title="Размытие фона">Blur</label>
+        <input id="blurSlider" type="range" min="0" max="40" value="18">
+        <label title="Прозрачность панелей">Glass</label>
+        <input id="glassSlider" type="range" min="0.2" max="0.95" step="0.01" value="0.55">
     </div>
     <!-- Emotional Market Indicator -->
     <div class="market-indicator">
@@ -433,24 +496,24 @@
         <div class="dashboard-grid">
             <!-- Portfolio Panel -->
             <div class="glass-panel portfolio-panel">
-                <div class="portfolio-balance">₿ 12.34</div>
+                <div class="portfolio-balance" id="portfolioBalance">₿ 12.34</div>
                 <div class="portfolio-pnl">+2.7% за неделю</div>
                 <div class="portfolio-chart">
                     <!-- Placeholder for donut chart -->
                     <canvas id="portfolioChart" width="120" height="120"></canvas>
                 </div>
                 <div class="assets-list">
-                    <div class="asset-card" id="assetBTC">
+                    <div class="asset-card" id="assetBTC" data-symbol="BTC">
                         <span class="asset-symbol">BTC</span>
                         <span class="asset-price">₿ 67,200</span>
                         <span class="asset-change">+1.2%</span>
                     </div>
-                    <div class="asset-card negative" id="assetETH">
+                    <div class="asset-card negative" id="assetETH" data-symbol="ETH">
                         <span class="asset-symbol">ETH</span>
                         <span class="asset-price">Ξ 3,420</span>
                         <span class="asset-change">-0.8%</span>
                     </div>
-                    <div class="asset-card" id="assetSOL">
+                    <div class="asset-card" id="assetSOL" data-symbol="SOL">
                         <span class="asset-symbol">SOL</span>
                         <span class="asset-price">◎ 145</span>
                         <span class="asset-change">+3.1%</span>
@@ -554,9 +617,21 @@
         // Animated Blur Background (abstract gradient blobs)
         const blurBgCanvas = document.getElementById('blurBgCanvas');
         const ctx = blurBgCanvas.getContext('2d');
+        // Resize canvases (ensure devicePixelRatio aware)
         function resizeBlurBg() {
-            blurBgCanvas.width = window.innerWidth;
-            blurBgCanvas.height = window.innerHeight;
+            const dpr = window.devicePixelRatio || 1;
+            blurBgCanvas.width = Math.floor(window.innerWidth * dpr);
+            blurBgCanvas.height = Math.floor(window.innerHeight * dpr);
+            blurBgCanvas.style.width = window.innerWidth + 'px';
+            blurBgCanvas.style.height = window.innerHeight + 'px';
+            ctx.setTransform(dpr,0,0,dpr,0,0);
+            // market indicator canvas
+            const micDpr = window.devicePixelRatio || 1;
+            marketIndicatorCanvas.width = Math.floor(marketIndicatorCanvas.clientWidth * micDpr);
+            marketIndicatorCanvas.height = Math.floor(marketIndicatorCanvas.clientHeight * micDpr);
+            marketIndicatorCanvas.style.width = marketIndicatorCanvas.clientWidth + 'px';
+            marketIndicatorCanvas.style.height = marketIndicatorCanvas.clientHeight + 'px';
+            mictx.setTransform(micDpr,0,0,micDpr,0,0);
         }
         window.addEventListener('resize', resizeBlurBg);
         resizeBlurBg();
@@ -659,6 +734,150 @@
             pct.fill();
         }
         drawPortfolioChart();
+
+        // --- Theme presets and dynamic theming ---
+        const themes = {
+            'BTC': {
+                accent: '#ff7a29',
+                accentGlow: '#ff7a2999',
+                bg1: '#2b1200',
+                bg2: '#10100b',
+                portfolioGlow: 'rgba(255,122,41,0.35)'
+            },
+            'ETH': {
+                accent: '#7f5af0',
+                accentGlow: '#7f5af0cc',
+                bg1: '#181c2f',
+                bg2: '#2d1a3a',
+                portfolioGlow: 'rgba(127,90,240,0.22)'
+            },
+            'SOL': {
+                accent: '#2ce59b',
+                accentGlow: '#2ce59b88',
+                bg1: '#06261a',
+                bg2: '#102d24',
+                portfolioGlow: 'rgba(44,229,155,0.2)'
+            }
+        };
+
+        // applyTheme: updates CSS variables; transition is handled by CSS transitions above
+        function applyTheme(key) {
+            const root = document.documentElement;
+            if(!key || key === 'auto') return;
+            const p = themes[key];
+            if(!p) return;
+            root.style.setProperty('--accent', p.accent);
+            root.style.setProperty('--accent-glow', p.accentGlow);
+            root.style.setProperty('--bg-color-1', p.bg1);
+            root.style.setProperty('--bg-color-2', p.bg2);
+            root.style.setProperty('--portfolio-glow', p.portfolioGlow);
+            // Update glass border tint subtly
+            root.style.setProperty('--glass-border', `1.5px solid ${hexToRgba(p.accent,0.18)}`);
+        }
+        function hexToRgba(hex, a=1){
+            const c = hex.replace('#','');
+            const bigint = parseInt(c.length===3? c.split('').map(ch=>ch+ch).join(''):c,16);
+            const r=(bigint>>16)&255,g=(bigint>>8)&255,b=bigint&255;
+            return `rgba(${r},${g},${b},${a})`;
+        }
+
+        // Theme selector + asset card click -> set theme (auto option still allowed)
+        const themeSelect = document.getElementById('themeSelect');
+        themeSelect.addEventListener('change', ()=>{
+            const val = themeSelect.value;
+            if(val === 'auto'){ localStorage.removeItem('forcedTheme'); return; }
+            localStorage.setItem('forcedTheme', val);
+            applyTheme(val);
+        });
+        // If user previously selected theme, restore
+        const forced = localStorage.getItem('forcedTheme');
+        if(forced){ themeSelect.value = forced; applyTheme(forced); }
+
+        // Asset card clicks trigger theme switch (unless user forced a theme)
+        document.querySelectorAll('.asset-card').forEach(card=>{
+            card.addEventListener('click', ()=>{
+                const s = card.dataset.symbol;
+                const forcedTheme = localStorage.getItem('forcedTheme');
+                if(forcedTheme && forcedTheme !== 'auto') return; // respect forced theme
+                if(themes[s]) applyTheme(s);
+            });
+        });
+
+        // --- Portfolio volatility -> pulse mapping (demo) ---
+        let recentPrices = []; // sliding window
+        const windowSize = 30; // sample count (demo)
+        // demo base price and update (in real app - feed from API)
+        let demoPrice = 67200;
+        function pushPrice(p){
+            recentPrices.push(p);
+            if(recentPrices.length > windowSize) recentPrices.shift();
+        }
+        function stddev(arr){
+            if(arr.length===0) return 0;
+            const mean = arr.reduce((a,b)=>a+b,0)/arr.length;
+            const v = Math.sqrt(arr.reduce((s,x)=>s+(x-mean)*(x-mean),0)/arr.length);
+            return v;
+        }
+        function updatePulseFromVolatility(){
+            if(recentPrices.length < 4) return;
+            const sd = stddev(recentPrices);
+            // map sd to pulseScale [1.0 .. 1.06] and duration [2.5s .. 0.6s]
+            const maxSd = 300; // demo mapping scale (tweak to real data)
+            const norm = Math.min(sd / maxSd, 1);
+            const scale = 1 + norm * 0.06;
+            const duration = (2.5 - norm * 1.9).toFixed(2) + 's';
+            document.documentElement.style.setProperty('--pulse-scale', scale);
+            document.documentElement.style.setProperty('--pulse-duration', duration);
+            // optionally change glow color intensity when volatility high
+            if(norm > 0.6) {
+                document.documentElement.style.setProperty('--portfolio-glow', 'rgba(255,60,110,0.28)');
+            } else {
+                // keep accent-based glow
+                const currentAccent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#7f5af0';
+                document.documentElement.style.setProperty('--portfolio-glow', hexToRgba(currentAccent, 0.24));
+            }
+        }
+        // Demo incoming prices
+        setInterval(()=>{
+            // small random walk; occasionally spike for demo
+            const spike = Math.random() < 0.06 ? (Math.random()*1200 - 600) : (Math.random()*40 - 20);
+            demoPrice = Math.max(100, demoPrice + spike);
+            pushPrice(demoPrice);
+            updatePulseFromVolatility();
+            // update displayed portfolio balance for demo
+            const balEl = document.getElementById('portfolioBalance');
+            if(balEl){
+                const display = (demoPrice/1000).toFixed(2);
+                balEl.textContent = `₿ ${display}`;
+            }
+        }, 2000);
+
+        // --- Settings sliders: blur and glass opacity (persisted) ---
+        const blurSlider = document.getElementById('blurSlider');
+        const glassSlider = document.getElementById('glassSlider');
+        // restore
+        const savedBlur = localStorage.getItem('cb_blur');
+        const savedGlass = localStorage.getItem('cb_glass');
+        if(savedBlur) { document.documentElement.style.setProperty('--glass-blur', `blur(${savedBlur}px)`); blurSlider.value = savedBlur; }
+        if(savedGlass) { document.documentElement.style.setProperty('--glass-opacity', savedGlass); glassSlider.value = savedGlass; }
+        blurSlider.addEventListener('input', ()=> {
+            const v = blurSlider.value;
+            document.documentElement.style.setProperty('--glass-blur', `blur(${v}px)`);
+            localStorage.setItem('cb_blur', v);
+        });
+        glassSlider.addEventListener('input', ()=>{
+            const v = glassSlider.value;
+            document.documentElement.style.setProperty('--glass-opacity', v);
+            // update derived --glass-bg automatically (uses var in CSS)
+            localStorage.setItem('cb_glass', v);
+        });
+
+        // Helper: if user clicks a theme option set to auto, it will allow asset clicks to control theme
+        // initial apply if forced or matching asset initial selection (demo picks BTC)
+        if(!forced) {
+            // apply theme based on initial highlighted asset (BTC default)
+            applyTheme('BTC');
+        }
 
         // Focus Mode
         const focusBtn = document.getElementById('focusBtn');
