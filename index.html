@@ -7,15 +7,21 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* New cyberpunk theme */
-            --bg-color: #1a1a1a;
-            --panel-bg: rgba(32, 32, 32, 0.85);
-            --neon-blue: #0ff;
-            --neon-purple: #f0f;
-            --neon-yellow: #ff0;
-            --glass-blur: blur(20px);
-            --text-main: #fff;
-            --text-muted: #888;
+            /* updated dark neon theme */
+            --bg-color: #000000;
+            --panel-bg: rgba(8,8,10,0.88);
+            --glass-bg: rgba(10,10,12,0.6);
+            --neon-cyan: #00f7ff;
+            --neon-magenta: #ff2aff;
+            --neon-yellow: #ffd400;
+            --accent: var(--neon-cyan);
+            --accent-glow: rgba(0,247,255,0.18);
+            --glass-blur: blur(18px);
+            --text-main: #e8f9ff;
+            --text-muted: #9aa6b2;
+            --pulse-scale: 1;
+            --pulse-duration: 2.4s;
+            --portfolio-glow: var(--accent-glow);
         }
 
         html, body {
@@ -38,19 +44,40 @@
             inset: 0;
             z-index: 0;
             overflow: hidden;
-            opacity: 0.15;
+            pointer-events: none;
         }
 
         .crypto-symbol {
             position: absolute;
-            font-size: 12rem;
+            font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+            font-weight: 800;
+            color: #fff;
+            mix-blend-mode: screen;
+            opacity: 0.28;
+            text-shadow:
+                0 0 6px rgba(255,255,255,0.06),
+                0 0 18px rgba(0,247,255,0.08),
+                0 0 36px rgba(255,42,255,0.04);
             filter: blur(4px);
-            animation: neonPulse 4s infinite;
+            transform: translate3d(0,0,0);
+            will-change: transform, opacity, filter;
         }
 
-        @keyframes neonPulse {
-            0%, 100% { opacity: 0.3; filter: blur(4px); text-shadow: 0 0 20px var(--neon-blue); }
-            50% { opacity: 0.6; filter: blur(6px); text-shadow: 0 0 40px var(--neon-purple); }
+        .crypto-symbol.flicker {
+            animation: neonFlicker 700ms steps(2, end);
+            opacity: 0.9;
+            filter: blur(0.5px);
+            text-shadow:
+                0 0 10px var(--neon-cyan),
+                0 0 30px var(--neon-magenta),
+                0 0 60px rgba(0,247,255,0.5);
+        }
+
+        @keyframes neonFlicker {
+            0% { opacity: 0.12; transform: scale(1); filter: blur(4px); }
+            40% { opacity: 0.9; transform: scale(1.02); filter: blur(1px); }
+            60% { opacity: 0.6; transform: scale(1.01); filter: blur(2px); }
+            100% { opacity: 0.28; transform: scale(1); filter: blur(4px); }
         }
 
         /* New navigation */
@@ -81,8 +108,13 @@
         }
 
         .nav-link:hover {
-            color: var(--neon-blue);
-            text-shadow: 0 0 10px var(--neon-blue);
+            color: var(--neon-cyan);
+            text-shadow: 0 0 10px var(--neon-cyan);
+        }
+
+        .nav-link.active {
+            color: var(--neon-cyan);
+            text-shadow: 0 0 12px var(--neon-cyan);
         }
 
         /* Layout */
@@ -196,7 +228,7 @@
 
         /* TradingView Panel */
         .tradingview-panel {
-            min-height: 600px;
+            min-height: 72vh;
             display: flex;
             flex-direction: column;
             gap: 1rem;
@@ -236,7 +268,8 @@
 
         .tradingview-iframe {
             width: 100%;
-            height: 500px;
+            height: calc(72vh - 120px);
+            max-height: 92vh;
             border: none;
             border-radius: 12px;
             overflow: hidden;
@@ -506,24 +539,28 @@
             height: 100vh;
             image-rendering: optimizeQuality;
         }
+
+        /* Page system (multi-page single-file router) */
+        .page { display:none; }
+        .page.active { display:block; }
     </style>
 </head>
 <body>
     <!-- Neon Crypto Symbols Background -->
     <div class="crypto-symbols">
-        <div class="crypto-symbol" style="top:10%;left:5%;">₿</div>
-        <div class="crypto-symbol" style="top:40%;right:10%;">Ξ</div>
-        <div class="crypto-symbol" style="bottom:20%;left:15%;">◎</div>
-        <div class="crypto-symbol" style="top:60%;right:20%;">Ð</div>
+        <div class="crypto-symbol" style="top:8%;left:6%;font-size:18rem;">₿</div>
+        <div class="crypto-symbol" style="top:30%;right:8%;font-size:16rem;">Ξ</div>
+        <div class="crypto-symbol" style="bottom:18%;left:12%;font-size:14rem;">◎</div>
+        <div class="crypto-symbol" style="top:62%;right:20%;font-size:13rem;">Ð</div>
     </div>
 
-    <!-- Navigation Bar -->
+    <!-- Navigation Bar (hash-based links) -->
     <nav class="nav-bar">
         <div class="nav-links">
-            <a href="/" class="nav-link">Trading</a>
-            <a href="/portfolio" class="nav-link">Portfolio</a>
-            <a href="/analytics" class="nav-link">Analytics</a>
-            <a href="/academy" class="nav-link">Academy</a>
+            <a href="#trading" class="nav-link">Trading</a>
+            <a href="#portfolio" class="nav-link">Portfolio</a>
+            <a href="#analytics" class="nav-link">Analytics</a>
+            <a href="#academy" class="nav-link">Academy</a>
         </div>
         <div class="nav-tools">
             <button id="themeBtn" class="nav-link">Theme</button>
@@ -990,6 +1027,69 @@
             const states = ['calm','up','down','panic'];
             marketState = states[Math.floor(Math.random()*states.length)];
         },9000);
+
+        // Client-side router: show page based on hash
+        function route() {
+            const hash = (location.hash || '#trading').replace('#','') || 'trading';
+            document.querySelectorAll('.page').forEach(p=>{
+                p.classList.toggle('active', p.id === hash + 'Page');
+            });
+            // nav link active state
+            document.querySelectorAll('.nav-link').forEach(a=>{
+                const target = (a.getAttribute('href') || '').replace('#','') || '';
+                a.classList.toggle('active', target === hash);
+            });
+            // Small UX: when switching to trading, focus chart (optional)
+            if(hash === 'trading') {
+                const iframe = document.querySelector('.tradingview-iframe');
+                if(iframe) iframe.scrollIntoView({behavior:'smooth', block:'center'});
+            }
+        }
+        window.addEventListener('hashchange', route);
+        // initial route
+        route();
+
+        // Neon symbols movement + random flicker
+        (function neonMotionAndFlicker(){
+            const symbols = Array.from(document.querySelectorAll('.crypto-symbol'));
+            if(!symbols.length) return;
+            // gentle drift
+            function drift() {
+                symbols.forEach((el, i) => {
+                    const tx = (Math.sin(Date.now()/4000 + i)*0.02)*window.innerWidth;
+                    const ty = (Math.cos(Date.now()/3500 + i)*0.02)*window.innerHeight;
+                    el.style.transform = `translate3d(${tx}px, ${ty}px, 0)`;
+                });
+                requestAnimationFrame(drift);
+            }
+            drift();
+            // random flickers
+            function randomFlick() {
+                const idx = Math.floor(Math.random() * symbols.length);
+                const el = symbols[idx];
+                if(!el) return;
+                el.classList.add('flicker');
+                setTimeout(()=> el.classList.remove('flicker'), 400 + Math.random()*900);
+            }
+            setInterval(randomFlick, 900);
+        })();
+
+        // update trading iframe sizing on resize if needed
+        window.addEventListener('resize', ()=> {
+            // optionally re-route to force layout update
+            // route();
+        });
+
+        // Update: remove previous demo nav click handlers that interfered
+        document.querySelectorAll('.nav-link').forEach(link=>{
+            link.addEventListener('click', (e)=>{
+                // let hash navigation work naturally; for buttons with no hash, prevent default
+                const href = link.getAttribute('href');
+                if(!href || !href.startsWith('#')) {
+                    e.preventDefault();
+                }
+            });
+        });
 
         // Add neon animation effects
         function animateNeonSymbols() {
