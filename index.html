@@ -2,95 +2,262 @@
 
 <html lang="ru">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Gamelton AI Halloween</title>
-<style>
-body {margin:0; background:#0f1724; color:#fff; font-family:'Segoe UI',sans-serif; overflow:hidden;}
-#splash, #mainMenu {position:fixed; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:999;}
-#splash {background:#0f1724; z-index:1000;}
-.title {font-size:52px; font-weight:bold; opacity:0; animation:fadeIn 2s forwards;}
-.title span.ai {margin-left:8px; display:inline-block; background:linear-gradient(270deg, red, orange, yellow, green, cyan, blue, violet); background-size:400% 400%; -webkit-background-clip:text; -webkit-text-fill-color:transparent; animation: spinGradient 2s linear infinite;}
-.subtitle {font-size:20px; margin-top:10px; opacity:0; animation:fadeUp 2s forwards 2.5s; color:#a78bfa;}
-@keyframes fadeIn {to{opacity:1;}}
-@keyframes fadeUp {from{opacity:0; transform:translateY(20px);}to{opacity:1; transform:translateY(0);}}
-@keyframes spinGradient {0%{background-position:0% 50%;}100%{background-position:100% 50%;}}
-.title span.ai.final {background:none; -webkit-text-fill-color:#a78bfa; animation:none;}
-#mainMenu {background:#0f1724; z-index:999; display:none;}
-.menuBtn {padding:10px 20px; margin:8px; border:none; border-radius:50px; background:rgba(255,255,255,0.15); color:#fff; backdrop-filter:blur(20px); cursor:pointer; transition:0.3s; font-size:18px;}
-.menuBtn:hover {background:rgba(255,255,255,0.25);}
-#app {display:none; flex-direction:column; height:100vh;}
-#stage {position:relative; flex:1; overflow:hidden}
-video, canvas {position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
-video {transform:scaleX(-1)}
-#controls {position:absolute; bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:8px; padding:8px 12px; border-radius:30px; background:rgba(255,255,255,0.1); backdrop-filter:blur(20px); box-shadow:0 4px 20px rgba(0,0,0,0.4);}
-.btn {padding:6px 12px; border:none; border-radius:50px; cursor:pointer; background:rgba(255,255,255,0.15); color:#fff; backdrop-filter:blur(20px); transition:all 0.3s; font-size:14px;}
-.btn.active {background:rgba(167,139,250,0.4); box-shadow:0 0 10px #a78bfa;}
-#submenu {position:absolute; bottom:60px; left:50%; transform:translateX(-50%); display:flex; gap:6px; padding:6px 12px; border-radius:50px; background:rgba(255,255,255,0.1); backdrop-filter:blur(20px); box-shadow:0 4px 15px rgba(0,0,0,0.3); display:none;}
-.subbtn {padding:4px 12px; border:none; border-radius:50px; cursor:pointer; background:rgba(255,255,255,0.15); color:#fff; backdrop-filter:blur(20px); transition:0.3s; font-size:14px;}
-.subbtn.active {background:rgba(167,139,250,0.4); box-shadow:0 0 8px #a78bfa;}
-.subbtn:hover {background:rgba(255,255,255,0.25);}
-#objectCutControls {position:absolute; top:10px; right:10px; display:none; flex-direction:column; gap:6px;}
-#objectCutControls input,#objectCutControls button {padding:6px 10px; border-radius:20px; border:none; font-size:14px;}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Camera + Finger Draw</title>
+  <style>
+    :root{--bg:#0f1724;--panel:#0b1220;--accent:#3b82f6;--muted:#94a3b8}
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial;background:var(--bg);color:#e6eef8}
+    .app{display:flex;flex-direction:column;height:100vh;gap:8px;padding:10px;box-sizing:border-box}
+    .stage{position:relative;flex:1;border-radius:12px;overflow:hidden;box-shadow:0 6px 20px rgba(2,6,23,.6)}
+    video, canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+    video{transform:scaleX(-1)} /* mirror by default so it feels natural */
+    .controls{display:flex;gap:8px;align-items:center;padding:8px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));}
+    .btn{background:var(--panel);border:1px solid rgba(255,255,255,0.04);padding:8px 10px;border-radius:8px;color:#e6eef8;cursor:pointer}
+    .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06)}
+    .spacer{flex:1}
+    label{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px}
+    input[type=color]{width:38px;height:34px;border:0;background:transparent;padding:0}
+    input[type=range]{width:120px}
+    select{background:transparent;color:inherit;padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.04)}
+    .footer{font-size:13px;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
+    @media (max-width:640px){.controls{flex-wrap:wrap}}
+  </style>
 </head>
 <body>
-<div id="splash">
-  <div class="title">Gamelton <span class="ai">AI</span></div>
-  <div class="subtitle">Halloween Edition</div>
+  <div class="app">
+    <div class="stage" id="stage">
+      <video id="video" autoplay playsinline muted></video>
+      <canvas id="draw"></canvas>
+    </div><div class="controls" id="controls">
+  <label>Камера
+    <select id="cameraSelect"></select>
+  </label>
+
+  <label>Цвет <input type="color" id="color" value="#ff4655"></label>
+  <label>Толщина <input type="range" id="size" min="1" max="80" value="8"></label>
+  <button class="btn" id="eraser">Ластик</button>
+  <button class="btn" id="clear">Очистить</button>
+  <button class="btn" id="save">Сохранить</button>
+  <div class="spacer"></div>
+  <button class="btn secondary" id="toggleMirror">Зеркало: Вкл</button>
 </div>
-<div id="mainMenu">
-  <button class="menuBtn" data-mode="draw">Draw</button>
-  <button class="menuBtn" data-mode="filters">Filters</button>
-  <button class="menuBtn" data-mode="background">Background</button>
-  <button class="menuBtn" data-mode="object">Object Cut</button>
-  <button class="menuBtn" data-mode="ghosts">Ghosts</button>
+
+<div class="footer">
+  <div>Нарисуйте пальцем по экрану — работает на мобильных и настольных устройствах.</div>
+  <div id="status">Инициализация камеры...</div>
 </div>
-<div id="app">
-  <div id="stage">
-    <video id="video" autoplay playsinline muted></video>
-    <canvas id="draw"></canvas>
-    <canvas id="overlay"></canvas>
-  </div>
-  <div id="controls"></div>
-  <div id="submenu"></div>
-  <div id="objectCutControls">
-    <input type="file" id="uploadImage">
-    <button id="takePhoto">Take Photo</button>
-    <button id="cutObject">Cut Object</button>
-    <button id="downloadCut">Download</button>
-  </div>
-</div>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.min.js"></script>
-<script>
-const splash=document.getElementById('splash');
-const mainMenu=document.getElementById('mainMenu');
-const app=document.getElementById('app');
-const video=document.getElementById('video');
-const canvas=document.getElementById('draw');
-const overlay=document.getElementById('overlay');
-const ctx=canvas.getContext('2d');
-const octx=overlay.getContext('2d');
-const objectCutControls=document.getElementById('objectCutControls');
-let mode='', ghostInterval=null, uploadedImage=null;
-const cutCanvas=document.createElement('canvas');
-const cutCtx=cutCanvas.getContext('2d');// Splash animation setTimeout(()=>{document.querySelector('.title span.ai').classList.add('final');},3000); setTimeout(()=>{splash.style.display='none'; mainMenu.style.display='flex';},4500);
 
-function resize(){canvas.width=overlay.width=app.clientWidth; canvas.height=overlay.height=app.clientHeight-80;} window.addEventListener('resize',resize);
+  </div>  <script>
+    // Основные элементы
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('draw');
+    const ctx = canvas.getContext('2d');
+    const cameraSelect = document.getElementById('cameraSelect');
+    const colorInput = document.getElementById('color');
+    const sizeInput = document.getElementById('size');
+    const eraserBtn = document.getElementById('eraser');
+    const clearBtn = document.getElementById('clear');
+    const saveBtn = document.getElementById('save');
+    const toggleMirrorBtn = document.getElementById('toggleMirror');
+    const status = document.getElementById('status');
 
-async function startCamera(){ try{ const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}}); video.srcObject=stream; await video.play(); }catch(e){alert('Невозможно получить доступ к камере: '+e);} }
+    let drawing = false;
+    let last = {x:0,y:0};
+    let isEraser = false;
+    let currentStream = null;
 
-function activateMode(selectedMode){ mode=selectedMode; mainMenu.style.display='none'; app.style.display='flex'; resize(); objectCutControls.style.display=(mode==='object')?'flex':'none'; if(ghostInterval)clearInterval(ghostInterval); startApp(); }
+    // Устанавливаем размеры canvas по размеру контейнера
+    function resize() {
+      const rect = canvas.getBoundingClientRect();
+      const ratio = window.devicePixelRatio || 1;
+      canvas.width = Math.round(rect.width * ratio);
+      canvas.height = Math.round(rect.height * ratio);
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.scale(ratio, ratio);
+      redrawUIHint();
+    }
 
-document.querySelectorAll('.menuBtn').forEach(btn=>{btn.addEventListener('click',()=>activateMode(btn.dataset.mode));});
+    // Простейший hint (не сохраняется в окончательный рисунок)
+    function redrawUIHint(){
+      // Вы можете использовать эту функцию для отрисовки вспомогательных элементов.
+    }
 
-// Ghosts mode function renderGhosts(){ octx.clearRect(0,0,overlay.width,overlay.height); for(let i=0;i<5;i++){ octx.beginPath(); octx.arc(Math.random()*overlay.width,Math.random()*overlay.height,30+Math.random()50,0,2Math.PI); octx.fillStyle='rgba(200,200,255,0.08)'; octx.fill(); } }
+    // Конвертация координат события в координаты canvas
+    function getPos(e){
+      const rect = canvas.getBoundingClientRect();
+      let clientX, clientY;
+      if (e.touches && e.touches.length) {clientX = e.touches[0].clientX; clientY = e.touches[0].clientY}
+      else {clientX = e.clientX; clientY = e.clientY}
+      return {x: clientX - rect.left, y: clientY - rect.top};
+    }
 
-// Object Cut function handleUpload(e){ const file=e.target.files[0]; if(file){ const img=new Image(); img.onload=()=>{uploadedImage=img; cutCanvas.width=img.width; cutCanvas.height=img.height; cutCtx.drawImage(img,0,0);}; img.src=URL.createObjectURL(file); } }
+    // Рисование одной линии
+    function drawLine(from, to){
+      ctx.save();
+      ctx.globalCompositeOperation = isEraser ? 'destination-out' : 'source-over';
+      ctx.strokeStyle = isEraser ? 'rgba(0,0,0,1)' : colorInput.value;
+      ctx.lineWidth = sizeInput.value;
+      ctx.beginPath();
+      ctx.moveTo(from.x, from.y);
+      ctx.lineTo(to.x, to.y);
+      ctx.stroke();
+      ctx.restore();
+    }
 
-document.getElementById('uploadImage').addEventListener('change',handleUpload); document.getElementById('cutObject').addEventListener('click',async ()=>{ if(!uploadedImage)return; const seg=new SelfieSegmentation({locateFile:f=>https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${f}}); seg.setOptions({modelSelection:1}); seg.onResults(results=>{ cutCtx.clearRect(0,0,cutCanvas.width,cutCanvas.height); cutCtx.drawImage(results.segmentationMask,0,0,cutCanvas.width,cutCanvas.height); cutCtx.globalCompositeOperation='source-in'; cutCtx.drawImage(uploadedImage,0,0); }); await seg.send({image:uploadedImage}); }); document.getElementById('downloadCut').addEventListener('click',()=>{ const a=document.createElement('a'); a.href=cutCanvas.toDataURL('image/png'); a.download='object.png'; a.click(); });
+    // События указателя / касания
+    function pointerDown(e){
+      e.preventDefault();
+      drawing = true;
+      last = getPos(e);
+    }
+    function pointerMove(e){
+      if (!drawing) return;
+      const pos = getPos(e);
+      drawLine(last, pos);
+      last = pos;
+    }
+    function pointerUp(e){
+      drawing = false;
+    }
 
-async function startApp(){ await startCamera(); if(mode==='ghosts') ghostInterval=setInterval(renderGhosts,500); } </script>
+    // Подключаем обработчики
+    function attachDrawingHandlers(){
+      canvas.addEventListener('pointerdown', pointerDown);
+      canvas.addEventListener('pointermove', pointerMove);
+      window.addEventListener('pointerup', pointerUp);
 
-</body>
+      // Для старых браузеров и тачей
+      canvas.addEventListener('touchstart', pointerDown, {passive:false});
+      canvas.addEventListener('touchmove', pointerMove, {passive:false});
+      canvas.addEventListener('touchend', pointerUp);
+    }
+
+    // Управление камерой
+    async function getCameras(){
+      try{
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const cams = devices.filter(d => d.kind === 'videoinput');
+        cameraSelect.innerHTML = '';
+        cams.forEach((c,i)=>{
+          const opt = document.createElement('option');
+          opt.value = c.deviceId;
+          opt.textContent = c.label || `Камера ${i+1}`;
+          cameraSelect.appendChild(opt);
+        });
+      }catch(err){console.warn(err)}
+    }
+
+    async function startCamera(deviceId){
+      if (currentStream){
+        currentStream.getTracks().forEach(t=>t.stop());
+        currentStream = null;
+      }
+      const constraints = {
+        video: deviceId ? {deviceId:{exact:deviceId}} : {facingMode:'environment'},
+        audio: false
+      };
+      try{
+        status.textContent = 'Запуск камеры...';
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        currentStream = stream;
+        video.srcObject = stream;
+        await video.play();
+        status.textContent = 'Камера включена';
+
+        // После запуска камеры скорректируем размеры canvas
+        resize();
+      }catch(err){
+        console.error(err);
+        status.textContent = 'Ошибка доступа к камере';
+      }
+    }
+
+    // Сохранение — мы рисуем кадр видео на временном canvas, затем накладываем рисунок
+    function saveImage(){
+      const out = document.createElement('canvas');
+      out.width = canvas.width; out.height = canvas.height;
+      const octx = out.getContext('2d');
+      // Важно: видео имеет transform:scaleX(-1) для зеркала, учтем это
+      octx.save();
+      // Масштабируем под devicePixelRatio
+      const ratio = window.devicePixelRatio || 1;
+      octx.scale(ratio, ratio);
+      // Нарисуем видео (не зеркально) — если page зеркален, то перевернём
+      const stageRect = canvas.getBoundingClientRect();
+      // drawImage принимает размеры в реальных пикселях, поэтому используем video.videoWidth/video.videoHeight
+      // Чтобы корректно вписать видео в canvas, используем cover-like drawing
+      const vw = video.videoWidth, vh = video.videoHeight;
+      const cw = stageRect.width, ch = stageRect.height;
+      // compute source rect to cover
+      const videoRatio = vw/vh; const canvasRatio = cw/ch;
+      let sx=0, sy=0, sw=vw, sh=vh;
+      if (videoRatio > canvasRatio){
+        // video wider -> crop sides
+        const desiredW = vh * canvasRatio;
+        sx = (vw - desiredW)/2; sw = desiredW;
+      } else {
+        // video taller -> crop top/bottom
+        const desiredH = vw / canvasRatio;
+        sy = (vh - desiredH)/2; sh = desiredH;
+      }
+      // учитываем зеркальность на странице
+      const mirrored = getComputedStyle(video).transform.includes('-1') || getComputedStyle(video).transform.includes('scaleX(-1)');
+      if (mirrored) {
+        octx.translate(cw, 0);
+        octx.scale(-1,1);
+      }
+      octx.drawImage(video, sx, sy, sw, sh, 0, 0, cw, ch);
+      octx.restore();
+
+      // затем наложим рисунок (canvas) — но remember canvas is already scaled to DPR, so draw full size
+      octx.drawImage(canvas, 0, 0, out.width, out.height);
+
+      // формируем dataURL и сохраняем
+      const data = out.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = data; a.download = 'camera-draw.png';
+      document.body.appendChild(a); a.click(); a.remove();
+    }
+
+    // Инициализация UI
+    (async function init(){
+      attachDrawingHandlers();
+      window.addEventListener('resize', resize);
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+        status.textContent = 'Ваш браузер не поддерживает getUserMedia.';
+        return;
+      }
+
+      await getCameras();
+      // Запускаем камеру (попытка сначала environment)
+      await startCamera();
+
+      // Если список камер доступен, автоматически выбрать и дать возможность переключать
+      cameraSelect.addEventListener('change', ()=>{
+        startCamera(cameraSelect.value);
+      });
+
+      // Управление инструментами
+      eraserBtn.addEventListener('click', ()=>{
+        isEraser = !isEraser; eraserBtn.textContent = isEraser ? 'Карандаш' : 'Ластик';
+      });
+      clearBtn.addEventListener('click', ()=>{ ctx.clearRect(0,0,canvas.width,canvas.height); });
+      saveBtn.addEventListener('click', saveImage);
+
+      toggleMirrorBtn.addEventListener('click', ()=>{
+        const mirrored = video.style.transform === 'scaleX(-1)';
+        if (mirrored){ video.style.transform = 'scaleX(1)'; toggleMirrorBtn.textContent = 'Зеркало: Выкл'; }
+        else { video.style.transform = 'scaleX(-1)'; toggleMirrorBtn.textContent = 'Зеркало: Вкл'; }
+      });
+
+      // Предотвратить прокрутку страницы при рисовании на мобильных
+      document.body.addEventListener('touchmove', function(e){ if (e.target === canvas) e.preventDefault(); }, {passive:false});
+
+      // Начальное ресайз
+      setTimeout(resize, 250);
+    })();
+  </script></body>
 </html>
