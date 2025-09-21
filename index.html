@@ -1,9 +1,10 @@
 <!doctype html>
+
 <html lang="ru">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Gamelton AI Halloween</title>
+<title>Gamelton AI</title>
 <style>
 body {margin:0; background:#0f1724; color:#fff; font-family:'Segoe UI',sans-serif; overflow:hidden;}
 #splash, #mainMenu {position:fixed; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:999;}
@@ -37,14 +38,13 @@ video {transform:scaleX(-1)}
 <body>
 <div id="splash">
   <div class="title">Gamelton <span class="ai">AI</span></div>
-  <div class="subtitle">Halloween Edition</div>
+  <div class="subtitle">Camera Draw</div>
 </div>
 <div id="mainMenu">
   <button class="menuBtn" data-mode="draw">Draw</button>
   <button class="menuBtn" data-mode="filters">Filters</button>
   <button class="menuBtn" data-mode="background">Background</button>
   <button class="menuBtn" data-mode="object">Object Cut</button>
-  <button class="menuBtn" data-mode="ghosts">Ghosts</button>
 </div>
 <div id="app">
   <div id="stage">
@@ -72,44 +72,26 @@ const overlay=document.getElementById('overlay');
 const ctx=canvas.getContext('2d');
 const octx=overlay.getContext('2d');
 const objectCutControls=document.getElementById('objectCutControls');
-let mode='', ghostInterval=null, uploadedImage=null;
+let mode='', uploadedImage=null;
 const cutCanvas=document.createElement('canvas');
-const cutCtx=cutCanvas.getContext('2d');
+const cutCtx=cutCanvas.getContext('2d');// Splash animation setTimeout(()=>{splash.style.opacity=0; setTimeout(()=>{splash.style.display='none'; mainMenu.style.display='flex';},1000);},3000);
 
-// Splash animation
-setTimeout(()=>{splash.classList.add('glow');},1000);
-setTimeout(()=>{
-  splash.style.opacity=0;
-  setTimeout(()=>{
-    splash.style.display='none';
-    mainMenu.style.display='flex';
-  },1000);
-},3000);
+function resize(){canvas.width=overlay.width=app.clientWidth; canvas.height=overlay.height=app.clientHeight-80;} window.addEventListener('resize',resize);
 
-function resize(){canvas.width=overlay.width=app.clientWidth; canvas.height=overlay.height=app.clientHeight-80;}
-window.addEventListener('resize',resize);
+async function startCamera(){ try{ const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}}); video.srcObject=stream; await video.play(); }catch(e){alert('Невозможно получить доступ к камере: '+e);} }
 
-async function startCamera(){
-  try{
-    const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}});
-    video.srcObject=stream;
-    await video.play();
-  }catch(e){alert('Невозможно получить доступ к камере: '+e);}
-}
-
-function activateMode(selectedMode){
-  mode=selectedMode;
-  mainMenu.style.display='none';
-  app.style.display='flex';
-  resize();
-  objectCutControls.style.display=(mode==='object')?'flex':'none';
-  if(ghostInterval)clearInterval(ghostInterval);
-  startApp();
-}
+function activateMode(selectedMode){ mode=selectedMode; mainMenu.style.display='none'; app.style.display='flex'; resize(); objectCutControls.style.display=(mode==='object')?'flex':'none'; startApp(); }
 
 document.querySelectorAll('.menuBtn').forEach(btn=>{btn.addEventListener('click',()=>activateMode(btn.dataset.mode));});
 
-function renderGhosts(){
+function handleUpload(e){ const file=e.target.files[0]; if(file){ const img=new Image(); img.onload=()=>{uploadedImage=img; cutCanvas.width=img.width; cutCanvas.height=img.height; cutCtx.drawImage(img,0,0);}; img.src=URL.createObjectURL(file); } }
+
+document.getElementById('uploadImage').addEventListener('change',handleUpload); document.getElementById('cutObject').addEventListener('click',async ()=>{ if(!uploadedImage)return; const seg=new SelfieSegmentation({locateFile:f=>https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${f}}); seg.setOptions({modelSelection:1}); seg.onResults(results=>{ cutCtx.clearRect(0,0,cutCanvas.width,cutCanvas.height); cutCtx.drawImage(results.segmentationMask,0,0,cutCanvas.width,cutCanvas.height); cutCtx.globalCompositeOperation='source-in'; cutCtx.drawImage(uploadedImage,0,0); }); await seg.send({image:uploadedImage}); }); document.getElementById('downloadCut').addEventListener('click',()=>{ const a=document.createElement('a'); a.href=cutCanvas.toDataURL('image/png'); a.download='object.png'; a.click(); });
+
+async function startApp(){ await startCamera(); } </script>
+
+</body>
+</html>function renderGhosts(){
   octx.clearRect(0,0,overlay.width,overlay.height);
   for(let i=0;i<5;i++){
     octx.beginPath();
