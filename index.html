@@ -1,696 +1,406 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Gamelton Ai — demo</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Liquid Glass Interface</title>
     <style>
-        /* ----------------------
-           Reset & base
-           ---------------------- */
-        * { box-sizing: border-box; margin:0; padding:0; font-family: Inter, "SF Pro Display", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
-        html,body { height:100%; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
         body {
-            min-height:100vh;
-            background: linear-gradient(135deg,#0f0420 0%, #2a0b3b 100%);
-            color:#fff;
-            overflow-x:hidden;
+            overflow: hidden;
+            background: linear-gradient(135deg, #000428, #004e92);
+            color: rgba(255, 255, 255, 0.9);
+            min-height: 100vh;
+            perspective: 1000px;
         }
 
-        /* ----------------------
-           Header
-           ---------------------- */
-        header{
-            position:fixed; left:0; right:0; top:0;
-            height:72px; display:flex; align-items:center; gap:20px;
-            padding:12px 28px;
+        .container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2;
+        }
+
+        /* Liquid Glass эффект для интерфейса */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px) saturate(180%);
+            -webkit-backdrop-filter: blur(12px) saturate(180%);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.225);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2), 
+                        inset 0 4px 20px rgba(255, 255, 255, 0.3);
+            padding: 2rem;
+            width: 85%;
+            max-width: 500px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .glass-panel::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            backdrop-filter: blur(1px);
+            box-shadow: inset -10px -8px 0px -11px rgba(255, 255, 255, 1),
+                        inset 0px -9px 0px -8px rgba(255, 255, 255, 1);
+            opacity: 0.6;
+            z-index: -1;
+            filter: blur(1px) brightness(115%);
+            animation: liquidShift 8s infinite alternate ease-in-out;
+        }
+
+        @keyframes liquidShift {
+            0% {
+                transform: translateX(-5px) translateY(-5px);
+            }
+            100% {
+                transform: translateX(5px) translateY(5px);
+            }
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+            font-size: 2.5rem;
+            background: linear-gradient(45deg, #00c6fb, #005bea, #00c6fb);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmer 3s infinite linear;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+
+        .menu {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .menu-item {
+            background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
-            background: rgba(24,6,38,0.48);
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            z-index:1000;
-        }
-        .logo {
-            font-weight:800; font-size:22px;
-            background: linear-gradient(90deg,#b967ff,#6e3fce,#ff38d7);
-            -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
-            background-size:200% 200%; animation:gradShift 4s linear infinite;
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 1.2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.18);
         }
 
-        nav { margin-left:auto; }
-        nav ul {
-            display:flex; gap:22px; align-items:center; list-style:none;
-        }
-        nav a {
-            color:#e7cffc; text-decoration:none; font-weight:600; position:relative;
-        }
-        nav a::after {
-            content:""; position:absolute; left:0; bottom:-6px; height:2px; width:0;
-            background: linear-gradient(90deg,#b967ff,#ff38d7); transition:width .25s;
-        }
-        nav a:hover::after { width:100%; }
-
-        .online-counter {
-            margin-left:18px; padding:6px 10px; border-radius:20px;
-            background: rgba(110,63,206,0.25);
-            border: 1px solid rgba(255,255,255,0.06);
-            font-size:13px;
-            backdrop-filter: blur(6px);
+        .menu-item:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
         }
 
-        /* mobile burger */
-        .mobile-menu-btn { display:none; width:36px; height:36px; border-radius:8px; border:none; background:transparent; cursor:pointer; align-items:center; justify-content:center; }
-        .mobile-menu-btn span { display:block; width:20px; height:2px; background:#e7cffc; border-radius:2px; margin:3px 0; transition:all .25s; }
-
-        /* ----------------------
-           Layout pages
-           ---------------------- */
-        main { padding-top:92px; }
-        .page { display:none; padding:40px 36px 80px; min-height:calc(100vh - 92px); }
-        .page.active { display:block; }
-
-        h1 { font-size:40px; margin-bottom:12px;
-            background: linear-gradient(90deg,#ffd6ff,#b967ff,#9bd0ff);
-            -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
-            background-size:200% 200%; animation:gradShift 6s linear infinite;
-        }
-        p.lead { color:#d7bff1; margin-bottom:20px; max-width:900px; line-height:1.6; }
-
-        /* ----------------------
-           Chats layout
-           ---------------------- */
-        .chats { display:flex; gap:18px; align-items:flex-start; }
-        .chats .sidebar { width:320px; background: rgba(72,22,110,0.36); padding:16px; border-radius:14px; backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,0.04); }
-        .chats .content { flex:1; background: rgba(72,22,110,0.36); padding:18px; border-radius:14px; min-height:520px; display:flex; flex-direction:column; gap:12px; backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,0.04); }
-
-        .chat-item { padding:10px; margin-bottom:10px; border-radius:10px; cursor:pointer; background: rgba(110,63,206,0.18); transition:transform .15s, background .15s; }
-        .chat-item:hover { transform: translateY(-3px); background: rgba(110,63,206,0.30); }
-        .chat-item.active { background: linear-gradient(90deg, rgba(185,103,255,0.18), rgba(110,63,206,0.28)); box-shadow:0 6px 18px rgba(110,63,206,0.12); }
-
-        .messages { flex:1; overflow:auto; padding:12px; display:flex; flex-direction:column; gap:12px; }
-        .message { max-width:72%; padding:12px 14px; border-radius:14px; backdrop-filter: blur(6px); }
-        .message.incoming { background: rgba(110,63,206,0.26); align-self:flex-start; border-bottom-left-radius:6px; }
-        .message.outgoing { background: linear-gradient(90deg,#b967ff,#6e3fce); align-self:flex-end; color:#fff; border-bottom-right-radius:6px; }
-
-        /* shimmer for text and "liquid" glass effect */
-        .message .body { position:relative; z-index:2; }
-        .message .gloss {
-            position:absolute; left:0; right:0; top:0; bottom:0; border-radius:inherit;
-            background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.06), rgba(255,255,255,0.02));
-            mix-blend-mode: overlay; pointer-events:none; opacity:0.7;
-            animation:glassMove 4s linear infinite;
-        }
-        @keyframes glassMove { 0%{ transform:translateX(-30%);} 100%{ transform:translateX(130%);} }
-
-        /* thinking placeholder */
-        .thinking {
-            display:inline-block; padding:8px 12px; border-radius:14px; background:rgba(255,255,255,0.03);
-            color:#e6dcff; font-weight:600; position:relative;
-        }
-        .thinking .dots { display:inline-block; width:48px; text-align:left; }
-        .dot { display:inline-block; animation:blink 1s infinite; margin-right:3px; opacity:0.25; }
-        .dot:nth-child(1){ animation-delay:0s } .dot:nth-child(2){ animation-delay:.15s } .dot:nth-child(3){ animation-delay:.3s }
-        @keyframes blink { 0%,80%,100%{ opacity:0.25 } 40%{ opacity:1 } }
-
-        /* input area */
-        .input-row { display:flex; gap:8px; margin-top:6px; align-items:center; }
-        .message-input { flex:1; padding:12px 14px; border-radius:999px; border:none; background: rgba(255,255,255,0.06); color:#fff; outline:none; }
-        .btn { padding:10px 12px; border-radius:10px; border:none; cursor:pointer; font-weight:700; }
-
-        .send-btn { width:48px; height:48px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:linear-gradient(90deg,#b967ff,#6e3fce); box-shadow: 0 8px 24px rgba(110,63,206,0.18); }
-
-        /* ----------------------
-           Image generator page
-           ---------------------- */
-        .gen-panel { display:flex; gap:12px; align-items:center; margin-top:12px; margin-bottom:18px; }
-        .gen-input { flex:1; padding:12px; border-radius:10px; border:none; background: rgba(255,255,255,0.04); color:#fff; }
-        .gallery { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px; }
-        .img-card { background:rgba(255,255,255,0.03); border-radius:12px; overflow:hidden; position:relative; padding-bottom:12px; }
-        .img-card img { width:100%; display:block; height:160px; object-fit:cover; }
-        .img-actions { display:flex; gap:8px; padding:10px; align-items:center; justify-content:space-between; }
-
-        /* download badge */
-        .download-btn { padding:8px 10px; border-radius:8px; border:none; background:linear-gradient(90deg,#ffd6ff,#b967ff); color:#1b0424; font-weight:700; cursor:pointer; }
-
-        /* watermark info small */
-        .wm-note { font-size:12px; color:#d7c1f6; }
-
-        /* ----------------------
-           Settings / controls
-           ---------------------- */
-        .settings-grid { display:flex; gap:14px; flex-wrap:wrap; margin-top:12px; }
-        .card { background: rgba(72,22,110,0.32); padding:14px; border-radius:12px; border:1px solid rgba(255,255,255,0.03); min-width:220px; }
-
-        /* high load notification */
-        .high-load-notification { position:fixed; right:18px; bottom:18px; background:#ff5a5a; color:#fff; padding:12px 16px; border-radius:10px; display:none; z-index:2000; box-shadow:0 8px 30px rgba(0,0,0,0.4); }
-
-        /* responsive */
-        @media (max-width:900px){
-            nav ul { display:none; position:fixed; top:72px; right:-100%; height:100vh; width:72%; max-width:320px; background: rgba(24,6,38,0.96); flex-direction:column; padding-top:40px; gap:24px; transition:right .3s ease; z-index:999; }
-            nav ul.active { right:0; }
-            .mobile-menu-btn { display:flex; margin-left:auto; }
-            .chats { flex-direction:column; }
-            .chats .sidebar { width:100% }
+        .menu-item:active {
+            transform: translateY(0);
         }
 
-        /* animations */
-        @keyframes gradShift { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+        .menu-item i {
+            display: block;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* 3D сцена */
+        .scene {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            transform-style: preserve-3d;
+        }
+
+        .shape-selector {
+            margin-top: 1.5rem;
+            display: flex;
+            justify-content: center;
+            gap: 0.8rem;
+        }
+
+        .shape-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        .shape-btn.active {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .glass-panel {
+                width: 90%;
+                padding: 1.5rem;
+            }
+            
+            .menu {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+
+        /* Элементы для 3D сцены */
+        .cube {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform-style: preserve-3d;
+            transform: translate3d(-50%, -50%, 0);
+        }
+
+        .cube-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0.8;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+
+        .front  { transform: rotateY(0deg) translateZ(100px); background: linear-gradient(45deg, #ff3366, #ff3366aa); }
+        .back   { transform: rotateY(180deg) translateZ(100px); background: linear-gradient(45deg, #6633ff, #6633ffaa); }
+        .right  { transform: rotateY(90deg) translateZ(100px); background: linear-gradient(45deg, #33ff66, #33ff66aa); }
+        .left   { transform: rotateY(-90deg) translateZ(100px); background: linear-gradient(45deg, #ff6633, #ff6633aa); }
+        .top    { transform: rotateX(90deg) translateZ(100px); background: linear-gradient(45deg, #3366ff, #3366ffaa); }
+        .bottom { transform: rotateX(-90deg) translateZ(100px); background: linear-gradient(45deg, #ff33cc, #ff33ccaa); }
     </style>
 </head>
 <body>
-    <header>
-        <div class="logo">Gamelton Ai</div>
-
-        <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="menu">
-            <span></span><span></span><span></span>
-        </button>
-
-        <nav>
-            <ul id="nav-menu">
-                <li><a href="#" data-page="home">Главная</a></li>
-                <li><a href="#" data-page="news">Новости</a></li>
-                <li><a href="#" data-page="chats">Чаты</a></li>
-                <li><a href="#" data-page="imagegen">Генерация картинок</a></li>
-                <li><a href="#" data-page="settings">Настройки</a></li>
-            </ul>
-        </nav>
-
-        <div class="online-counter">Онлайн: <strong id="online-count">2 345</strong></div>
-    </header>
-
-    <main>
-        <section id="home" class="page active">
-            <h1>Добро пожаловать в Gamelton Ai</h1>
-            <p class="lead">Интерактивная демо-страница: теперь меню работает, в чате есть эффект «Думаю…», генерация картинок — отдельный раздел и чат-команда, а также плавные анимации и водяной знак на скачиваемых изображениях.</p>
-        </section>
-
-        <section id="news" class="page">
-            <h1>Новости</h1>
-            <p class="lead">Новости платформы — сюда можно подтягивать реальные данные через API.</p>
-            <div class="card">
-                <h3>Запуск бета</h3>
-                <p class="wm-note">Мы добавили функционал генерации картинок и улучшили анимации.</p>
-            </div>
-        </section>
-
-        <section id="chats" class="page">
-            <h1>Чаты Gamelton Ai</h1>
-            <div class="chats">
-                <aside class="sidebar">
-                    <div style="display:flex; gap:8px; margin-bottom:12px;">
-                        <input id="new-chat-name" placeholder="Название чата" style="flex:1; padding:10px; border-radius:8px; border:none; background:rgba(255,255,255,0.03); color:#fff" />
-                        <button class="btn" id="create-chat-btn" style="background:linear-gradient(90deg,#b967ff,#6e3fce); color:#fff; border-radius:8px;">Создать</button>
-                    </div>
-                    <div id="chats-list"></div>
-                </aside>
-
-                <div class="content">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <div><strong id="current-chat-title">— Выберите чат —</strong></div>
-                        <div style="font-size:13px; color:#d7c1f6;">avg response: <b id="avg-response-display">—</b></div>
-                    </div>
-
-                    <div class="messages" id="messages-container">
-                        <!-- messages -->
-                    </div>
-
-                    <div class="input-row">
-                        <input id="message-input" class="message-input" placeholder="Введите сообщение. Для генерации картинки: 'сгенерируй картинку: лес туман' " />
-                        <button class="send-btn" id="send-btn" title="Отправить">
-                            <!-- paper plane svg -->
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden><path d="M2 21l21-9L2 3v7l15 2-15 2v7z" fill="white"/></svg>
-                        </button>
-                    </div>
+    <!-- 3D сцена -->
+    <div class="scene" id="scene"></div>
+    
+    <!-- Интерфейс с эффектом жидкого стекла -->
+    <div class="container">
+        <div class="glass-panel">
+            <h1>Liquid Glass 3D</h1>
+            <p>Liquid Glass - это дизайн-система Apple, представленная в 2025 году, которая сочетает оптические свойства стекла с динамической текучестью интерфейса[citation:1]. Эффект создаёт ощущение глубины и иерархии элементов[citation:4].</p>
+            
+            <div class="menu">
+                <div class="menu-item">
+                    <i>🔷</i>
+                    <span>Куб</span>
+                </div>
+                <div class="menu-item">
+                    <i>🔺</i>
+                    <span>Пирамида</span>
+                </div>
+                <div class="menu-item">
+                    <i>⚫</i>
+                    <span>Сфера</span>
+                </div>
+                <div class="menu-item">
+                    <i>⭐</i>
+                    <span>Звезда</span>
                 </div>
             </div>
-        </section>
-
-        <section id="imagegen" class="page">
-            <h1>Генерация картинок</h1>
-            <p class="lead">Введи ключевые слова — мы попытаемся найти/сгенерировать картинку из интернета по ключевым словам.</p>
-
-            <div class="gen-panel">
-                <input id="gen-input" class="gen-input" placeholder="Например: лес, туман, мужчина" />
-                <button id="gen-btn" class="btn" style="background:linear-gradient(90deg,#b967ff,#6e3fce);">Сгенерировать</button>
+            
+            <div class="shape-selector">
+                <button class="shape-btn active">1</button>
+                <button class="shape-btn">2</button>
+                <button class="shape-btn">3</button>
+                <button class="shape-btn">4</button>
             </div>
-
-            <div class="gallery" id="image-gallery"></div>
-        </section>
-
-        <section id="settings" class="page">
-            <h1>Настройки</h1>
-            <div class="settings-grid">
-                <div class="card">
-                    <h3>Загрузки / Нагрузка сервера</h3>
-                    <p class="wm-note">Симуляция загрузки сервера влияет на среднее время ответа в чате (avgResponseTime).</p>
-                    <label>Загрузка сервера: <span id="server-load-display">20</span>%</label>
-                    <input id="server-load" type="range" min="0" max="100" value="20" style="width:100%; margin-top:8px;" />
-                </div>
-
-                <div class="card">
-                    <h3>Параметры</h3>
-                    <p class="wm-note">avgResponseTime рассчитывается так: base + load * multiplier</p>
-                    <p>Базовое время: <span id="base-time-display">800</span> ms</p>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <div class="high-load-notification" id="high-load-notification">Слишком большая нагрузка на сервер — задержки увеличены.</div>
+        </div>
+    </div>
 
     <script>
-    // -------------------------
-    // Core variables and helpers
-    // -------------------------
-    const pages = document.querySelectorAll('.page');
-    const navMenu = document.getElementById('nav-menu');
-    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-    const navUL = document.getElementById('nav-menu');
-    const AVG_BASE = 800; // ms base
-    let avgBase = 800;
-    let serverLoad = Number(document.getElementById('server-load').value); // 0..100
-
-    function updateAvgDisplay(){
-        const avg = computeAvgResponse();
-        document.getElementById('avg-response-display').textContent = avg + ' ms';
-        // show/hide high load
-        const highLoadEl = document.getElementById('high-load-notification');
-        if(serverLoad > 80){ highLoadEl.style.display = 'block'; } else { highLoadEl.style.display = 'none'; }
-    }
-    function computeAvgResponse(){
-        // base + serverLoad * multiplier
-        const multiplier = 30; // ms per load percent
-        return Math.round(avgBase + serverLoad * multiplier);
-    }
-
-    // -------------------------
-    // Navigation & mobile menu
-    // -------------------------
-    function showPage(id){
-        pages.forEach(p => p.classList.toggle('active', p.id === id));
-        // close mobile menu if open
-        if(window.innerWidth <= 900){
-            navUL.classList.remove('active');
-        }
-    }
-
-    document.querySelectorAll('[data-page]').forEach(a=>{
-        a.addEventListener('click', e=>{
-            e.preventDefault();
-            const page = a.dataset.page;
-            showPage(page);
-        });
-    });
-
-    // mobile
-    mobileMenuBtn.addEventListener('click', ()=>{
-        navUL.classList.toggle('active');
-    });
-
-    // close menu when clicking a nav link on mobile
-    navUL.querySelectorAll('a').forEach(a=>{
-        a.addEventListener('click', ()=> navUL.classList.remove('active'));
-    });
-
-    // -------------------------
-    // Chats logic
-    // -------------------------
-    const chatsListEl = document.getElementById('chats-list');
-    const createChatBtn = document.getElementById('create-chat-btn');
-    const newChatName = document.getElementById('new-chat-name');
-    const messagesContainer = document.getElementById('messages-container');
-    const messageInput = document.getElementById('message-input');
-    const sendBtn = document.getElementById('send-btn');
-    const currentChatTitle = document.getElementById('current-chat-title');
-
-    // In-memory chats store (persist in localStorage for convenience)
-    let chats = JSON.parse(localStorage.getItem('gamelton_chats') || '[]'); // array of {id, name, messages: [{from:'user'|'ai', type:'text'|'image', content:...}]}
-    let currentChatId = null;
-
-    function saveChats(){ localStorage.setItem('gamelton_chats', JSON.stringify(chats)); }
-    function renderChatsList(){
-        chatsListEl.innerHTML = '';
-        chats.forEach(c=>{
-            const div = document.createElement('div');
-            div.className = 'chat-item' + (c.id === currentChatId ? ' active' : '');
-            div.textContent = c.name;
-            div.onclick = ()=> selectChat(c.id);
-            chatsListEl.appendChild(div);
-        });
-    }
-
-    function createChat(name){
-        const id = 'chat_' + Date.now();
-        chats.unshift({ id, name: name || 'Чат ' + (chats.length + 1), messages: [] });
-        saveChats();
-        renderChatsList();
-        selectChat(id);
-    }
-
-    function selectChat(id){
-        currentChatId = id;
-        renderChatsList();
-        const chat = chats.find(c => c.id === id);
-        if(!chat) return;
-        currentChatTitle.textContent = chat.name;
-        renderMessages(chat);
-    }
-
-    function renderMessages(chat){
-        messagesContainer.innerHTML = '';
-        chat.messages.forEach(msg => {
-            const el = createMessageElement(msg);
-            messagesContainer.appendChild(el);
-        });
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }
-
-    function createMessageElement(msg){
-        const div = document.createElement('div');
-        div.className = 'message ' + (msg.from === 'user' ? 'outgoing' : 'incoming');
-        if(msg.type === 'text'){
-            div.innerHTML = `<div class="body">${escapeHtml(msg.content)}</div><div class="gloss"></div>`;
-        } else if(msg.type === 'image'){
-            const img = document.createElement('img');
-            img.src = msg.content.src;
-            img.alt = msg.content.alt || 'image';
-            img.style.maxWidth = '100%';
-            img.style.borderRadius = '8px';
-            img.style.display = 'block';
-            const caption = msg.content.caption ? `<div style="margin-top:8px; font-size:13px; color:#e9dfff">${escapeHtml(msg.content.caption)}</div>` : '';
-            const imgWrap = document.createElement('div');
-            imgWrap.style.borderRadius = '12px';
-            imgWrap.style.overflow = 'hidden';
-            imgWrap.appendChild(img);
-            div.appendChild(imgWrap);
-            if(caption) div.insertAdjacentHTML('beforeend', caption);
-            div.appendChild(createImageDownloadButton(msg.content.src));
-            const gloss = document.createElement('div'); gloss.className='gloss'; div.appendChild(gloss);
-        }
-        return div;
-    }
-
-    function createImageDownloadButton(src){
-        const wrapper = document.createElement('div');
-        wrapper.style.marginTop = '8px';
-        wrapper.style.display = 'flex';
-        wrapper.style.justifyContent = 'flex-end';
-        const btn = document.createElement('button');
-        btn.className = 'download-btn';
-        btn.textContent = 'Скачать (с водяным знаком)';
-        btn.onclick = ()=> downloadWatermarkedImage(src);
-        wrapper.appendChild(btn);
-        return wrapper;
-    }
-
-    createChatBtn.addEventListener('click', ()=>{
-        const name = newChatName.value.trim() || ('Чат ' + (chats.length + 1));
-        createChat(name);
-        newChatName.value = '';
-    });
-
-    sendBtn.addEventListener('click', ()=> handleSendMessage());
-    messageInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') handleSendMessage(); });
-
-    function handleSendMessage(){
-        const text = messageInput.value.trim();
-        if(!text || !currentChatId) return;
-        // append user message
-        appendToChat(currentChatId, { from:'user', type:'text', content:text });
-        messageInput.value = '';
-        // If contains keyword 'сгенерируй картинку' -> start generation flow
-        const lower = text.toLowerCase();
-        const trigger = 'сгенерируй картинку';
-        if(lower.includes(trigger)){
-            // extract keywords after trigger if exist
-            let keywords = text.slice(lower.indexOf(trigger) + trigger.length).replace(/[:\-–—]/g,'').trim();
-            if(!keywords) keywords = text.replace(new RegExp(trigger, 'i'), '').trim() || 'art';
-            // show thinking placeholder and then append image as incoming
-            showThinkingThenRespondWithImage(currentChatId, keywords);
-        } else {
-            // normal text reply simulation
-            showThinkingThenRespondWithText(currentChatId, text);
-        }
-    }
-
-    function appendToChat(chatId, msg){
-        const chat = chats.find(c=>c.id===chatId);
-        if(!chat) return;
-        chat.messages.push(msg);
-        saveChats();
-        if(chatId === currentChatId){
-            const el = createMessageElement(msg);
-            messagesContainer.appendChild(el);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
-    }
-
-    function showThinkingThenRespondWithText(chatId, userText){
-        // add thinking element as incoming
-        const thinkingMsg = { from:'ai', type:'text', content:'thinking-placeholder', meta:{thinking:true} };
-        appendToChat(chatId, thinkingMsg);
-        // compute delay
-        const delay = computeAvgResponse();
-        setTimeout(()=> {
-            // replace last AI message with real reply
-            const chat = chats.find(c=>c.id===chatId);
-            if(!chat) return;
-            // remove last thinking message
-            for(let i=chat.messages.length-1;i>=0;i--){
-                if(chat.messages[i].meta && chat.messages[i].meta.thinking){
-                    chat.messages.splice(i,1);
-                    break;
-                }
+        document.addEventListener('DOMContentLoaded', function() {
+            const scene = document.getElementById('scene');
+            let isDragging = false;
+            let previousX, previousY;
+            let rotationX = 0, rotationY = 0;
+            let currentShape = 'cube';
+            const shapes = {};
+            
+            // Создание 3D куба
+            function createCube() {
+                const cube = document.createElement('div');
+                cube.className = 'cube';
+                cube.style.width = '200px';
+                cube.style.height = '200px';
+                
+                const faces = ['front', 'back', 'right', 'left', 'top', 'bottom'];
+                faces.forEach(face => {
+                    const faceEl = document.createElement('div');
+                    faceEl.className = `cube-face ${face}`;
+                    cube.appendChild(faceEl);
+                });
+                
+                scene.appendChild(cube);
+                shapes.cube = cube;
+                return cube;
             }
-            // generate a simple reply (placeholder)
-            const reply = `Я обработал запрос: "${userText}". (ответ через ${computeAvgResponse()} ms)`;
-            chat.messages.push({ from:'ai', type:'text', content:reply });
-            saveChats();
-            if(chatId === currentChatId) renderMessages(chat);
-        }, delay);
-        // render thinking (update UI)
-        if(currentChatId === chatId) renderThinkingElement();
-    }
-
-    function showThinkingThenRespondWithImage(chatId, keywords){
-        // add thinking message
-        appendToChat(chatId, { from:'ai', type:'text', content:'thinking-placeholder', meta:{thinking:true} });
-        if(currentChatId === chatId) renderThinkingElement();
-        const delay = computeAvgResponse() + 500; // bit more for image
-        setTimeout(async ()=>{
-            const chat = chats.find(c=>c.id===chatId);
-            if(!chat) return;
-            // remove thinking
-            for(let i=chat.messages.length-1;i>=0;i--){
-                if(chat.messages[i].meta && chat.messages[i].meta.thinking){
-                    chat.messages.splice(i,1);
-                    break;
-                }
-            }
-            // generate image source (Unsplash Source fallback)
-            // NOTE: using source.unsplash.com — returns a redirect to an image for keywords
-            const safeKeywords = encodeURIComponent(keywords);
-            const rand = Math.floor(Math.random()*10000);
-            const src = `https://source.unsplash.com/800x600/?${safeKeywords}&sig=${rand}`;
-            chat.messages.push({
-                from:'ai', type:'image',
-                content: { src, caption: `Сгенерировано по запросу: ${keywords}` }
+            
+            // Инициализация
+            const cube = createCube();
+            
+            // Обработка событий вращения
+            scene.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                previousX = e.clientX;
+                previousY = e.clientY;
+                e.preventDefault();
             });
-            saveChats();
-            if(chatId === currentChatId) renderMessages(chat);
-            // If the image was created via chat, we also show it in the gallery section (optional)
-            addToGallery(src, keywords);
-        }, delay);
-    }
-
-    function renderThinkingElement(){
-        // replace any AI messages with meta.thinking by a friendly animated "Думаю" block
-        const chat = chats.find(c=>c.id===currentChatId);
-        if(!chat) return;
-        messagesContainer.innerHTML = '';
-        chat.messages.forEach(msg => {
-            if(msg.meta && msg.meta.thinking){
-                const div = document.createElement('div');
-                div.className = 'message incoming';
-                div.innerHTML = `<div class="body thinking">Думаю <span class="dots"><span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></span></div><div class="gloss"></div>`;
-                messagesContainer.appendChild(div);
-            } else {
-                messagesContainer.appendChild(createMessageElement(msg));
+            
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                
+                const deltaX = e.clientX - previousX;
+                const deltaY = e.clientY - previousY;
+                
+                rotationY += deltaX * 0.5;
+                rotationX += deltaY * 0.5;
+                
+                if (shapes[currentShape]) {
+                    shapes[currentShape].style.transform = `translate3d(-50%, -50%, 0) rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
+                }
+                
+                previousX = e.clientX;
+                previousY = e.clientY;
+            });
+            
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+            
+            // Обработка касаний для мобильных устройств
+            scene.addEventListener('touchstart', (e) => {
+                isDragging = true;
+                previousX = e.touches[0].clientX;
+                previousY = e.touches[0].clientY;
+                e.preventDefault();
+            });
+            
+            document.addEventListener('touchmove', (e) => {
+                if (!isDragging) return;
+                
+                const deltaX = e.touches[0].clientX - previousX;
+                const deltaY = e.touches[0].clientY - previousY;
+                
+                rotationY += deltaX * 0.5;
+                rotationX += deltaY * 0.5;
+                
+                if (shapes[currentShape]) {
+                    shapes[currentShape].style.transform = `translate3d(-50%, -50%, 0) rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
+                }
+                
+                previousX = e.touches[0].clientX;
+                previousY = e.touches[0].clientY;
+                
+                e.preventDefault();
+            });
+            
+            document.addEventListener('touchend', () => {
+                isDragging = false;
+            });
+            
+            // Обработка выбора фигур из меню
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach((item, index) => {
+                item.addEventListener('click', () => {
+                    // Удаляем текущую фигуру
+                    if (shapes[currentShape]) {
+                        scene.removeChild(shapes[currentShape]);
+                    }
+                    
+                    // Устанавливаем новую фигуру
+                    const shapesList = ['cube', 'pyramid', 'sphere', 'star'];
+                    currentShape = shapesList[index];
+                    
+                    // Создаём новую фигуру (здесь можно расширить функционал)
+                    if (currentShape === 'cube') {
+                        shapes.cube = createCube();
+                    } else {
+                        // Заглушка для других фигур
+                        const placeholder = document.createElement('div');
+                        placeholder.innerHTML = `<div style="color: white; font-size: 24px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">Фигура "${currentShape}" в разработке</div>`;
+                        scene.appendChild(placeholder);
+                        shapes[currentShape] = placeholder;
+                    }
+                });
+            });
+            
+            // Анимация вращения, когда пользователь не взаимодействует
+            let idleRotation = true;
+            
+            function animateIdleRotation() {
+                if (!idleRotation || !shapes[currentShape]) return;
+                
+                rotationY += 0.2;
+                shapes[currentShape].style.transform = `translate3d(-50%, -50%, 0) rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
+                
+                requestAnimationFrame(animateIdleRotation);
             }
-        });
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }
-
-    // -------------------------
-    // Image generator page
-    // -------------------------
-    const genInput = document.getElementById('gen-input');
-    const genBtn = document.getElementById('gen-btn');
-    const gallery = document.getElementById('image-gallery');
-
-    genBtn.addEventListener('click', ()=> {
-        const q = (genInput.value || '').trim() || 'art';
-        generateGallery(q);
-    });
-
-    function generateGallery(q){
-        gallery.innerHTML = '';
-        // create 6 variants using Unsplash source with sig param for randomness
-        for(let i=0;i<6;i++){
-            const rand = Math.floor(Math.random()*10000) + i;
-            const src = `https://source.unsplash.com/800x600/?${encodeURIComponent(q)}&sig=${rand}`;
-            const card = createImageCard(src, q);
-            gallery.appendChild(card);
-        }
-        // switch to imagegen page
-        showPage('imagegen');
-    }
-
-    function createImageCard(src, q){
-        const card = document.createElement('div'); card.className='img-card';
-        const img = document.createElement('img'); img.src = src; img.alt = q;
-        img.loading = 'lazy';
-        card.appendChild(img);
-        const actions = document.createElement('div'); actions.className='img-actions';
-        const left = document.createElement('div'); left.className='wm-note'; left.textContent = q;
-        const saveBtn = document.createElement('button'); saveBtn.className='download-btn'; saveBtn.textContent='Скачать';
-        saveBtn.onclick = ()=> downloadWatermarkedImage(src);
-        actions.appendChild(left); actions.appendChild(saveBtn);
-        card.appendChild(actions);
-        return card;
-    }
-
-    function addToGallery(src, q){
-        const card = createImageCard(src, q);
-        // prepend to gallery if exists
-        const galleryEl = document.getElementById('image-gallery');
-        if(galleryEl) galleryEl.prepend(card);
-    }
-
-    // -------------------------
-    // Watermark & download
-    // -------------------------
-    async function downloadWatermarkedImage(url){
-        try {
-            // try to load as blob (to avoid crossOrigin issues when drawing)
-            const res = await fetch(url, {mode:'cors'});
-            const blob = await res.blob();
-            const img = await createImageBitmap(blob);
-            // draw to canvas and add watermark
-            const canvas = document.createElement('canvas');
-            canvas.width = img.width; canvas.height = img.height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0,0);
-            // watermark style
-            const wmText = 'Gamelton';
-            const fontSize = Math.max(18, Math.round(canvas.width / 18));
-            ctx.font = `bold ${fontSize}px sans-serif`;
-            ctx.textBaseline = 'bottom';
-            const padding = 12;
-            const textWidth = ctx.measureText(wmText).width;
-            // draw semi-transparent black rect for watermark
-            ctx.fillStyle = 'rgba(0,0,0,0.25)';
-            ctx.fillRect(canvas.width - textWidth - padding*2, canvas.height - fontSize - padding*1.6, textWidth + padding*1.6, fontSize + padding*0.6);
-            // draw watermark text
-            ctx.fillStyle = 'rgba(255,255,255,0.85)';
-            ctx.fillText(wmText, canvas.width - textWidth - padding, canvas.height - padding);
-            // additional faint diagonal watermark
-            ctx.save();
-            ctx.translate(canvas.width/2, canvas.height/2);
-            ctx.rotate(-Math.PI/8);
-            ctx.globalAlpha = 0.06;
-            ctx.font = `${Math.round(canvas.width/6)}px sans-serif`;
-            ctx.fillStyle = '#ffffff';
-            ctx.fillText(wmText, -ctx.measureText(wmText).width/2, 0);
-            ctx.restore();
-
-            // create link to download
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
-            const a = document.createElement('a');
-            a.href = dataUrl;
-            a.download = 'gamelton_' + Date.now() + '.jpg';
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-        } catch(err){
-            console.warn('watermarking failed (CORS?), fallback to direct download', err);
-            // fallback: just open original URL in new tab to allow manual save
-            const a = document.createElement('a');
-            a.href = url;
-            a.target = '_blank';
-            a.rel = 'noopener noreferrer';
-            a.click();
-            a.remove();
-            alert('Не удалось наложить водяной знак из-за ограничений CORS. Открылось оригинальное изображение — сохраните его вручную.');
-        }
-    }
-
-    // -------------------------
-    // Utils & init
-    // -------------------------
-    function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
-
-    // load saved chats
-    (function init(){
-        // if no chats exist, create a welcome chat
-        if(chats.length === 0) {
-            createChat('Общий чат');
-            // add welcome message
-            chats[0].messages.push({ from:'ai', type:'text', content:'Привет! Я — ваш помощник. Напишите что-нибудь или используйте команду "сгенерируй картинку: лес туман" в чате.' });
-            saveChats();
-            renderChatsList();
-            selectChat(chats[0].id);
-        } else {
-            renderChatsList();
-            selectChat(chats[0].id);
-        }
-
-        // init server-load controls
-        document.getElementById('server-load').addEventListener('input', (e)=>{
-            serverLoad = Number(e.target.value);
-            document.getElementById('server-load-display').textContent = serverLoad;
-            updateAvgDisplay();
-        });
-        document.getElementById('server-load-display').textContent = serverLoad;
-        document.getElementById('base-time-display').textContent = avgBase;
-        updateAvgDisplay();
-
-        // catch window resize to close mobile menu
-        window.addEventListener('resize', ()=>{ if(window.innerWidth > 900) navUL.classList.remove('active'); });
-    })();
-
-    // replace thinking-placeholder messages content on render
-    // override createMessageElement to support placeholder rendering
-    // (but handled by renderThinkingElement when meta.thinking present)
-
-    // -------------------------
-    // Keyboard shortcuts (optional)
-    // -------------------------
-    document.addEventListener('keydown', (e)=>{
-        if(e.key === 'k' && (e.ctrlKey || e.metaKey)){
-            e.preventDefault();
-            genInput.focus();
-            showPage('imagegen');
-        }
-    });
-
-    // -------------------------
-    // Small helper: if user generates image from imagegen page, add to chat optionally
-    // -------------------------
-    gallery && gallery.addEventListener('click', (ev)=>{
-        const t = ev.target;
-        if(t.tagName === 'IMG'){
-            // send image to current chat
-            if(!currentChatId){
-                alert('Выберите чат слева, чтобы отправить картинку в чат.');
-                return;
+            
+            // Запускаем анимацию в простое
+            animateIdleRotation();
+            
+            // Останавливаем анимацию при взаимодействии пользователя
+            document.addEventListener('mousedown', () => {
+                idleRotation = false;
+            });
+            
+            document.addEventListener('touchstart', () => {
+                idleRotation = false;
+            });
+            
+            // Возобновляем анимацию через 3 секунды бездействия
+            let idleTimeout;
+            
+            function resetIdleTimeout() {
+                clearTimeout(idleTimeout);
+                idleTimeout = setTimeout(() => {
+                    idleRotation = true;
+                    animateIdleRotation();
+                }, 3000);
             }
-            const src = t.src;
-            appendToChat(currentChatId, { from:'user', type:'text', content:'/sendimage' });
-            // add thinking & then image
-            showThinkingThenRespondWithImage(currentChatId, 'изображение из галереи');
-        }
-    });
-
+            
+            document.addEventListener('mousemove', resetIdleTimeout);
+            document.addEventListener('touchmove', resetIdleTimeout);
+            
+            resetIdleTimeout();
+        });
     </script>
 </body>
 </html>
