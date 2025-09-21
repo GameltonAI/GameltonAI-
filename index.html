@@ -2,154 +2,125 @@
 
 <html lang="ru">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Gamelton AI</title>
-  <style>
-    body {margin:0; background:#0f1724; color:#fff; font-family:'Segoe UI',sans-serif; overflow:hidden;}/* Splash */
-#splash {position:fixed; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center; background:#0f1724; z-index:999;}
-.title {font-size:52px; font-weight:bold; opacity:0; animation:fadeIn 2s forwards;}
-.title span.ai {margin-left:8px; display:inline-block;
-  background:linear-gradient(270deg, red, orange, yellow, green, cyan, blue, violet);
-  background-size:400% 400%;
-  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-  animation: spinGradient 2s linear infinite;
-}
-.subtitle {font-size:20px; margin-top:10px; opacity:0; animation:fadeUp 2s forwards 2.5s; color:#a78bfa;}
-@keyframes fadeIn {to{opacity:1;}}
-@keyframes fadeUp {from{opacity:0; transform:translateY(20px);}to{opacity:1; transform:translateY(0);}}
-@keyframes spinGradient {0%{background-position:0% 50%;}100%{background-position:100% 50%;}}
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Gamelton AI</title>
+<style>
+body {margin:0; background:#0f1724; color:#fff; font-family:'Segoe UI',sans-serif; overflow:hidden;}/* Splash */ #splash {position:fixed; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center; background:#0f1724; z-index:999;} .title {font-size:52px; font-weight:bold; opacity:0; animation:fadeIn 2s forwards;} .title span.ai {margin-left:8px; display:inline-block; background:linear-gradient(270deg, red, orange, yellow, green, cyan, blue, violet); background-size:400% 400%; -webkit-background-clip:text; -webkit-text-fill-color:transparent; animation: spinGradient 2s linear infinite;} .subtitle {font-size:20px; margin-top:10px; opacity:0; animation:fadeUp 2s forwards 2.5s; color:#a78bfa;} @keyframes fadeIn {to{opacity:1;}} @keyframes fadeUp {from{opacity:0; transform:translateY(20px);}to{opacity:1; transform:translateY(0);}} @keyframes spinGradient {0%{background-position:0% 50%;}100%{background-position:100% 50%;}} .title span.ai.final {background:none; -webkit-text-fill-color:#a78bfa; animation:none;}
 
-.title span.ai.final {background:none; -webkit-text-fill-color:#a78bfa; animation:none;}
+/* Intro */ #intro {position:fixed; inset:0; background:#0f1724; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:998; opacity:0; pointer-events:none; transition:opacity 1s;} #intro.active {opacity:1; pointer-events:auto;} #intro p {max-width:400px; text-align:center; font-size:18px; line-height:1.4; margin-bottom:20px;} #intro button {padding:10px 20px; font-size:18px; background:#a78bfa; border:none; border-radius:8px; color:#fff; cursor:pointer; transition:background 0.3s;} #intro button:hover {background:#7c3aed;}
 
-/* Intro */
-#intro {position:fixed; inset:0; background:#0f1724; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:998; opacity:0; pointer-events:none; transition:opacity 1s;}
-#intro.active {opacity:1; pointer-events:auto;}
-#intro p {max-width:400px; text-align:center; font-size:18px; line-height:1.4; margin-bottom:20px;}
-#intro button {padding:10px 20px; font-size:18px; background:#a78bfa; border:none; border-radius:8px; color:#fff; cursor:pointer; transition:background 0.3s;}
-#intro button:hover {background:#7c3aed;}
+/* App */ #app {display:none; flex-direction:column; height:100vh;} #stage {position:relative; flex:1; overflow:hidden} video, canvas {position:absolute; inset:0; width:100%; height:100%; object-fit:cover} video {transform:scaleX(-1)}
 
-/* App */
-#app {display:none; flex-direction:column; height:100vh;}
-#stage {position:relative; flex:1; overflow:hidden}
-video, canvas {position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
-video {transform:scaleX(-1)}
+/* Controls */ #controls {position:absolute; bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:12px; padding:10px 20px; border-radius:20px; background:rgba(255,255,255,0.1); backdrop-filter:blur(20px); box-shadow:0 4px 20px rgba(0,0,0,0.4);} .btn {padding:10px 18px; font-size:16px; border:none; border-radius:14px; cursor:pointer; background:rgba(255,255,255,0.15); color:#fff; backdrop-filter:blur(20px); transition:all 0.3s;} .btn.active {background:rgba(167,139,250,0.4); box-shadow:0 0 10px #a78bfa;} .btn:hover {background:rgba(255,255,255,0.25);}
 
-/* Controls */
-#controls {position:absolute; bottom:20px; left:50%; transform:translateX(-50%);
-  display:flex; gap:12px; padding:10px 20px; border-radius:20px;
-  background:rgba(255,255,255,0.1); backdrop-filter:blur(20px);
-  box-shadow:0 4px 20px rgba(0,0,0,0.4);
-}
-.btn {padding:10px 18px; font-size:16px; border:none; border-radius:14px; cursor:pointer;
-  background:rgba(255,255,255,0.15); color:#fff; backdrop-filter:blur(20px);
-  transition:all 0.3s;}
-.btn.active {background:rgba(167,139,250,0.4); box-shadow:0 0 10px #a78bfa;}
-.btn:hover {background:rgba(255,255,255,0.25);}
+/* Submenu */ #submenu {position:absolute; bottom:80px; left:50%; transform:translateX(-50%); display:flex; gap:10px; padding:8px 16px; border-radius:18px; background:rgba(255,255,255,0.1); backdrop-filter:blur(20px); box-shadow:0 4px 15px rgba(0,0,0,0.3); display:none;} .subbtn {padding:6px 14px; border:none; border-radius:12px; cursor:pointer; background:rgba(255,255,255,0.15); color:#fff; backdrop-filter:blur(20px); transition:all 0.3s;} .subbtn.active {background:rgba(167,139,250,0.4); box-shadow:0 0 10px #a78bfa;} .subbtn:hover {background:rgba(255,255,255,0.25);} </style>
 
-  </style>
 </head>
 <body>
-  <!-- Splash -->
-  <div id="splash">
-    <div class="title">Gamelton <span class="ai">AI</span></div>
-    <div class="subtitle">Camera Experience</div>
-  </div>  <!-- Intro -->  <div id="intro">
-    <p>Добро пожаловать в <b>Gamelton AI</b> — приложение с экспериментальными возможностями:
-      ✍️ Рисование в воздухе.<br>
-      😎 AR-фильтры для лица.<br>
-      🌆 Замена фона с помощью AI.<br><br>
-      Выбирайте режим и пробуйте!</p>
-    <button id="startBtn">Попробовать</button>
-  </div>  <!-- App -->  <div id="app">
-    <div id="stage">
-      <video id="video" autoplay playsinline muted></video>
-      <canvas id="draw"></canvas>
-      <canvas id="overlay"></canvas>
-    </div>
-    <div id="controls">
-      <button class="btn active" data-mode="draw">Draw</button>
-      <button class="btn" data-mode="filters">Filters</button>
-      <button class="btn" data-mode="background">Background</button>
-      <button class="btn" id="save">💾</button>
-    </div>
-  </div>  <!-- MediaPipe -->  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.min.js"></script>  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.min.js"></script>  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.min.js"></script>  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.min.js"></script>  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.min.js"></script>  <script>
-    const splash=document.getElementById('splash');
-    const intro=document.getElementById('intro');
-    const app=document.getElementById('app');
-    const video=document.getElementById('video');
-    const canvas=document.getElementById('draw');
-    const overlay=document.getElementById('overlay');
-    const ctx=canvas.getContext('2d');
-    const octx=overlay.getContext('2d');
-    let mode="draw";
+<!-- Splash -->
+<div id="splash">
+  <div class="title">Gamelton <span class="ai">AI</span></div>
+  <div class="subtitle">Camera Experience</div>
+</div><!-- Intro --><div id="intro">
+  <p>Добро пожаловать в <b>Gamelton AI</b> — приложение с экспериментальными возможностями:
+  ✍️ Рисование в воздухе.<br>😎 AR-фильтры для лица.<br>🌆 Замена фона с помощью AI.<br>💡 Object Cut.</p>
+  <button id="startBtn">Попробовать</button>
+</div><!-- App --><div id="app">
+  <div id="stage">
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="draw"></canvas>
+    <canvas id="overlay"></canvas>
+  </div>
+  <div id="controls">
+    <button class="btn active" data-mode="draw">Draw</button>
+    <button class="btn" data-mode="filters">Filters</button>
+    <button class="btn" data-mode="background">Background</button>
+    <button class="btn" data-mode="object">Object Cut</button>
+    <button class="btn" id="save">💾</button>
+  </div>
+  <div id="submenu"></div>
+</div><!-- MediaPipe --><script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.min.js"></script><script>
+const splash=document.getElementById('splash');
+const intro=document.getElementById('intro');
+const app=document.getElementById('app');
+const video=document.getElementById('video');
+const canvas=document.getElementById('draw');
+const overlay=document.getElementById('overlay');
+const ctx=canvas.getContext('2d');
+const octx=overlay.getContext('2d');
+const submenu=document.getElementById('submenu');
+let mode='draw';
 
-    setTimeout(()=>{document.querySelector('.title span.ai').classList.add('final');},3000);
-    setTimeout(()=>{splash.style.display='none'; intro.classList.add('active');},4500);
+setTimeout(()=>{document.querySelector('.title span.ai').classList.add('final');},3000);
+setTimeout(()=>{splash.style.display='none'; intro.classList.add('active');},4500);
+document.getElementById('startBtn').addEventListener('click',()=>{intro.style.display='none'; app.style.display='flex'; startApp();});
 
-    document.getElementById('startBtn').addEventListener('click',()=>{
-      intro.style.display='none';
-      app.style.display='flex';
-      startApp();
-    });
+function resize(){canvas.width=overlay.width=app.clientWidth; canvas.height=overlay.height=app.clientHeight-80;}
+window.addEventListener('resize',resize);
 
-    function resize(){canvas.width=overlay.width=app.clientWidth; canvas.height=overlay.height=app.clientHeight-80;}
-    window.addEventListener('resize',resize);
+// --- Draw Mode ---
+let last=null;
+function detectGesture(lm){const tips=[8,12,16,20],mcp=[5,9,13,17];let ext=tips.map((t,i)=>lm[t].y<mcp[i].y);const c=ext.filter(v=>v).length;if(c===0)return'fist';if(ext[0]&&ext[1]&&!ext[2]&&!ext[3])return'two';if(ext[0]&&!ext[1]&&!ext[2]&&!ext[3])return'draw';return'none';}
+function drawLine(from,to,erase=false){ctx.save();ctx.globalCompositeOperation=erase?'destination-out':'source-over';ctx.strokeStyle=erase?'rgba(0,0,0,1)':'#ff4655';ctx.lineWidth=erase?40:6;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(from.x,from.y);ctx.lineTo(to.x,to.y);ctx.stroke();ctx.restore();}
+function norm(p){return{x:p.x*canvas.width,y:p.y*canvas.height};}
 
-    // --- DRAW MODE ---
-    let last=null;
-    function detectGesture(lm){const tips=[8,12,16,20],mcp=[5,9,13,17];let ext=tips.map((t,i)=>lm[t].y<lm[mcp[i]].y);const c=ext.filter(v=>v).length;if(c===0)return'fist';if(ext[0]&&ext[1]&&!ext[2]&&!ext[3])return'two';if(ext[0]&&!ext[1]&&!ext[2]&&!ext[3])return'draw';return'none';}
-    function drawLine(from,to,erase=false){ctx.save();ctx.globalCompositeOperation=erase?'destination-out':'source-over';ctx.strokeStyle=erase?'rgba(0,0,0,1)':'#ff4655';ctx.lineWidth=erase?40:6;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(from.x,from.y);ctx.lineTo(to.x,to.y);ctx.stroke();ctx.restore();}
-    function norm(p){return{x:p.x*canvas.width,y:p.y*canvas.height};}
+// --- Filters ---
+function renderFilters(lm){if(!lm)return;drawConnectors(octx,lm,FACEMESH_TESSELATION,{color:'rgba(0,255,255,0.3)',lineWidth:0.5});}
 
-    // --- FILTER MODE (FaceMesh) ---
-    function renderFilters(lm){if(!lm) return;drawConnectors(octx,lm,FACEMESH_TESSELATION,{color:'rgba(0,255,255,0.3)',lineWidth:0.5});}
+// --- Background ---
+function renderBackground(results){if(!results.segmentationMask)return;octx.save();octx.clearRect(0,0,overlay.width,overlay.height);octx.drawImage(results.segmentationMask,0,0,overlay.width,overlay.height);octx.globalCompositeOperation='source-in';octx.fillStyle='rgba(100,0,200,0.5)';octx.fillRect(0,0,overlay.width,overlay.height);octx.restore();}
 
-    // --- BACKGROUND MODE ---
-    let segmentationMask=null;
-    function renderBackground(results){if(!results.segmentationMask)return; octx.save(); octx.clearRect(0,0,overlay.width,overlay.height); octx.drawImage(results.segmentationMask,0,0,overlay.width,overlay.height); octx.globalCompositeOperation='source-in'; octx.fillStyle='rgba(100,0,200,0.5)'; octx.fillRect(0,0,overlay.width,overlay.height); octx.restore();}
+// --- Object Cut (Human only via segmentation) ---
+function renderObjectCut(results){if(!results.segmentationMask)return;octx.save();octx.clearRect(0,0,overlay.width,overlay.height);octx.drawImage(results.segmentationMask,0,0,overlay.width,overlay.height);octx.globalCompositeOperation='source-in';octx.drawImage(video,0,0,overlay.width,overlay.height);octx.restore();}
 
-    // MediaPipe pipelines
-    const hands=new Hands({locateFile:(f)=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`});
-    hands.setOptions({maxNumHands:1,modelComplexity:1,minDetectionConfidence:0.7,minTrackingConfidence:0.5});
-    hands.onResults(res=>{if(mode!=='draw'){return;}octx.clearRect(0,0,overlay.width,overlay.height);if(res.multiHandLandmarks&&res.multiHandLandmarks.length>0){const lm=res.multiHandLandmarks[0];const g=detectGesture(lm);if(g==='draw'){const tip=norm(lm[8]);if(last)drawLine(last,tip,false);last=tip;}else if(g==='fist'){const tip=norm(lm[8]);if(last)drawLine(last,tip,true);last=tip;}else if(g==='two'){ctx.clearRect(0,0,canvas.width,canvas.height);last=null;}else last=null;}});
+// Pipelines
+const hands=new Hands({locateFile:(f)=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`});
+hands.setOptions({maxNumHands:1,modelComplexity:1,minDetectionConfidence:0.7,minTrackingConfidence:0.5});
+hands.onResults(res=>{if(mode!=='draw')return;octx.clearRect(0,0,overlay.width,overlay.height);if(res.multiHandLandmarks&&res.multiHandLandmarks.length>0){const lm=res.multiHandLandmarks[0];const g=detectGesture(lm);if(g==='draw'){const tip=norm(lm[8]);if(last)drawLine(last,tip,false);last=tip;}else if(g==='fist'){const tip=norm(lm[8]);if(last)drawLine(last,tip,true);last=tip;}else if(g==='two'){ctx.clearRect(0,0,canvas.width,canvas.height);last=null;}else last=null;}});
+const faceMesh=new FaceMesh({locateFile:(f)=>`https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`});
+faceMesh.setOptions({maxNumFaces:1,minDetectionConfidence:0.5,minTrackingConfidence:0.5});
+faceMesh.onResults(res=>{if(mode!=='filters')return;octx.clearRect(0,0,overlay.width,overlay.height);if(res.multiFaceLandmarks)res.multiFaceLandmarks.forEach(renderFilters);});
+const selfieSeg=new SelfieSegmentation({locateFile:(f)=>`https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${f}`});
+selfieSeg.setOptions({modelSelection:1});
+selfieSeg.onResults(res=>{if(mode==='background')renderBackground(res);if(mode==='object')renderObjectCut(res);});
 
-    const faceMesh=new FaceMesh({locateFile:(f)=>`https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`});
-    faceMesh.setOptions({maxNumFaces:1,minDetectionConfidence:0.5,minTrackingConfidence:0.5});
-    faceMesh.onResults(res=>{if(mode!=='filters'){return;}octx.clearRect(0,0,overlay.width,overlay.height);if(res.multiFaceLandmarks)res.multiFaceLandmarks.forEach(renderFilters);});
+function startApp(){resize();const camera=new Camera(video,{onFrame:async()=>{if(mode==='draw')await hands.send({image:video});else if(mode==='filters')await faceMesh.send({image:video});else if(mode==='background')await selfieSeg.send({image:video});else if(mode==='object')await selfieSeg.send({image:video});},width:640,height:480});camera.start();}
 
-    const selfieSeg=new SelfieSegmentation({locateFile:(f)=>`https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${f}`});
-    selfieSeg.setOptions({modelSelection:1});
-    selfieSeg.onResults(res=>{if(mode!=='background'){return;}renderBackground(res);});
+// Mode switch & submenu
+const modeButtons=document.querySelectorAll('#controls .btn[data-mode]');
+modeButtons.forEach(btn=>{btn.addEventListener('click',()=>{
+  mode=btn.dataset.mode;
+  modeButtons.forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  ctx.clearRect(0,0,canvas.width,canvas.height); octx.clearRect(0,0,overlay.width,overlay.height);
+  renderSubmenu();
+})});
 
-    function startApp(){resize();
-      const camera=new Camera(video,{onFrame:async()=>{
-        if(mode==='draw') await hands.send({image:video});
-        else if(mode==='filters') await faceMesh.send({image:video});
-        else if(mode==='background') await selfieSeg.send({image:video});
-      },width:640,height:480});
-      camera.start();
-    }
+function renderSubmenu(){submenu.innerHTML='';
+if(mode==='filters'){
+  submenu.style.display='flex';
+  ['Glasses','Mask','Mustache'].forEach(f=>{
+    const b=document.createElement('button'); b.className='subbtn'; b.textContent=f; b.onclick=()=>{alert('Выбран фильтр: '+f);};
+    submenu.appendChild(b);
+  });
+} else if(mode==='background'){
+  submenu.style.display='flex';
+  ['Blur','Gradient','City'].forEach(bk=>{
+    const b=document.createElement('button'); b.className='subbtn'; b.textContent=bk; b.onclick=()=>{alert('Выбран фон: '+bk);};
+    submenu.appendChild(b);
+  });
+} else submenu.style.display='none';
+}
 
-    // Mode switch
-    document.querySelectorAll('#controls .btn[data-mode]').forEach(btn=>{
-      btn.addEventListener('click',()=>{
-        mode=btn.dataset.mode;
-        document.querySelectorAll('#controls .btn').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        ctx.clearRect(0,0,canvas.width,canvas.height);
-        octx.clearRect(0,0,overlay.width,overlay.height);
-      });
-    });
-
-    // Save
-    document.getElementById('save').addEventListener('click',()=>{
-      const out=document.createElement('canvas'); out.width=canvas.width; out.height=canvas.height;
-      const octx2=out.getContext('2d');
-      octx2.drawImage(video,0,0,out.width,out.height);
-      octx2.drawImage(canvas,0,0,out.width,out.height);
-      octx2.drawImage(overlay,0,0,out.width,out.height);
-      const a=document.createElement('a'); a.href=out.toDataURL('image/png'); a.download='gamelton-ai.png'; a.click();
-    });
-  </script></body>
+// Save
+document.getElementById('save').addEventListener('click',()=>{
+  const out=document.createElement('canvas'); out.width=canvas.width; out.height=canvas.height;
+  const octx2=out.getContext('2d');
+  octx2.drawImage(video,0,0,out.width,out.height);
+  octx2.drawImage(canvas,0,0,out.width,out.height);
+  octx2.drawImage(overlay,0,0,out.width,out.height);
+  const a=document.createElement('a'); a.href=out.toDataURL('image/png'); a.download='gamelton-ai.png'; a.click();
+});
+</script></body>
 </html>
