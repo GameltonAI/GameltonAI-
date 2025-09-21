@@ -1,928 +1,428 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <title>CryptoBlur — Trading Platform Demo</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --accent: #7f5af0;
-            --accent-glow: #7f5af0cc;
-            /* new theme base colors (dynamic) */
-            --bg-color-1: #181c2f;
-            --bg-color-2: #2d1a3a;
-            --bg-gradient: linear-gradient(135deg, var(--bg-color-1) 0%, var(--bg-color-2) 100%);
-            /* glass control */
-            --glass-opacity: 0.55;
-            --glass-bg: rgba(30, 34, 54, var(--glass-opacity));
-            --glass-blur: blur(18px);
-            --glass-border: 1.5px solid #7f5af055;
-            --glass-shadow: 0 4px 32px 0 #7f5af022;
-            /* portfolio pulse defaults */
-            --pulse-scale: 1;
-            --pulse-duration: 2.4s;
-            --portfolio-glow: var(--accent-glow);
-            --success: #2ce59b;
-            --danger: #ff3c6e;
-            --text-main: #eaeaea;
-            --text-muted: #b3b3b3;
-        }
-        html, body {
-            height: 100%;
-            margin: 0;
-            font-family: 'Inter', sans-serif;
-            background: var(--bg-gradient);
-            color: var(--text-main);
-            overflow-x: hidden;
-        }
-        body {
-            min-height: 100vh;
-            position: relative;
-        }
-        /* Animated Blur Background */
-        .blur-bg {
-            position: fixed;
-            inset: 0;
-            z-index: 0;
-            pointer-events: none;
-            overflow: hidden;
-        }
-        .blur-bg-canvas {
-            width: 100vw;
-            height: 100vh;
-            display: block;
-            filter: blur(32px) brightness(1.1);
-            opacity: 0.8;
-            background: transparent;
-        }
-        /* Glassmorphism Panels */
-        .glass-panel {
-            background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur);
-            border-radius: 18px;
-            border: var(--glass-border);
-            box-shadow: var(--glass-shadow);
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            position: relative;
-            transition: box-shadow 0.3s, border-color 0.3s;
-        }
-        .glass-panel.glow-success {
-            box-shadow: 0 0 24px 0 var(--success), var(--glass-shadow);
-            border-color: var(--success);
-            animation: pulse-success 1s;
-        }
-        .glass-panel.glow-danger {
-            box-shadow: 0 0 24px 0 var(--danger), var(--glass-shadow);
-            border-color: var(--danger);
-            animation: pulse-danger 1s;
-        }
-        @keyframes pulse-success {
-            0% { box-shadow: 0 0 0 0 var(--success); }
-            50% { box-shadow: 0 0 24px 8px var(--success); }
-            100% { box-shadow: 0 0 24px 0 var(--success); }
-        }
-        @keyframes pulse-danger {
-            0% { box-shadow: 0 0 0 0 var(--danger); }
-            50% { box-shadow: 0 0 24px 8px var(--danger); }
-            100% { box-shadow: 0 0 24px 0 var(--danger); }
-        }
-        /* Layout */
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 2rem 1rem 4rem 1rem;
-            position: relative;
-            z-index: 2;
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-        }
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1.2fr 2fr 1.2fr;
-            gap: 2rem;
-            align-items: flex-start;
-        }
-        @media (max-width: 900px) {
-            .dashboard-grid {
-                grid-template-columns: 1fr;
-                gap: 1.5rem;
-            }
-        }
-        /* Portfolio Panel */
-        .portfolio-panel {
-            min-width: 260px;
-        }
-        .portfolio-balance {
-            font-size: 2.2rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            transform-origin: center;
-            animation: portfolioPulse var(--pulse-duration) ease-in-out infinite;
-        }
-        @keyframes portfolioPulse {
-            0% { transform: scale(1); box-shadow: 0 8px 28px var(--portfolio-glow); }
-            50% { transform: scale(var(--pulse-scale)); box-shadow: 0 14px 48px var(--portfolio-glow); }
-            100% { transform: scale(1); box-shadow: 0 8px 28px var(--portfolio-glow); }
-        }
-        .portfolio-pnl {
-            font-size: 1.1rem;
-            color: var(--success);
-            margin-bottom: 1.2rem;
-        }
-        .portfolio-chart {
-            width: 100%;
-            height: 140px;
-            margin-bottom: 1.2rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        /* Asset Cards */
-        .assets-list {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-        .asset-card {
-            background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur);
-            border-radius: 14px;
-            border: var(--glass-border);
-            box-shadow: 0 2px 16px 0 #7f5af011;
-            padding: 1rem 1.2rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            transition: box-shadow 0.3s, border-color 0.3s;
-            position: relative;
-        }
-        .asset-card .asset-symbol {
-            font-weight: 600;
-            font-size: 1.1rem;
-            letter-spacing: 0.03em;
-        }
-        .asset-card .asset-price {
-            font-size: 1.1rem;
-            font-weight: 500;
-            margin-left: 1.2rem;
-        }
-        .asset-card .asset-change {
-            font-size: 1rem;
-            margin-left: 1.2rem;
-            font-weight: 500;
-            border-radius: 8px;
-            padding: 0.2em 0.7em;
-            background: rgba(44,229,155,0.08);
-            color: var(--success);
-            transition: background 0.3s, color 0.3s;
-        }
-        .asset-card.negative .asset-change {
-            background: rgba(255,60,110,0.08);
-            color: var(--danger);
-        }
-        /* TradingView Panel */
-        .tradingview-panel {
-            min-height: 420px;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-        .tradingview-header {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 0.5rem;
-        }
-        .tradingview-header .title {
-            font-size: 1.2rem;
-            font-weight: 600;
-        }
-        .tradingview-tools {
-            display: flex;
-            gap: 0.5rem;
-        }
-        .tradingview-tools button {
-            background: rgba(127,90,240,0.12);
-            border: none;
-            color: var(--accent);
-            border-radius: 8px;
-            padding: 0.4em 1em;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .tradingview-tools button:hover {
-            background: rgba(127,90,240,0.22);
-        }
-        .tradingview-iframe {
-            width: 100%;
-            height: 340px;
-            border: none;
-            border-radius: 12px;
-            overflow: hidden;
-            background: rgba(24,28,47,0.7);
-            box-shadow: 0 2px 24px 0 #7f5af022;
-        }
-        /* Order Book & Trade History */
-        .orderbook-panel, .tradehistory-panel {
-            min-width: 220px;
-            max-height: 420px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-        .orderbook-table, .tradehistory-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.98rem;
-        }
-        .orderbook-table th, .orderbook-table td,
-        .tradehistory-table th, .tradehistory-table td {
-            padding: 0.5em 0.7em;
-            text-align: right;
-            border-bottom: 1px solid rgba(127,90,240,0.08);
-        }
-        .orderbook-table th, .tradehistory-table th {
-            color: var(--accent);
-            font-weight: 600;
-            background: rgba(127,90,240,0.06);
-        }
-        /* Order Form */
-        .order-form-panel {
-            margin-top: 1.2rem;
-            background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur);
-            border-radius: 14px;
-            border: var(--glass-border);
-            box-shadow: 0 2px 16px 0 #7f5af011;
-            padding: 1rem 1.2rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.8rem;
-        }
-        .order-form-panel label {
-            font-size: 0.98rem;
-            color: var(--text-muted);
-            margin-bottom: 0.2em;
-        }
-        .order-form-panel input, .order-form-panel select {
-            background: rgba(24,28,47,0.55);
-            border: 1px solid #7f5af022;
-            border-radius: 8px;
-            color: var(--text-main);
-            padding: 0.5em 0.8em;
-            font-size: 1rem;
-            outline: none;
-            margin-bottom: 0.5em;
-            transition: border-color 0.2s;
-        }
-        .order-form-panel input:focus, .order-form-panel select:focus {
-            border-color: var(--accent);
-        }
-        .order-form-panel button {
-            background: var(--accent);
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            padding: 0.6em 1.2em;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 2px 12px 0 var(--accent-glow);
-            transition: background 0.2s;
-        }
-        .order-form-panel button:hover {
-            background: #5f3ad6;
-        }
-        /* Emotional Market Indicator */
-        .market-indicator {
-            position: fixed;
-            top: 2rem;
-            right: 2rem;
-            z-index: 10;
-            width: 72px;
-            height: 72px;
-            pointer-events: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .market-indicator-canvas {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            filter: blur(2px) brightness(1.2);
-            box-shadow: 0 0 24px 0 var(--accent-glow);
-            background: transparent;
-        }
-        /* Focus Mode */
-        .focus-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 20;
-            background: rgba(24,28,47,0.85);
-            backdrop-filter: blur(32px);
-            transition: opacity 0.4s;
-            opacity: 0;
-            pointer-events: none;
-        }
-        .focus-overlay.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
-        /* Notification */
-        .notification {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            z-index: 30;
-            min-width: 260px;
-            background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur);
-            border-radius: 14px;
-            border: var(--glass-border);
-            box-shadow: 0 2px 24px 0 var(--accent-glow);
-            color: var(--text-main);
-            padding: 1rem 1.2rem;
-            opacity: 0;
-            transform: translateY(40px);
-            transition: opacity 0.5s, transform 0.5s;
-            pointer-events: none;
-        }
-        .notification.active {
-            opacity: 1;
-            transform: translateY(0);
-            pointer-events: auto;
-        }
-        /* Academy Section */
-        .academy-section {
-            margin-top: 3rem;
-            margin-bottom: 2rem;
-        }
-        .academy-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 1.2rem;
-            color: var(--accent);
-        }
-        .academy-cards {
-            display: flex;
-            gap: 1.2rem;
-            overflow-x: auto;
-            padding-bottom: 1rem;
-        }
-        .academy-card {
-            min-width: 220px;
-            background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur);
-            border-radius: 14px;
-            border: var(--glass-border);
-            box-shadow: 0 2px 16px 0 #7f5af011;
-            padding: 1rem 1.2rem;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 0.7rem;
-            transition: box-shadow 0.3s, border-color 0.3s;
-        }
-        .academy-card .icon {
-            font-size: 2rem;
-            color: var(--accent);
-            margin-bottom: 0.5rem;
-        }
-        .academy-card .card-title {
-            font-weight: 600;
-            font-size: 1.1rem;
-            margin-bottom: 0.3rem;
-        }
-        .academy-card .card-desc {
-            font-size: 0.98rem;
-            color: var(--text-muted);
-        }
-        /* Responsive */
-        @media (max-width: 600px) {
-            .container {
-                padding: 1rem 0.2rem 2rem 0.2rem;
-            }
-            .market-indicator {
-                top: 1rem;
-                right: 1rem;
-                width: 52px;
-                height: 52px;
-            }
-            .notification {
-                bottom: 1rem;
-                right: 1rem;
-                min-width: 180px;
-                padding: 0.7rem 0.8rem;
-            }
-            .academy-cards {
-                gap: 0.7rem;
-            }
-            .academy-card {
-                min-width: 160px;
-                padding: 0.7rem 0.7rem;
-            }
-        }
-
-        /* smooth transitions when theme variables change */
-        body, .glass-panel, .asset-card, .tradingview-iframe, .academy-card {
-            transition: background 600ms, color 600ms, box-shadow 600ms, border-color 600ms, transform 300ms;
-        }
-
-        /* Settings panel (compact) */
-        .settings-panel {
-            position: fixed;
-            left: 1rem;
-            top: 1rem;
-            z-index: 40;
-            background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur);
-            border-radius: 12px;
-            border: var(--glass-border);
-            padding: 0.6rem 0.8rem;
-            display: flex;
-            gap: 0.6rem;
-            align-items: center;
-            box-shadow: 0 8px 24px 0 rgba(0,0,0,0.35);
-            color: var(--text-main);
-            font-size: 0.9rem;
-        }
-        .settings-panel input[type="range"] { width: 90px; }
-        .settings-panel select { background: rgba(24,28,47,0.6); color: var(--text-main); border-radius: 6px; padding: 0.2rem 0.4rem; border: 1px solid #7f5af022; }
-
-        /* Make sure blurred canvases use CSS size provided by canvas element */
-        .blur-bg-canvas, .market-indicator-canvas {
-            width: 100vw;
-            height: 100vh;
-            image-rendering: optimizeQuality;
-        }
-    </style>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>YT-Sim — Маленькая имитация YouTube</title>
+	<style>
+		:root{--bg:#f7f9fc;--card:#fff;--accent:#ff3b49;--muted:#6b7280}
+		*{box-sizing:border-box}
+		body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:#111}
+		header{background:#fff;border-bottom:1px solid #eee;position:sticky;top:0;z-index:20}
+		.header-inner{display:flex;align-items:center;gap:12px;padding:10px 18px;max-width:1100px;margin:0 auto}
+		.brand{font-weight:700;color:var(--accent);cursor:pointer}
+		.search{flex:1;display:flex;gap:8px}
+		.search input{flex:1;padding:8px 10px;border:1px solid #e5e7eb;border-radius:6px}
+		.btn{background:var(--accent);color:#fff;border:0;padding:8px 12px;border-radius:6px;cursor:pointer}
+		.layout{display:flex;max-width:1100px;margin:18px auto;padding:0 18px;gap:18px}
+		.sidebar{width:220px}
+		.sidebar nav a{display:block;padding:8px;border-radius:6px;color:#111;text-decoration:none}
+		.sidebar nav a:hover{background:#f1f5f9}
+		.main{flex:1}
+		.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+		.video-card{background:var(--card);padding:0;border-radius:8px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+		.thumb{width:100%;height:124px;object-fit:cover;display:block;background:#ddd}
+		.meta{padding:8px}
+		.small{font-size:13px;color:var(--muted)}
+		.channel-row{display:flex;gap:8px;align-items:center}
+		.avatar{width:36px;height:36px;border-radius:50%;background:#ddd;display:inline-block}
+		.player-wrap{background:#000;padding:12px;border-radius:8px}
+		.card{background:var(--card);padding:12px;border-radius:8px}
+		.flex{display:flex;gap:8px;align-items:center}
+		.muted{color:var(--muted)}
+		.like-btn{background:#f3f4f6;border:0;padding:6px 8px;border-radius:6px;cursor:pointer}
+		form.inline{display:flex;gap:8px}
+		@media (max-width:900px){.sidebar{display:none}.layout{padding:0 12px}}
+	</style>
 </head>
 <body>
-    <!-- Animated Blur Background -->
-    <div class="blur-bg">
-        <canvas id="blurBgCanvas" class="blur-bg-canvas"></canvas>
-    </div>
-    <!-- Settings Panel -->
-    <div class="settings-panel" id="settingsPanel">
-        <label for="themeSelect">Тема</label>
-        <select id="themeSelect">
-            <option value="auto">Авто (по активу)</option>
-            <option value="BTC">BTC</option>
-            <option value="ETH">ETH</option>
-            <option value="SOL">SOL</option>
-        </select>
-        <label title="Размытие фона">Blur</label>
-        <input id="blurSlider" type="range" min="0" max="40" value="18">
-        <label title="Прозрачность панелей">Glass</label>
-        <input id="glassSlider" type="range" min="0.2" max="0.95" step="0.01" value="0.55">
-    </div>
-    <!-- Emotional Market Indicator -->
-    <div class="market-indicator">
-        <canvas id="marketIndicatorCanvas" class="market-indicator-canvas"></canvas>
-    </div>
-    <!-- Focus Mode Overlay -->
-    <div id="focusOverlay" class="focus-overlay"></div>
-    <!-- Notification -->
-    <div id="notification" class="notification"></div>
-    <!-- Main Container -->
-    <div class="container">
-        <!-- Dashboard -->
-        <div class="dashboard-grid">
-            <!-- Portfolio Panel -->
-            <div class="glass-panel portfolio-panel">
-                <div class="portfolio-balance" id="portfolioBalance">₿ 12.34</div>
-                <div class="portfolio-pnl">+2.7% за неделю</div>
-                <div class="portfolio-chart">
-                    <!-- Placeholder for donut chart -->
-                    <canvas id="portfolioChart" width="120" height="120"></canvas>
-                </div>
-                <div class="assets-list">
-                    <div class="asset-card" id="assetBTC" data-symbol="BTC">
-                        <span class="asset-symbol">BTC</span>
-                        <span class="asset-price">₿ 67,200</span>
-                        <span class="asset-change">+1.2%</span>
-                    </div>
-                    <div class="asset-card negative" id="assetETH" data-symbol="ETH">
-                        <span class="asset-symbol">ETH</span>
-                        <span class="asset-price">Ξ 3,420</span>
-                        <span class="asset-change">-0.8%</span>
-                    </div>
-                    <div class="asset-card" id="assetSOL" data-symbol="SOL">
-                        <span class="asset-symbol">SOL</span>
-                        <span class="asset-price">◎ 145</span>
-                        <span class="asset-change">+3.1%</span>
-                    </div>
-                </div>
-            </div>
-            <!-- TradingView Panel -->
-            <div class="glass-panel tradingview-panel">
-                <div class="tradingview-header">
-                    <span class="title">График BTC/USDT</span>
-                    <div class="tradingview-tools">
-                        <button>Индикаторы</button>
-                        <button>Инструменты</button>
-                        <button id="focusBtn">Фокус</button>
-                    </div>
-                </div>
-                <!-- TradingView Widget (Demo) -->
-                <iframe class="tradingview-iframe"
-                    src="https://s.tradingview.com/widgetembed/?symbol=BINANCE:BTCUSDT&interval=60&theme=dark"
-                    frameborder="0"
-                    allowtransparency="true"
-                    scrolling="no"
-                    title="TradingView Chart"></iframe>
-                <!-- Order Form -->
-                <div class="order-form-panel">
-                    <label for="orderType">Тип ордера</label>
-                    <select id="orderType">
-                        <option value="market">Рыночный</option>
-                        <option value="limit">Лимитный</option>
-                        <option value="stop">Стоп</option>
-                    </select>
-                    <label for="orderAmount">Количество</label>
-                    <input type="number" id="orderAmount" placeholder="Введите сумму">
-                    <label for="orderPrice">Цена (для лимит/стоп)</label>
-                    <input type="number" id="orderPrice" placeholder="Введите цену">
-                    <button id="orderSubmitBtn">Купить</button>
-                </div>
-            </div>
-            <!-- Order Book & Trade History -->
-            <div>
-                <div class="glass-panel orderbook-panel">
-                    <div style="font-weight:600;color:var(--accent);margin-bottom:0.5rem;">Стакан ордеров</div>
-                    <table class="orderbook-table">
-                        <thead>
-                            <tr>
-                                <th>Цена</th>
-                                <th>Кол-во</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr><td style="color:var(--danger);">67,210</td><td>0.12</td></tr>
-                            <tr><td style="color:var(--danger);">67,205</td><td>0.08</td></tr>
-                            <tr><td style="color:var(--success);">67,200</td><td>0.15</td></tr>
-                            <tr><td style="color:var(--success);">67,195</td><td>0.09</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="glass-panel tradehistory-panel">
-                    <div style="font-weight:600;color:var(--accent);margin-bottom:0.5rem;">Лента сделок</div>
-                    <table class="tradehistory-table">
-                        <thead>
-                            <tr>
-                                <th>Время</th>
-                                <th>Цена</th>
-                                <th>Кол-во</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr><td>12:01:23</td><td style="color:var(--success);">67,200</td><td>0.03</td></tr>
-                            <tr><td>12:01:18</td><td style="color:var(--danger);">67,205</td><td>0.02</td></tr>
-                            <tr><td>12:01:10</td><td style="color:var(--success);">67,195</td><td>0.05</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        <!-- Academy Section -->
-        <div class="academy-section">
-            <div class="academy-title">CryptoBlur Academy</div>
-            <div class="academy-cards">
-                <div class="academy-card">
-                    <span class="icon">📈</span>
-                    <span class="card-title">Основы трейдинга</span>
-                    <span class="card-desc">Краткие статьи о базовых принципах торговли криптовалютами.</span>
-                </div>
-                <div class="academy-card">
-                    <span class="icon">🛡️</span>
-                    <span class="card-title">Управление рисками</span>
-                    <span class="card-desc">Видео и советы по контролю рисков и сохранению капитала.</span>
-                </div>
-                <div class="academy-card">
-                    <span class="icon">🔍</span>
-                    <span class="card-title">Технический анализ</span>
-                    <span class="card-desc">Обзор популярных индикаторов и стратегий анализа графиков.</span>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- JS for Blur Background, Market Indicator, Focus Mode, Chart, Notification -->
-    <script>
-        // Animated Blur Background (abstract gradient blobs)
-        const blurBgCanvas = document.getElementById('blurBgCanvas');
-        const ctx = blurBgCanvas.getContext('2d');
-        // Resize canvases (ensure devicePixelRatio aware)
-        function resizeBlurBg() {
-            const dpr = window.devicePixelRatio || 1;
-            blurBgCanvas.width = Math.floor(window.innerWidth * dpr);
-            blurBgCanvas.height = Math.floor(window.innerHeight * dpr);
-            blurBgCanvas.style.width = window.innerWidth + 'px';
-            blurBgCanvas.style.height = window.innerHeight + 'px';
-            ctx.setTransform(dpr,0,0,dpr,0,0);
-            // market indicator canvas
-            const micDpr = window.devicePixelRatio || 1;
-            marketIndicatorCanvas.width = Math.floor(marketIndicatorCanvas.clientWidth * micDpr);
-            marketIndicatorCanvas.height = Math.floor(marketIndicatorCanvas.clientHeight * micDpr);
-            marketIndicatorCanvas.style.width = marketIndicatorCanvas.clientWidth + 'px';
-            marketIndicatorCanvas.style.height = marketIndicatorCanvas.clientHeight + 'px';
-            mictx.setTransform(micDpr,0,0,micDpr,0,0);
-        }
-        window.addEventListener('resize', resizeBlurBg);
-        resizeBlurBg();
-        // Blob objects
-        const blobs = [
-            {x: 300, y: 400, r: 220, c: '#7f5af0', dx: 0.7, dy: 0.5},
-            {x: 900, y: 200, r: 180, c: '#2ce59b', dx: -0.5, dy: 0.6},
-            {x: 600, y: 700, r: 260, c: '#ff3c6e', dx: 0.4, dy: -0.7},
-            {x: 1200, y: 600, r: 180, c: '#181c2f', dx: -0.6, dy: 0.3}
-        ];
-        function animateBlurBg() {
-            ctx.clearRect(0, 0, blurBgCanvas.width, blurBgCanvas.height);
-            blobs.forEach(blob => {
-                ctx.save();
-                ctx.globalAlpha = 0.38;
-                const grad = ctx.createRadialGradient(blob.x, blob.y, blob.r*0.3, blob.x, blob.y, blob.r);
-                grad.addColorStop(0, blob.c);
-                grad.addColorStop(1, '#181c2f00');
-                ctx.fillStyle = grad;
-                ctx.beginPath();
-                ctx.arc(blob.x, blob.y, blob.r, 0, 2*Math.PI);
-                ctx.fill();
-                ctx.restore();
-                // Move blobs
-                blob.x += blob.dx;
-                blob.y += blob.dy;
-                if(blob.x < 0 || blob.x > blurBgCanvas.width) blob.dx *= -1;
-                if(blob.y < 0 || blob.y > blurBgCanvas.height) blob.dy *= -1;
-            });
-            // Faint numbers/graphics
-            ctx.save();
-            ctx.globalAlpha = 0.09;
-            ctx.font = "bold 120px Inter";
-            ctx.fillStyle = "#fff";
-            ctx.fillText("BTC", 180, 220);
-            ctx.fillText("Ξ", 900, 320);
-            ctx.fillText("◎", 600, 600);
-            ctx.restore();
-            requestAnimationFrame(animateBlurBg);
-        }
-        animateBlurBg();
+	<header>
+		<div class="header-inner">
+			<div class="brand" data-link="#/">YT-Sim</div>
+			<div class="search">
+				<input id="searchInput" placeholder="Поиск видео..." />
+				<button id="searchBtn" class="btn">Поиск</button>
+			</div>
+			<div class="flex">
+				<button id="uploadBtn" class="btn" data-link="#/upload">Загрузить</button>
+				<div id="userArea"></div>
+			</div>
+		</div>
+	</header>
 
-        // Emotional Market Indicator (animated sphere)
-        const marketIndicatorCanvas = document.getElementById('marketIndicatorCanvas');
-        const mictx = marketIndicatorCanvas.getContext('2d');
-        let marketState = 'calm'; // calm, up, down, panic
-        function drawMarketIndicator() {
-            mictx.clearRect(0,0,marketIndicatorCanvas.width,marketIndicatorCanvas.height);
-            let color = '#7f5af0', pulse = 1, chaos = 0;
-            if(marketState==='up') { color = '#2ce59b'; pulse = 1.2; chaos = 0.1;}
-            if(marketState==='down') { color = '#ff3c6e'; pulse = 1.3; chaos = 0.2;}
-            if(marketState==='panic') { color = '#ff3c6e'; pulse = 1.5; chaos = 0.5;}
-            // Animated sphere
-            const t = Date.now()/600;
-            mictx.save();
-            mictx.translate(marketIndicatorCanvas.width/2, marketIndicatorCanvas.height/2);
-            for(let i=0;i<18;i++) {
-                const angle = i*2*Math.PI/18 + Math.sin(t/2+i)*chaos;
-                const r = 28 + Math.sin(t+i)*pulse*4 + Math.cos(t/2+i)*chaos*8;
-                mictx.beginPath();
-                mictx.arc(Math.cos(angle)*r, Math.sin(angle)*r, 8, 0, 2*Math.PI);
-                mictx.fillStyle = color;
-                mictx.globalAlpha = 0.18 + 0.12*Math.sin(t+i);
-                mictx.fill();
-            }
-            mictx.beginPath();
-            mictx.arc(0,0,24+Math.sin(t)*pulse*2,0,2*Math.PI);
-            mictx.fillStyle = color;
-            mictx.globalAlpha = 0.38;
-            mictx.fill();
-            mictx.restore();
-            requestAnimationFrame(drawMarketIndicator);
-        }
-        drawMarketIndicator();
+	<div class="layout">
+		<aside class="sidebar">
+			<nav>
+				<a href="#/">Главная</a>
+				<a href="#/trending">Тренды</a>
+				<a href="#/subscriptions">Подписки</a>
+				<a href="#/history">История</a>
+				<a href="#/playlists">Плейлисты</a>
+				<a href="#/mychannel">Мой канал</a>
+			</nav>
+		</aside>
+		<main class="main" id="app"></main>
+	</div>
 
-        // Portfolio Donut Chart (demo)
-        const portfolioChart = document.getElementById('portfolioChart');
-        const pct = portfolioChart.getContext('2d');
-        function drawPortfolioChart() {
-            pct.clearRect(0,0,120,120);
-            const data = [
-                {v: 60, c:'#7f5af0'},
-                {v: 25, c:'#2ce59b'},
-                {v: 15, c:'#ff3c6e'}
-            ];
-            let start = -Math.PI/2;
-            data.forEach(d=>{
-                pct.beginPath();
-                pct.arc(60,60,48,start,start+2*Math.PI*d.v/100);
-                pct.lineWidth = 18;
-                pct.strokeStyle = d.c;
-                pct.globalAlpha = 0.7;
-                pct.stroke();
-                start += 2*Math.PI*d.v/100;
-            });
-            pct.globalAlpha = 1;
-            pct.beginPath();
-            pct.arc(60,60,32,0,2*Math.PI);
-            pct.fillStyle = 'rgba(24,28,47,0.7)';
-            pct.fill();
-        }
-        drawPortfolioChart();
+	<footer style="text-align:center;color:var(--muted);padding:18px 0">© 2025 YT-Sim — Demo</footer>
 
-        // --- Theme presets and dynamic theming ---
-        const themes = {
-            'BTC': {
-                accent: '#ff7a29',
-                accentGlow: '#ff7a2999',
-                bg1: '#2b1200',
-                bg2: '#10100b',
-                portfolioGlow: 'rgba(255,122,41,0.35)'
-            },
-            'ETH': {
-                accent: '#7f5af0',
-                accentGlow: '#7f5af0cc',
-                bg1: '#181c2f',
-                bg2: '#2d1a3a',
-                portfolioGlow: 'rgba(127,90,240,0.22)'
-            },
-            'SOL': {
-                accent: '#2ce59b',
-                accentGlow: '#2ce59b88',
-                bg1: '#06261a',
-                bg2: '#102d24',
-                portfolioGlow: 'rgba(44,229,155,0.2)'
-            }
-        };
+	<template id="tpl-home">
+		<div>
+			<h2>Рекомендации</h2>
+			<div class="grid" id="homeGrid"></div>
+			<div id="loadingMore" class="small muted" style="text-align:center;margin-top:12px">Прокрутите вниз для загрузки...</div>
+		</div>
+	</template>
 
-        // applyTheme: updates CSS variables; transition is handled by CSS transitions above
-        function applyTheme(key) {
-            const root = document.documentElement;
-            if(!key || key === 'auto') return;
-            const p = themes[key];
-            if(!p) return;
-            root.style.setProperty('--accent', p.accent);
-            root.style.setProperty('--accent-glow', p.accentGlow);
-            root.style.setProperty('--bg-color-1', p.bg1);
-            root.style.setProperty('--bg-color-2', p.bg2);
-            root.style.setProperty('--portfolio-glow', p.portfolioGlow);
-            // Update glass border tint subtly
-            root.style.setProperty('--glass-border', `1.5px solid ${hexToRgba(p.accent,0.18)}`);
-        }
-        function hexToRgba(hex, a=1){
-            const c = hex.replace('#','');
-            const bigint = parseInt(c.length===3? c.split('').map(ch=>ch+ch).join(''):c,16);
-            const r=(bigint>>16)&255,g=(bigint>>8)&255,b=bigint&255;
-            return `rgba(${r},${g},${b},${a})`;
-        }
+	<template id="tpl-watch">
+		<div>
+			<div class="player-wrap card">
+				<video id="videoPlayer" controls width="100%" style="max-height:480px;background:#000"></video>
+			</div>
+			<div style="display:flex;gap:12px;margin-top:8px;align-items:center;justify-content:space-between">
+				<div>
+					<h3 id="videoTitle" style="margin:0"></h3>
+					<div class="small muted" id="videoMeta"></div>
+				</div>
+				<div class="flex">
+					<button id="likeBtn" class="like-btn">👍 <span id="likeCount">0</span></button>
+					<button id="dislikeBtn" class="like-btn">👎 <span id="dislikeCount">0</span></button>
+					<button id="subscribeBtn" class="btn">Подписаться</button>
+				</div>
+			</div>
+			<div class="card" style="margin-top:12px">
+				<h4>Описание</h4>
+				<p id="videoDesc" class="small"></p>
+			</div>
+			<div class="card" style="margin-top:12px">
+				<h4>Комментарии</h4>
+				<div id="commentsList"></div>
+				<form id="commentForm" style="margin-top:8px" class="inline">
+					<input id="commentInput" placeholder="Оставить комментарий..." />
+					<button class="btn">Отправить</button>
+				</form>
+			</div>
+		</div>
+	</template>
 
-        // Theme selector + asset card click -> set theme (auto option still allowed)
-        const themeSelect = document.getElementById('themeSelect');
-        themeSelect.addEventListener('change', ()=>{
-            const val = themeSelect.value;
-            if(val === 'auto'){ localStorage.removeItem('forcedTheme'); return; }
-            localStorage.setItem('forcedTheme', val);
-            applyTheme(val);
-        });
-        // If user previously selected theme, restore
-        const forced = localStorage.getItem('forcedTheme');
-        if(forced){ themeSelect.value = forced; applyTheme(forced); }
+	<template id="tpl-channel">
+		<div>
+			<div class="card channel-info">
+				<div class="channel-row">
+					<div class="avatar" id="channelAvatar"></div>
+					<div>
+						<h3 id="channelName" style="margin:0"></h3>
+						<div class="small muted" id="channelSubs"></div>
+					</div>
+					<div style="margin-left:auto">
+						<button id="channelSubscribe" class="btn">Подписаться</button>
+					</div>
+				</div>
+			</div>
+			<h4 style="margin-top:12px">Видео канала</h4>
+			<div class="grid" id="channelGrid"></div>
+		</div>
+	</template>
 
-        // Asset card clicks trigger theme switch (unless user forced a theme)
-        document.querySelectorAll('.asset-card').forEach(card=>{
-            card.addEventListener('click', ()=>{
-                const s = card.dataset.symbol;
-                const forcedTheme = localStorage.getItem('forcedTheme');
-                if(forcedTheme && forcedTheme !== 'auto') return; // respect forced theme
-                if(themes[s]) applyTheme(s);
-            });
-        });
+	<template id="tpl-upload">
+		<div class="card">
+			<h3>Загрузка видео (demo)</h3>
+			<form id="uploadForm" style="display:grid;gap:8px">
+				<input id="uploadTitle" placeholder="Название" required />
+				<textarea id="uploadDesc" placeholder="Описание"></textarea>
+				<input id="uploadUrl" placeholder="Ссылка на видео (mp4) или оставьте пустым, чтобы загрузить файл" />
+				<input id="uploadFile" type="file" accept="video/*" />
+				<input id="uploadThumb" type="file" accept="image/*" />
+				<button class="btn">Опубликовать</button>
+				<div class="small muted">Примечание: загрузка файла сохраняется только в текущей сессии (objectURL). Для постоянного хранения используйте URL или сервер.</div>
+			</form>
+		</div>
+	</template>
 
-        // --- Portfolio volatility -> pulse mapping (demo) ---
-        let recentPrices = []; // sliding window
-        const windowSize = 30; // sample count (demo)
-        // demo base price and update (in real app - feed from API)
-        let demoPrice = 67200;
-        function pushPrice(p){
-            recentPrices.push(p);
-            if(recentPrices.length > windowSize) recentPrices.shift();
-        }
-        function stddev(arr){
-            if(arr.length===0) return 0;
-            const mean = arr.reduce((a,b)=>a+b,0)/arr.length;
-            const v = Math.sqrt(arr.reduce((s,x)=>s+(x-mean)*(x-mean),0)/arr.length);
-            return v;
-        }
-        function updatePulseFromVolatility(){
-            if(recentPrices.length < 4) return;
-            const sd = stddev(recentPrices);
-            // map sd to pulseScale [1.0 .. 1.06] and duration [2.5s .. 0.6s]
-            const maxSd = 300; // demo mapping scale (tweak to real data)
-            const norm = Math.min(sd / maxSd, 1);
-            const scale = 1 + norm * 0.06;
-            const duration = (2.5 - norm * 1.9).toFixed(2) + 's';
-            document.documentElement.style.setProperty('--pulse-scale', scale);
-            document.documentElement.style.setProperty('--pulse-duration', duration);
-            // optionally change glow color intensity when volatility high
-            if(norm > 0.6) {
-                document.documentElement.style.setProperty('--portfolio-glow', 'rgba(255,60,110,0.28)');
-            } else {
-                // keep accent-based glow
-                const currentAccent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#7f5af0';
-                document.documentElement.style.setProperty('--portfolio-glow', hexToRgba(currentAccent, 0.24));
-            }
-        }
-        // Demo incoming prices
-        setInterval(()=>{
-            // small random walk; occasionally spike for demo
-            const spike = Math.random() < 0.06 ? (Math.random()*1200 - 600) : (Math.random()*40 - 20);
-            demoPrice = Math.max(100, demoPrice + spike);
-            pushPrice(demoPrice);
-            updatePulseFromVolatility();
-            // update displayed portfolio balance for demo
-            const balEl = document.getElementById('portfolioBalance');
-            if(balEl){
-                const display = (demoPrice/1000).toFixed(2);
-                balEl.textContent = `₿ ${display}`;
-            }
-        }, 2000);
+	<template id="tpl-search">
+		<div>
+			<h3>Результаты поиска: <span id="searchQuery"></span></h3>
+			<div class="grid" id="searchGrid"></div>
+		</div>
+	</template>
 
-        // --- Settings sliders: blur and glass opacity (persisted) ---
-        const blurSlider = document.getElementById('blurSlider');
-        const glassSlider = document.getElementById('glassSlider');
-        // restore
-        const savedBlur = localStorage.getItem('cb_blur');
-        const savedGlass = localStorage.getItem('cb_glass');
-        if(savedBlur) { document.documentElement.style.setProperty('--glass-blur', `blur(${savedBlur}px)`); blurSlider.value = savedBlur; }
-        if(savedGlass) { document.documentElement.style.setProperty('--glass-opacity', savedGlass); glassSlider.value = savedGlass; }
-        blurSlider.addEventListener('input', ()=> {
-            const v = blurSlider.value;
-            document.documentElement.style.setProperty('--glass-blur', `blur(${v}px)`);
-            localStorage.setItem('cb_blur', v);
-        });
-        glassSlider.addEventListener('input', ()=>{
-            const v = glassSlider.value;
-            document.documentElement.style.setProperty('--glass-opacity', v);
-            // update derived --glass-bg automatically (uses var in CSS)
-            localStorage.setItem('cb_glass', v);
-        });
+	<template id="tpl-simple-list">
+		<div>
+			<h3 id="listTitle"></h3>
+			<div id="listGrid" class="grid"></div>
+		</div>
+	</template>
 
-        // Helper: if user clicks a theme option set to auto, it will allow asset clicks to control theme
-        // initial apply if forced or matching asset initial selection (demo picks BTC)
-        if(!forced) {
-            // apply theme based on initial highlighted asset (BTC default)
-            applyTheme('BTC');
-        }
+	<script>
+	// --- Simple client-side data layer using localStorage ---
+	const STORAGE = {
+		users: 'yt_users', videos: 'yt_videos', comments: 'yt_comments', subs: 'yt_subs', playlists: 'yt_playlists', history: 'yt_history', current: 'yt_current'
+	};
 
-        // Focus Mode
-        const focusBtn = document.getElementById('focusBtn');
-        const focusOverlay = document.getElementById('focusOverlay');
-        let focusActive = false;
-        focusBtn.addEventListener('click', ()=>{
-            focusActive = !focusActive;
-            focusOverlay.classList.toggle('active', focusActive);
-        });
-        focusOverlay.addEventListener('click', ()=>{
-            focusActive = false;
-            focusOverlay.classList.remove('active');
-        });
+	function uid(prefix='id') { return prefix + '_' + Math.random().toString(36).slice(2,9); }
 
-        // Notification (custom alert)
-        function showNotification(msg) {
-            const notification = document.getElementById('notification');
-            notification.textContent = msg;
-            notification.classList.add('active');
-            setTimeout(()=>notification.classList.remove('active'), 3500);
-        }
+	function load(key){return JSON.parse(localStorage.getItem(key) || 'null');}
+	function save(key,val){localStorage.setItem(key, JSON.stringify(val));}
 
-        // Order Form Demo
-        document.getElementById('orderSubmitBtn').addEventListener('click', ()=>{
-            showNotification('Ордера отправлен (демо)');
-        });
+	// Seed sample data if absent
+	function seed(){
+		if(!load(STORAGE.users)){
+			const u1 = {id:'u_alex',name:'Alex',avatar:'',subs:0, subscriptions:[],likes:[],dislikes:[]};
+			const u2 = {id:'u_maria',name:'Maria',avatar:'',subs:0,subscriptions:[],likes:[],dislikes:[]};
+			save(STORAGE.users,[u1,u2]);
+		}
+		if(!load(STORAGE.videos)){
+			const sample = 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4';
+			const mkThumb = (t)=> 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="480" height="270"><rect width="100%" height="100%" fill="#ddd"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="20" fill="#666">'+t+'</text></svg>');
+			const v1 = {id:'v1',title:'Красивый цветок',desc:'Видео цветка',url:sample,thumb:mkThumb('Цветок'),views:123,likes:5,dislikes:0,created:Date.now()-1000*60*60*24*3,author:'u_alex'};
+			const v2 = {id:'v2',title:'Природа и реки',desc:'Река и лес',url:sample,thumb:mkThumb('Река'),views:456,likes:12,dislikes:1,created:Date.now()-1000*60*60*24*10,author:'u_maria'};
+			const v3 = {id:'v3',title:'Город ночью',desc:'Ночной город в движении',url:sample,thumb:mkThumb('Город'),views:78,likes:2,dislikes:0,created:Date.now()-1000*60*60*6,author:'u_alex'};
+			save(STORAGE.videos,[v1,v2,v3]);
+		}
+		if(!load(STORAGE.comments)) save(STORAGE.comments,[]);
+		if(!load(STORAGE.subs)) save(STORAGE.subs,[]);
+		if(!load(STORAGE.playlists)) save(STORAGE.playlists,[]);
+		if(!load(STORAGE.history)) save(STORAGE.history,[]);
+		if(!load(STORAGE.current)) save(STORAGE.current,'u_alex');
+	}
 
-        // Asset Card Glow Demo (price change)
-        function pulseAssetCard(id, type) {
-            const card = document.getElementById(id);
-            card.classList.remove('glow-success','glow-danger');
-            void card.offsetWidth; // force reflow
-            if(type==='up') card.classList.add('glow-success');
-            if(type==='down') card.classList.add('glow-danger');
-            setTimeout(()=>card.classList.remove('glow-success','glow-danger'), 900);
-        }
-        // Demo: pulse BTC card green every 8s, ETH red every 12s
-        setInterval(()=>pulseAssetCard('assetBTC','up'),8000);
-        setInterval(()=>pulseAssetCard('assetETH','down'),12000);
+	// --- Router ---
+	function navigate(hash){ location.hash = hash; }
 
-        // Demo: market indicator state change
-        setInterval(()=>{
-            const states = ['calm','up','down','panic'];
-            marketState = states[Math.floor(Math.random()*states.length)];
-        },9000);
-    </script>
+	function getCurrentUser(){
+		const id = load(STORAGE.current);
+		const users = load(STORAGE.users) || [];
+		return users.find(u=>u.id===id) || users[0];
+	}
+
+	// --- Render helpers ---
+	function el(tag,attrs={},children=''){ const e = document.createElement(tag); for(const k in attrs) e.setAttribute(k,attrs[k]); if(typeof children==='string') e.innerHTML=children; else if(children) e.appendChild(children); return e }
+
+	// Render a video card into grid
+	function renderVideoCard(video){
+		const div = document.createElement('div'); div.className='video-card';
+		div.innerHTML = `
+			<a href="#/watch?id=${video.id}"><img src="${video.thumb}" class="thumb" loading="lazy"/></a>
+			<div class="meta">
+				<div class="channel-row">
+					<div class="avatar"></div>
+					<div style="flex:1">
+						<a href="#/watch?id=${video.id}" style="font-weight:600;color:inherit;text-decoration:none">${video.title}</a>
+						<div class="small muted">${getUserName(video.author)} • ${video.views} просмотров</div>
+					</div>
+				</div>
+			</div>
+		`;
+		return div;
+	}
+
+	function getUserName(id){ const u = (load(STORAGE.users)||[]).find(x=>x.id===id); return u?u.name:'Unknown' }
+
+	// --- Pages ---
+	async function pageHome(){
+		const tpl = document.getElementById('tpl-home').content.cloneNode(true);
+		const grid = tpl.getElementById('homeGrid');
+		const videos = (load(STORAGE.videos)||[]).sort((a,b)=>b.created-a.created);
+		let perPage = 6, page = 0;
+		function loadMore(){
+			const slice = videos.slice(page*perPage,(page+1)*perPage);
+			slice.forEach(v=> grid.appendChild(renderVideoCard(v)));
+			page++;
+		}
+		loadMore();
+		// infinite scroll
+		const observer = new IntersectionObserver((entries)=>{
+			if(entries[0].isIntersecting) loadMore();
+		},{root:document.querySelector('.main'),threshold:0.1});
+		observer.observe(tpl.getElementById('loadingMore'));
+		return tpl;
+	}
+
+	function pageWatch(params){
+		const tpl = document.getElementById('tpl-watch').content.cloneNode(true);
+		const id = params.id; const videos = load(STORAGE.videos)||[]; const video = videos.find(v=>v.id===id);
+		if(!video) { tpl.firstElementChild.innerHTML = '<p>Видео не найдено</p>'; return tpl }
+		const player = tpl.getElementById('videoPlayer'); player.src = video.url;
+		tpl.getElementById('videoTitle').textContent = video.title;
+		tpl.getElementById('videoMeta').textContent = `${getUserName(video.author)} • ${video.views} просмотров`;
+		tpl.getElementById('videoDesc').textContent = video.desc;
+		tpl.getElementById('likeCount').textContent = video.likes || 0;
+		tpl.getElementById('dislikeCount').textContent = video.dislikes || 0;
+
+		// comments
+		const comments = load(STORAGE.comments)||[];
+		function renderComments(){
+			const list = tpl.getElementById('commentsList'); list.innerHTML='';
+			comments.filter(c=>c.videoId===id).sort((a,b)=>a.date-b.date).forEach(c=>{
+				const d = document.createElement('div'); d.className='small'; d.style.padding='6px 0'; d.innerHTML = `<strong>${getUserName(c.userId)}:</strong> ${c.text}`; list.appendChild(d);
+			});
+		}
+		renderComments();
+
+		tpl.getElementById('commentForm').addEventListener('submit', (e)=>{
+			e.preventDefault(); const text = tpl.getElementById('commentInput').value.trim(); if(!text) return;
+			const cur = getCurrentUser(); const com = {id:uid('c'),videoId:id,userId:cur.id,text,date:Date.now()};
+			comments.push(com); save(STORAGE.comments,comments); tpl.getElementById('commentInput').value=''; renderComments();
+		});
+
+		// likes/dislikes
+		tpl.getElementById('likeBtn').addEventListener('click', ()=>{
+			const cur = getCurrentUser(); const users = load(STORAGE.users)||[]; const u = users.find(x=>x.id===cur.id);
+			if(!u.likes) u.likes = [];
+			const idx = u.likes.indexOf(id);
+			if(idx===-1){ u.likes.push(id); video.likes = (video.likes||0)+1; }
+			else { u.likes.splice(idx,1); video.likes = Math.max(0,(video.likes||1)-1); }
+			save(STORAGE.users,users); save(STORAGE.videos,load(STORAGE.videos)); tpl.getElementById('likeCount').textContent = video.likes;
+		});
+
+		tpl.getElementById('dislikeBtn').addEventListener('click', ()=>{
+			const cur = getCurrentUser(); const users = load(STORAGE.users)||[]; const u = users.find(x=>x.id===cur.id);
+			if(!u.dislikes) u.dislikes = [];
+			const idx = u.dislikes.indexOf(id);
+			if(idx===-1){ u.dislikes.push(id); video.dislikes = (video.dislikes||0)+1; }
+			else { u.dislikes.splice(idx,1); video.dislikes = Math.max(0,(video.dislikes||1)-1); }
+			save(STORAGE.users,users); save(STORAGE.videos,load(STORAGE.videos)); tpl.getElementById('dislikeCount').textContent = video.dislikes;
+		});
+
+		// subscribe
+		tpl.getElementById('subscribeBtn').addEventListener('click', ()=>{
+			const cur = getCurrentUser(); const users = load(STORAGE.users)||[]; const u = users.find(x=>x.id===cur.id);
+			if(!u.subscriptions) u.subscriptions = [];
+			const author = video.author;
+			const i = u.subscriptions.indexOf(author);
+			if(i===-1){ u.subscriptions.push(author); }
+			else u.subscriptions.splice(i,1);
+			save(STORAGE.users,users); alert(i===-1? 'Подписка оформлена':'Отписка выполнена');
+		});
+
+		// view counter: increase after 30s of watch
+		let counted=false; player.addEventListener('timeupdate', ()=>{
+			if(!counted && player.currentTime>=30){ video.views=(video.views||0)+1; save(STORAGE.videos,load(STORAGE.videos)); counted=true; tpl.getElementById('videoMeta').textContent = `${getUserName(video.author)} • ${video.views} просмотров`; }
+		});
+
+		// save to history when start play
+		player.addEventListener('play', ()=>{
+			const h = load(STORAGE.history)||[]; h.push({userId:getCurrentUser().id,videoId:id,date:Date.now()}); save(STORAGE.history,h);
+		})
+
+		return tpl;
+	}
+
+	function pageChannel(params){
+		const tpl = document.getElementById('tpl-channel').content.cloneNode(true);
+		const id = params.id || load(STORAGE.current);
+		const users = load(STORAGE.users)||[]; const user = users.find(u=>u.id===id);
+		if(!user){ tpl.firstElementChild.innerHTML='<p>Канал не найден</p>'; return tpl }
+		tpl.getElementById('channelName').textContent = user.name;
+		tpl.getElementById('channelSubs').textContent = `${user.subs||0} подписчиков`;
+		tpl.getElementById('channelSubscribe').addEventListener('click', ()=>{
+			const cur = getCurrentUser(); if(cur.id===user.id){ alert('Это ваш канал'); return }
+			const us = load(STORAGE.users)||[]; const cu = us.find(x=>x.id===cur.id); if(!cu.subscriptions) cu.subscriptions=[];
+			const idx = cu.subscriptions.indexOf(user.id); if(idx===-1){ cu.subscriptions.push(user.id); alert('Подписались'); } else { cu.subscriptions.splice(idx,1); alert('Отписались'); }
+			save(STORAGE.users,us);
+		});
+		const videos = (load(STORAGE.videos)||[]).filter(v=>v.author===user.id).sort((a,b)=>b.created-a.created);
+		const grid = tpl.getElementById('channelGrid'); videos.forEach(v=>grid.appendChild(renderVideoCard(v)));
+		return tpl;
+	}
+
+	function pageUpload(){
+		const tpl = document.getElementById('tpl-upload').content.cloneNode(true);
+		tpl.getElementById('uploadForm').addEventListener('submit', async (e)=>{
+			e.preventDefault(); const title = tpl.getElementById('uploadTitle').value.trim(); if(!title) return alert('Введите название');
+			const desc = tpl.getElementById('uploadDesc').value.trim(); const url = tpl.getElementById('uploadUrl').value.trim();
+			const fileInput = tpl.getElementById('uploadFile'); const thumbInput = tpl.getElementById('uploadThumb');
+			let finalUrl = url;
+			if(!finalUrl && fileInput.files && fileInput.files[0]) { finalUrl = URL.createObjectURL(fileInput.files[0]); }
+			let thumb = '';
+			if(thumbInput.files && thumbInput.files[0]){
+				thumb = await fileToDataUrl(thumbInput.files[0]);
+			} else {
+				thumb = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="480" height="270"><rect width="100%" height="100%" fill="#ddd"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="20" fill="#666">'+(title||'Видео')+'</text></svg>');
+			}
+			if(!finalUrl) return alert('Укажите URL видео или файл');
+			const videos = load(STORAGE.videos)||[]; const id = uid('v'); const v = {id,title,desc,url:finalUrl,thumb,views:0,likes:0,dislikes:0,created:Date.now(),author:getCurrentUser().id}; videos.unshift(v); save(STORAGE.videos,videos); alert('Видео опубликовано'); navigate('#/watch?id='+id);
+		});
+		return tpl;
+	}
+
+	function pageSearch(params){
+		const tpl = document.getElementById('tpl-search').content.cloneNode(true);
+		const q = params.q || ''; tpl.getElementById('searchQuery').textContent = q;
+		const grid = tpl.getElementById('searchGrid'); const vids = (load(STORAGE.videos)||[]).filter(v=>v.title.toLowerCase().includes(q.toLowerCase())||v.desc.toLowerCase().includes(q.toLowerCase())); vids.forEach(v=>grid.appendChild(renderVideoCard(v)));
+		return tpl;
+	}
+
+	function pageList(kind){
+		const tpl = document.getElementById('tpl-simple-list').content.cloneNode(true);
+		tpl.getElementById('listTitle').textContent = kind;
+		const grid = tpl.getElementById('listGrid');
+		if(kind==='subscriptions'){
+			const cur = getCurrentUser(); const subs = cur.subscriptions||[]; const vids = (load(STORAGE.videos)||[]).filter(v=>subs.includes(v.author)); vids.forEach(v=>grid.appendChild(renderVideoCard(v)));
+		} else if(kind==='history'){
+			const h = load(STORAGE.history)||[]; const vids = load(STORAGE.videos)||[]; const userId = getCurrentUser().id; h.filter(x=>x.userId===userId).sort((a,b)=>b.date-a.date).forEach(hi=>{ const v = vids.find(x=>x.id===hi.videoId); if(v) grid.appendChild(renderVideoCard(v));});
+		} else if(kind==='playlists'){
+			const pls = load(STORAGE.playlists)||[]; pls.forEach(p=>{
+				const card = document.createElement('div'); card.className='card'; card.innerHTML = `<h4>${p.title}</h4><div class="small muted">${p.items.length} видео</div>`; grid.appendChild(card);
+			});
+		}
+		return tpl;
+	}
+
+	// --- Utilities ---
+	function parseHash(){
+		const raw = location.hash.slice(1) || '/';
+		const [pathPart, queryString] = raw.split('?');
+		const params = {};
+		if(queryString){
+			queryString.split('&').forEach(p=>{
+				const [k,v] = p.split('=');
+				params[k] = decodeURIComponent(v||'');
+			});
+		}
+
+		if(pathPart.startsWith('/watch')){
+			const qs = new URLSearchParams(location.hash.split('?')[1] || '');
+			return { route: 'watch', params: { id: qs.get('id') } };
+		}
+		if(pathPart.startsWith('/channel')){
+			const qs = new URLSearchParams(location.hash.split('?')[1] || '');
+			return { route: 'channel', params: { id: qs.get('id') } };
+		}
+		if(pathPart.startsWith('/search')) return { route: 'search', params: { q: params.q || '' } };
+		if(pathPart.startsWith('/upload')) return { route: 'upload', params: {} };
+		if(pathPart.startsWith('/subscriptions')) return { route: 'subscriptions', params: {} };
+		if(pathPart.startsWith('/history')) return { route: 'history', params: {} };
+		if(pathPart.startsWith('/playlists')) return { route: 'playlists', params: {} };
+		if(pathPart === '/' || pathPart.startsWith('/trending')) return { route: 'home', params: {} };
+		if(pathPart.startsWith('/mychannel')) return { route: 'channel', params: { id: load(STORAGE.current) } };
+		return { route: 'home', params: {} };
+	}
+
+	async function router(){
+		const target = document.getElementById('app'); target.innerHTML=''; const r = parseHash(); let node;
+		if(r.route==='home') node = await pageHome();
+		else if(r.route==='watch') node = await pageWatch(r.params);
+		else if(r.route==='channel') node = await pageChannel(r.params);
+		else if(r.route==='upload') node = await pageUpload();
+		else if(r.route==='search') node = await pageSearch(r.params);
+		else if(r.route==='subscriptions') node = await pageList('subscriptions');
+		else if(r.route==='history') node = await pageList('history');
+		else if(r.route==='playlists') node = await pageList('playlists');
+		target.appendChild(node);
+		renderUserArea();
+	}
+
+	function fileToDataUrl(file){ return new Promise((res,rej)=>{ const r = new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); }) }
+
+	// --- UI wiring ---
+	function renderUserArea(){ const ua = document.getElementById('userArea'); const cur = getCurrentUser(); ua.innerHTML = `<div class="flex"><div class="small">${cur.name}</div><button class="btn" id="switchUser">Сменить</button></div>`; document.getElementById('switchUser').addEventListener('click', ()=>{ const users = load(STORAGE.users)||[]; const sel = prompt('Введите id пользователя для входа:\n' + users.map(u=>u.id+' ('+u.name+')').join('\n')); if(!sel) return; if(!users.find(u=>u.id===sel)) return alert('Пользователь не найден'); save(STORAGE.current,sel); router(); }); }
+
+	document.addEventListener('click', (e)=>{ const a = e.target.closest('[data-link]'); if(a){ e.preventDefault(); const h = a.getAttribute('data-link'); navigate(h); } });
+	document.getElementById('searchBtn').addEventListener('click', ()=>{ const q = document.getElementById('searchInput').value.trim(); navigate('#/search?q='+encodeURIComponent(q)); });
+
+	// Initialize
+	seed(); window.addEventListener('hashchange', router); window.addEventListener('load', router);
+	</script>
 </body>
 </html>
