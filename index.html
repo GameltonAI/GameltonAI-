@@ -61,11 +61,7 @@ video {transform:scaleX(-1)}
     <button id="downloadCut">Download</button>
   </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.min.js"></script>
 <script>
 const splash=document.getElementById('splash');
 const mainMenu=document.getElementById('mainMenu');
@@ -75,31 +71,26 @@ const canvas=document.getElementById('draw');
 const overlay=document.getElementById('overlay');
 const ctx=canvas.getContext('2d');
 const octx=overlay.getContext('2d');
-const submenu=document.getElementById('submenu');
 const objectCutControls=document.getElementById('objectCutControls');
-let mode='';
-let cameraInstance=null;
-let usingFront=true;
-let uploadedImage=null;
+let mode='', ghostInterval=null, uploadedImage=null;
 const cutCanvas=document.createElement('canvas');
-const cutCtx=cutCanvas.getContext('2d');
-let ghostInterval=null;setTimeout(()=>{document.querySelector('.title span.ai').classList.add('final');},3000); setTimeout(()=>{splash.style.display='none'; mainMenu.style.display='flex';},4500);
+const cutCtx=cutCanvas.getContext('2d');// Splash animation setTimeout(()=>{document.querySelector('.title span.ai').classList.add('final');},3000); setTimeout(()=>{splash.style.display='none'; mainMenu.style.display='flex';},4500);
 
 function resize(){canvas.width=overlay.width=app.clientWidth; canvas.height=overlay.height=app.clientHeight-80;} window.addEventListener('resize',resize);
 
-async function startCamera(){ if(cameraInstance)cameraInstance.stop(); const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:usingFront?'user':'environment'}}); video.srcObject=stream; await video.play(); }
+async function startCamera(){ try{ const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}}); video.srcObject=stream; await video.play(); }catch(e){alert('Невозможно получить доступ к камере: '+e);} }
 
-function activateMode(selectedMode){ mode=selectedMode; mainMenu.style.display='none'; app.style.display='flex'; ctx.clearRect(0,0,canvas.width,canvas.height); octx.clearRect(0,0,overlay.width,overlay.height); submenu.style.display='none'; objectCutControls.style.display=(mode==='object')?'flex':'none'; resize(); if(ghostInterval)clearInterval(ghostInterval); startApp(); }
+function activateMode(selectedMode){ mode=selectedMode; mainMenu.style.display='none'; app.style.display='flex'; resize(); objectCutControls.style.display=(mode==='object')?'flex':'none'; if(ghostInterval)clearInterval(ghostInterval); startApp(); }
 
 document.querySelectorAll('.menuBtn').forEach(btn=>{btn.addEventListener('click',()=>activateMode(btn.dataset.mode));});
 
-function renderGhosts(){ octx.clearRect(0,0,overlay.width,overlay.height); for(let i=0;i<5;i++){ octx.beginPath(); octx.arc(Math.random()*overlay.width,Math.random()*overlay.height,30+Math.random()50,0,2Math.PI); octx.fillStyle='rgba(200,200,255,0.08)'; octx.fill(); } }
+// Ghosts mode function renderGhosts(){ octx.clearRect(0,0,overlay.width,overlay.height); for(let i=0;i<5;i++){ octx.beginPath(); octx.arc(Math.random()*overlay.width,Math.random()*overlay.height,30+Math.random()50,0,2Math.PI); octx.fillStyle='rgba(200,200,255,0.08)'; octx.fill(); } }
 
-function handleUpload(e){ const file=e.target.files[0]; if(file){ const img=new Image(); img.onload=()=>{uploadedImage=img; cutCanvas.width=img.width; cutCanvas.height=img.height; cutCtx.drawImage(img,0,0);}; img.src=URL.createObjectURL(file); } }
+// Object Cut function handleUpload(e){ const file=e.target.files[0]; if(file){ const img=new Image(); img.onload=()=>{uploadedImage=img; cutCanvas.width=img.width; cutCanvas.height=img.height; cutCtx.drawImage(img,0,0);}; img.src=URL.createObjectURL(file); } }
 
 document.getElementById('uploadImage').addEventListener('change',handleUpload); document.getElementById('cutObject').addEventListener('click',async ()=>{ if(!uploadedImage)return; const seg=new SelfieSegmentation({locateFile:f=>https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${f}}); seg.setOptions({modelSelection:1}); seg.onResults(results=>{ cutCtx.clearRect(0,0,cutCanvas.width,cutCanvas.height); cutCtx.drawImage(results.segmentationMask,0,0,cutCanvas.width,cutCanvas.height); cutCtx.globalCompositeOperation='source-in'; cutCtx.drawImage(uploadedImage,0,0); }); await seg.send({image:uploadedImage}); }); document.getElementById('downloadCut').addEventListener('click',()=>{ const a=document.createElement('a'); a.href=cutCanvas.toDataURL('image/png'); a.download='object.png'; a.click(); });
 
-async function startApp(){ await startCamera(); resize(); if(mode==='ghosts'){ ghostInterval=setInterval(renderGhosts,500); } // Filters and Background setup can be added here } </script>
+async function startApp(){ await startCamera(); if(mode==='ghosts') ghostInterval=setInterval(renderGhosts,500); } </script>
 
 </body>
 </html>
