@@ -18,20 +18,20 @@
   /* Загрузка */
   #loader {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: #000;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    z-index: 9999;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background-color:#000;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+    z-index:9999;
   }
 
   #loader h1 {
-    font-size: 4em;
+    font-size:4em;
     background: linear-gradient(90deg, violet, indigo, blue, green, yellow, orange, red);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -43,63 +43,65 @@
   }
 
   @keyframes rainbow {
-    0% { background-position: 0% 50%; }
-    100% { background-position: 100% 50%; }
+    0% {background-position:0% 50%;}
+    100% {background-position:100% 50%;}
   }
 
   /* Основной интерфейс */
   #app {
-    display: none;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
+    display:none;
+    height:100%;
+    display:flex;
+    flex-direction:column;
   }
 
   /* Фон */
   #background {
-    position: fixed;
+    position:fixed;
     top:0;
     left:0;
     width:100%;
     height:100%;
     z-index:-1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background-size: cover;
+    background-position: center;
   }
 
   #background .neon-g {
     font-size: 10em;
     font-weight: bold;
     color: purple;
-    text-shadow: 0 0 20px violet, 0 0 40px purple, 0 0 60px purple;
+    text-shadow:0 0 20px violet,0 0 40px purple,0 0 60px purple;
     animation: glow 2s infinite alternate;
   }
 
   @keyframes glow {
-    0% { text-shadow: 0 0 20px violet, 0 0 40px purple; }
-    100% { text-shadow: 0 0 40px violet, 0 0 80px purple; }
+    0% { text-shadow: 0 0 20px violet,0 0 40px purple; }
+    100% { text-shadow: 0 0 40px violet,0 0 80px purple; }
   }
 
   /* Верхний размытый бар */
   .top-bar {
     backdrop-filter: blur(20px);
     background: rgba(0,0,0,0.5);
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    padding: 10px 20px;
-    gap: 20px;
-    font-weight: bold;
+    display:flex;
+    justify-content:flex-start;
+    align-items:center;
+    padding:10px 20px;
+    gap:20px;
+    font-weight:bold;
   }
 
   .top-bar button {
     background: rgba(255,255,255,0.1);
-    border: none;
-    padding: 8px 16px;
-    border-radius: 12px;
-    color: #fff;
-    cursor: pointer;
+    border:none;
+    padding:8px 16px;
+    border-radius:12px;
+    color:#fff;
+    cursor:pointer;
     transition: background 0.3s;
   }
 
@@ -109,80 +111,73 @@
 
   /* Чат */
   #chat {
-    flex: 1;
-    padding: 20px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    flex:1;
+    padding:20px;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
     backdrop-filter: blur(10px);
   }
 
   .message {
-    padding: 10px 15px;
-    border-radius: 15px;
-    max-width: 60%;
+    padding:10px 15px;
+    border-radius:15px;
+    max-width:60%;
     animation: fadeIn 0.5s;
   }
 
-  .user {
-    background: rgba(128,0,128,0.7);
-    align-self: flex-end;
-  }
-
-  .ai {
-    background: rgba(255,255,255,0.1);
-    align-self: flex-start;
-  }
+  .user { background: rgba(128,0,128,0.7); align-self:flex-end;}
+  .ai { background: rgba(255,255,255,0.1); align-self:flex-start;}
 
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { opacity:0; transform: translateY(10px);}
+    to { opacity:1; transform: translateY(0);}
   }
 
   /* Поле ввода */
   .input-container {
-    display: flex;
-    gap: 10px;
-    padding: 10px 20px;
+    display:flex;
+    gap:10px;
+    padding:10px 20px;
     backdrop-filter: blur(15px);
     background: rgba(0,0,0,0.3);
   }
 
   .input-container input {
-    flex: 1;
-    padding: 10px 15px;
-    border-radius: 12px;
-    border: none;
-    outline: none;
-    font-size: 1em;
+    flex:1;
+    padding:10px 15px;
+    border-radius:12px;
+    border:none;
+    outline:none;
+    font-size:1em;
     background: rgba(255,255,255,0.1);
-    color: #fff;
+    color:#fff;
   }
 
   .input-container button {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 12px;
-    background: purple;
-    color: #fff;
-    cursor: pointer;
+    padding:10px 20px;
+    border:none;
+    border-radius:12px;
+    background:purple;
+    color:#fff;
+    cursor:pointer;
   }
 
   /* Настройки */
   #settings {
-    display: none;
-    flex-direction: column;
-    padding: 20px;
-    gap: 15px;
+    display:none;
+    flex-direction:column;
+    padding:20px;
+    gap:15px;
     backdrop-filter: blur(15px);
     background: rgba(0,0,0,0.3);
   }
 
   #settings label {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
+    display:flex;
+    flex-direction:column;
+    gap:5px;
   }
 </style>
 </head>
@@ -221,74 +216,113 @@
         <option value="space">Космос</option>
       </select>
     </label>
+    <label>
+      Добавить шаблон ИИ (в формате "вопрос > ответ"):
+      <input type="text" id="newTemplate">
+      <button id="addTemplate">Добавить</button>
+    </label>
   </div>
 </div>
 
 <script>
-  // Загрузка сайта
-  window.addEventListener('load', () => {
-    setTimeout(() => {
-      document.getElementById('loader').style.display = 'none';
-      document.getElementById('app').style.display = 'flex';
-    }, 3000);
+  // Загрузка
+  window.addEventListener('load', ()=>{
+    setTimeout(()=>{
+      document.getElementById('loader').style.display='none';
+      document.getElementById('app').style.display='flex';
+    },3000);
+  });
+
+  // Фон
+  const bgSelect = document.getElementById('bgSelect');
+  const background = document.getElementById('background');
+  function setBackground(mode){
+    if(mode==='neon'){
+      background.innerHTML='<div class="neon-g">G</div>';
+      background.style.background='';
+    } else if(mode==='dark'){
+      background.innerHTML='';
+      background.style.background='#000';
+    } else if(mode==='space'){
+      background.innerHTML='';
+      background.style.background='url("https://i.imgur.com/3f6R1oO.jpg") center/cover no-repeat';
+    }
+  }
+  bgSelect.addEventListener('change', ()=>setBackground(bgSelect.value));
+
+  // Верхний бар
+  const chatsBtn=document.getElementById('chatsBtn');
+  const settingsBtn=document.getElementById('settingsBtn');
+  const settings=document.getElementById('settings');
+  const chatContainer=document.getElementById('chat');
+  chatsBtn.addEventListener('click', ()=>{
+    chatContainer.style.display='flex';
+    settings.style.display='none';
+  });
+  settingsBtn.addEventListener('click', ()=>{
+    chatContainer.style.display='none';
+    settings.style.display='flex';
   });
 
   // Чат
-  const chat = document.getElementById('chat');
-  const userInput = document.getElementById('userInput');
-  const sendBtn = document.getElementById('sendBtn');
+  const chat=document.getElementById('chat');
+  const userInput=document.getElementById('userInput');
+  const sendBtn=document.getElementById('sendBtn');
 
-  function addMessage(text, className) {
-    const msg = document.createElement('div');
-    msg.className = 'message ' + className;
-    msg.textContent = text;
+  let templates = {
+    "Привет!": "Привет! Я твой ИИ помощник.",
+    "Как дела?": "У меня всё отлично, спасибо что спросил!"
+  };
+
+  // Добавление шаблонов
+  const newTemplate=document.getElementById('newTemplate');
+  const addTemplateBtn=document.getElementById('addTemplate');
+  addTemplateBtn.addEventListener('click', ()=>{
+    const value=newTemplate.value.trim();
+    if(!value.includes('>')) return alert('Неверный формат! Используйте "вопрос > ответ"');
+    const [q,a]=value.split('>').map(s=>s.trim());
+    if(!q||!a) return alert('Неверный формат!');
+    templates[q]=a;
+    newTemplate.value='';
+    alert('Шаблон добавлен!');
+  });
+
+  // Функции чата
+  function addMessage(text,className){
+    const msg=document.createElement('div');
+    msg.className='message '+className;
+    msg.textContent=text;
     chat.appendChild(msg);
-    chat.scrollTop = chat.scrollHeight;
+    chat.scrollTop=chat.scrollHeight;
   }
 
-  sendBtn.addEventListener('click', () => {
-    const text = userInput.value.trim();
-    if(!text) return;
-    addMessage(text, 'user');
-    addMessage("Привет! Я твой ИИ помощник.", 'ai'); // Пока простой ответ
-    userInput.value = '';
-  });
-
-  userInput.addEventListener('keypress', e => {
-    if(e.key === 'Enter') sendBtn.click();
-  });
-
-  // Верхний бар
-  const chatsBtn = document.getElementById('chatsBtn');
-  const settingsBtn = document.getElementById('settingsBtn');
-  const settings = document.getElementById('settings');
-  const chatContainer = document.getElementById('chat');
-
-  chatsBtn.addEventListener('click', () => {
-    chatContainer.style.display = 'flex';
-    settings.style.display = 'none';
-  });
-
-  settingsBtn.addEventListener('click', () => {
-    chatContainer.style.display = 'none';
-    settings.style.display = 'flex';
-  });
-
-  // Смена фона
-  const bgSelect = document.getElementById('bgSelect');
-  const background = document.getElementById('background');
-
-  bgSelect.addEventListener('change', () => {
-    if(bgSelect.value === 'neon') {
-      background.innerHTML = '<div class="neon-g">G</div>';
-      background.style.background = '';
-    } else if(bgSelect.value === 'dark') {
-      background.innerHTML = '';
-      background.style.background = '#000';
-    } else if(bgSelect.value === 'space') {
-      background.innerHTML = '';
-      background.style.background = 'url("https://i.imgur.com/3f6R1oO.jpg") center/cover no-repeat';
+  // "Умная" проверка: ищем точное или частичное совпадение
+  function processMessage(msg){
+    msg=msg.toLowerCase();
+    // точное совпадение
+    for(const key in templates){
+      if(key.toLowerCase()===msg) return templates[key];
     }
+    // частичное совпадение
+    for(const key in templates){
+      if(msg.includes(key.toLowerCase()) || key.toLowerCase().includes(msg)){
+        return templates[key];
+      }
+    }
+    return "Я пока не знаю, как ответить на это.";
+  }
+
+  sendBtn.addEventListener('click', ()=>{
+    const text=userInput.value.trim();
+    if(!text) return;
+    addMessage(text,'user');
+    const response=processMessage(text);
+    addMessage(response,'ai');
+    userInput.value='';
+  });
+
+  userInput.addEventListener('keypress',e=>{
+    if(e.key==='Enter') sendBtn.click();
   });
 </script>
 
