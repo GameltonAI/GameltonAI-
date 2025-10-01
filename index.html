@@ -1,428 +1,171 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
-	<meta charset="utf-8" />
-	<meta name="viewport" content="width=device-width,initial-scale=1" />
-	<title>YT-Sim — Маленькая имитация YouTube</title>
-	<style>
-		:root{--bg:#f7f9fc;--card:#fff;--accent:#ff3b49;--muted:#6b7280}
-		*{box-sizing:border-box}
-		body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:#111}
-		header{background:#fff;border-bottom:1px solid #eee;position:sticky;top:0;z-index:20}
-		.header-inner{display:flex;align-items:center;gap:12px;padding:10px 18px;max-width:1100px;margin:0 auto}
-		.brand{font-weight:700;color:var(--accent);cursor:pointer}
-		.search{flex:1;display:flex;gap:8px}
-		.search input{flex:1;padding:8px 10px;border:1px solid #e5e7eb;border-radius:6px}
-		.btn{background:var(--accent);color:#fff;border:0;padding:8px 12px;border-radius:6px;cursor:pointer}
-		.layout{display:flex;max-width:1100px;margin:18px auto;padding:0 18px;gap:18px}
-		.sidebar{width:220px}
-		.sidebar nav a{display:block;padding:8px;border-radius:6px;color:#111;text-decoration:none}
-		.sidebar nav a:hover{background:#f1f5f9}
-		.main{flex:1}
-		.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
-		.video-card{background:var(--card);padding:0;border-radius:8px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
-		.thumb{width:100%;height:124px;object-fit:cover;display:block;background:#ddd}
-		.meta{padding:8px}
-		.small{font-size:13px;color:var(--muted)}
-		.channel-row{display:flex;gap:8px;align-items:center}
-		.avatar{width:36px;height:36px;border-radius:50%;background:#ddd;display:inline-block}
-		.player-wrap{background:#000;padding:12px;border-radius:8px}
-		.card{background:var(--card);padding:12px;border-radius:8px}
-		.flex{display:flex;gap:8px;align-items:center}
-		.muted{color:var(--muted)}
-		.like-btn{background:#f3f4f6;border:0;padding:6px 8px;border-radius:6px;cursor:pointer}
-		form.inline{display:flex;gap:8px}
-		@media (max-width:900px){.sidebar{display:none}.layout{padding:0 12px}}
-	</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Чат с Gamelton Ai</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .chat-container {
+            width: 90%;
+            max-width: 600px;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background-color: #4CAF50; /* Зеленый цвет */
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.2em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .settings-button {
+            background-color: #388E3C; /* Темно-зеленый для кнопки */
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s;
+        }
+
+        .settings-button:hover {
+            background-color: #2E7D32;
+        }
+
+        .chat-window {
+            height: 400px;
+            padding: 15px;
+            overflow-y: auto;
+            border-bottom: 1px solid #eee;
+            background-color: #e9ecef;
+        }
+
+        .input-area {
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-area input[type="text"] {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+
+        .input-area button {
+            background-color: #007bff; /* Синий цвет */
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .input-area button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Стиль для тестового сообщения от бота */
+        .bot-message {
+            background-color: #d1e7dd; /* Светло-зеленый */
+            padding: 8px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            max-width: 70%;
+            align-self: flex-start;
+        }
+
+    </style>
 </head>
 <body>
-	<header>
-		<div class="header-inner">
-			<div class="brand" data-link="#/">YT-Sim</div>
-			<div class="search">
-				<input id="searchInput" placeholder="Поиск видео..." />
-				<button id="searchBtn" class="btn">Поиск</button>
-			</div>
-			<div class="flex">
-				<button id="uploadBtn" class="btn" data-link="#/upload">Загрузить</button>
-				<div id="userArea"></div>
-			</div>
-		</div>
-	</header>
 
-	<div class="layout">
-		<aside class="sidebar">
-			<nav>
-				<a href="#/">Главная</a>
-				<a href="#/trending">Тренды</a>
-				<a href="#/subscriptions">Подписки</a>
-				<a href="#/history">История</a>
-				<a href="#/playlists">Плейлисты</a>
-				<a href="#/mychannel">Мой канал</a>
-			</nav>
-		</aside>
-		<main class="main" id="app"></main>
-	</div>
+    <div class="chat-container">
+        <div class="header">
+            <span>Чат с **Gamelton Ai**</span>
+            <button class="settings-button" onclick="openSettings()">Настройки</button>
+        </div>
 
-	<footer style="text-align:center;color:var(--muted);padding:18px 0">© 2025 YT-Sim — Demo</footer>
+        <div class="chat-window" id="chatWindow">
+            <div class="bot-message">Привет! Я Gamelton Ai. Спрашивай!</div>
+        </div>
 
-	<template id="tpl-home">
-		<div>
-			<h2>Рекомендации</h2>
-			<div class="grid" id="homeGrid"></div>
-			<div id="loadingMore" class="small muted" style="text-align:center;margin-top:12px">Прокрутите вниз для загрузки...</div>
-		</div>
-	</template>
+        <div class="input-area">
+            <input type="text" id="messageInput" placeholder="Введите ваше сообщение...">
+            <button onclick="sendMessage()">Отправить</button>
+        </div>
+    </div>
 
-	<template id="tpl-watch">
-		<div>
-			<div class="player-wrap card">
-				<video id="videoPlayer" controls width="100%" style="max-height:480px;background:#000"></video>
-			</div>
-			<div style="display:flex;gap:12px;margin-top:8px;align-items:center;justify-content:space-between">
-				<div>
-					<h3 id="videoTitle" style="margin:0"></h3>
-					<div class="small muted" id="videoMeta"></div>
-				</div>
-				<div class="flex">
-					<button id="likeBtn" class="like-btn">👍 <span id="likeCount">0</span></button>
-					<button id="dislikeBtn" class="like-btn">👎 <span id="dislikeCount">0</span></button>
-					<button id="subscribeBtn" class="btn">Подписаться</button>
-				</div>
-			</div>
-			<div class="card" style="margin-top:12px">
-				<h4>Описание</h4>
-				<p id="videoDesc" class="small"></p>
-			</div>
-			<div class="card" style="margin-top:12px">
-				<h4>Комментарии</h4>
-				<div id="commentsList"></div>
-				<form id="commentForm" style="margin-top:8px" class="inline">
-					<input id="commentInput" placeholder="Оставить комментарий..." />
-					<button class="btn">Отправить</button>
-				</form>
-			</div>
-		</div>
-	</template>
+    <script>
+        function openSettings() {
+            // Здесь должна быть логика для открытия окна настроек
+            // Например, перенаправление на страницу настроек или модальное окно.
+            alert("Открытие настроек! Здесь можно будет обучить бота шаблонам, например 'Привет' -> 'Привет'");
+            // Для примера обучения:
+            // let input = prompt("Введите шаблон в формате: Запрос > Ответ", "Привет > Привет");
+            // if (input) {
+            //     alert(`Шаблон "${input}" сохранен для обучения.`);
+            // }
+        }
 
-	<template id="tpl-channel">
-		<div>
-			<div class="card channel-info">
-				<div class="channel-row">
-					<div class="avatar" id="channelAvatar"></div>
-					<div>
-						<h3 id="channelName" style="margin:0"></h3>
-						<div class="small muted" id="channelSubs"></div>
-					</div>
-					<div style="margin-left:auto">
-						<button id="channelSubscribe" class="btn">Подписаться</button>
-					</div>
-				</div>
-			</div>
-			<h4 style="margin-top:12px">Видео канала</h4>
-			<div class="grid" id="channelGrid"></div>
-		</div>
-	</template>
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
 
-	<template id="tpl-upload">
-		<div class="card">
-			<h3>Загрузка видео (demo)</h3>
-			<form id="uploadForm" style="display:grid;gap:8px">
-				<input id="uploadTitle" placeholder="Название" required />
-				<textarea id="uploadDesc" placeholder="Описание"></textarea>
-				<input id="uploadUrl" placeholder="Ссылка на видео (mp4) или оставьте пустым, чтобы загрузить файл" />
-				<input id="uploadFile" type="file" accept="video/*" />
-				<input id="uploadThumb" type="file" accept="image/*" />
-				<button class="btn">Опубликовать</button>
-				<div class="small muted">Примечание: загрузка файла сохраняется только в текущей сессии (objectURL). Для постоянного хранения используйте URL или сервер.</div>
-			</form>
-		</div>
-	</template>
+            if (message === "") {
+                return; // Не отправлять пустое сообщение
+            }
 
-	<template id="tpl-search">
-		<div>
-			<h3>Результаты поиска: <span id="searchQuery"></span></h3>
-			<div class="grid" id="searchGrid"></div>
-		</div>
-	</template>
+            // Логика добавления сообщения пользователя в чат (для полноты примера)
+            const chatWindow = document.getElementById('chatWindow');
+            const userMessageDiv = document.createElement('div');
+            userMessageDiv.textContent = message;
+            // Добавим стиль, чтобы пользовательское сообщение было справа
+            userMessageDiv.style.cssText = 'background-color: #cfe2ff; padding: 8px; border-radius: 8px; margin-bottom: 10px; max-width: 70%; align-self: flex-end; margin-left: auto;';
+            chatWindow.appendChild(userMessageDiv);
 
-	<template id="tpl-simple-list">
-		<div>
-			<h3 id="listTitle"></h3>
-			<div id="listGrid" class="grid"></div>
-		</div>
-	</template>
+            // Имитация ответа бота (можно использовать ваш шаблон "Привет > Привет")
+            setTimeout(() => {
+                let botResponse = "Я получил ваше сообщение.";
+                if (message.toLowerCase().includes("привет")) {
+                    botResponse = "Привет! Чем я могу помочь?";
+                }
+                const botMessageDiv = document.createElement('div');
+                botMessageDiv.textContent = botResponse;
+                botMessageDiv.className = 'bot-message';
+                chatWindow.appendChild(botMessageDiv);
+                // Прокрутка чата вниз
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+            }, 500);
 
-	<script>
-	// --- Simple client-side data layer using localStorage ---
-	const STORAGE = {
-		users: 'yt_users', videos: 'yt_videos', comments: 'yt_comments', subs: 'yt_subs', playlists: 'yt_playlists', history: 'yt_history', current: 'yt_current'
-	};
 
-	function uid(prefix='id') { return prefix + '_' + Math.random().toString(36).slice(2,9); }
+            input.value = ''; // Очистить поле ввода
+            chatWindow.scrollTop = chatWindow.scrollHeight; // Прокрутка чата вниз
+        }
+    </script>
 
-	function load(key){return JSON.parse(localStorage.getItem(key) || 'null');}
-	function save(key,val){localStorage.setItem(key, JSON.stringify(val));}
-
-	// Seed sample data if absent
-	function seed(){
-		if(!load(STORAGE.users)){
-			const u1 = {id:'u_alex',name:'Alex',avatar:'',subs:0, subscriptions:[],likes:[],dislikes:[]};
-			const u2 = {id:'u_maria',name:'Maria',avatar:'',subs:0,subscriptions:[],likes:[],dislikes:[]};
-			save(STORAGE.users,[u1,u2]);
-		}
-		if(!load(STORAGE.videos)){
-			const sample = 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4';
-			const mkThumb = (t)=> 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="480" height="270"><rect width="100%" height="100%" fill="#ddd"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="20" fill="#666">'+t+'</text></svg>');
-			const v1 = {id:'v1',title:'Красивый цветок',desc:'Видео цветка',url:sample,thumb:mkThumb('Цветок'),views:123,likes:5,dislikes:0,created:Date.now()-1000*60*60*24*3,author:'u_alex'};
-			const v2 = {id:'v2',title:'Природа и реки',desc:'Река и лес',url:sample,thumb:mkThumb('Река'),views:456,likes:12,dislikes:1,created:Date.now()-1000*60*60*24*10,author:'u_maria'};
-			const v3 = {id:'v3',title:'Город ночью',desc:'Ночной город в движении',url:sample,thumb:mkThumb('Город'),views:78,likes:2,dislikes:0,created:Date.now()-1000*60*60*6,author:'u_alex'};
-			save(STORAGE.videos,[v1,v2,v3]);
-		}
-		if(!load(STORAGE.comments)) save(STORAGE.comments,[]);
-		if(!load(STORAGE.subs)) save(STORAGE.subs,[]);
-		if(!load(STORAGE.playlists)) save(STORAGE.playlists,[]);
-		if(!load(STORAGE.history)) save(STORAGE.history,[]);
-		if(!load(STORAGE.current)) save(STORAGE.current,'u_alex');
-	}
-
-	// --- Router ---
-	function navigate(hash){ location.hash = hash; }
-
-	function getCurrentUser(){
-		const id = load(STORAGE.current);
-		const users = load(STORAGE.users) || [];
-		return users.find(u=>u.id===id) || users[0];
-	}
-
-	// --- Render helpers ---
-	function el(tag,attrs={},children=''){ const e = document.createElement(tag); for(const k in attrs) e.setAttribute(k,attrs[k]); if(typeof children==='string') e.innerHTML=children; else if(children) e.appendChild(children); return e }
-
-	// Render a video card into grid
-	function renderVideoCard(video){
-		const div = document.createElement('div'); div.className='video-card';
-		div.innerHTML = `
-			<a href="#/watch?id=${video.id}"><img src="${video.thumb}" class="thumb" loading="lazy"/></a>
-			<div class="meta">
-				<div class="channel-row">
-					<div class="avatar"></div>
-					<div style="flex:1">
-						<a href="#/watch?id=${video.id}" style="font-weight:600;color:inherit;text-decoration:none">${video.title}</a>
-						<div class="small muted">${getUserName(video.author)} • ${video.views} просмотров</div>
-					</div>
-				</div>
-			</div>
-		`;
-		return div;
-	}
-
-	function getUserName(id){ const u = (load(STORAGE.users)||[]).find(x=>x.id===id); return u?u.name:'Unknown' }
-
-	// --- Pages ---
-	async function pageHome(){
-		const tpl = document.getElementById('tpl-home').content.cloneNode(true);
-		const grid = tpl.getElementById('homeGrid');
-		const videos = (load(STORAGE.videos)||[]).sort((a,b)=>b.created-a.created);
-		let perPage = 6, page = 0;
-		function loadMore(){
-			const slice = videos.slice(page*perPage,(page+1)*perPage);
-			slice.forEach(v=> grid.appendChild(renderVideoCard(v)));
-			page++;
-		}
-		loadMore();
-		// infinite scroll
-		const observer = new IntersectionObserver((entries)=>{
-			if(entries[0].isIntersecting) loadMore();
-		},{root:document.querySelector('.main'),threshold:0.1});
-		observer.observe(tpl.getElementById('loadingMore'));
-		return tpl;
-	}
-
-	function pageWatch(params){
-		const tpl = document.getElementById('tpl-watch').content.cloneNode(true);
-		const id = params.id; const videos = load(STORAGE.videos)||[]; const video = videos.find(v=>v.id===id);
-		if(!video) { tpl.firstElementChild.innerHTML = '<p>Видео не найдено</p>'; return tpl }
-		const player = tpl.getElementById('videoPlayer'); player.src = video.url;
-		tpl.getElementById('videoTitle').textContent = video.title;
-		tpl.getElementById('videoMeta').textContent = `${getUserName(video.author)} • ${video.views} просмотров`;
-		tpl.getElementById('videoDesc').textContent = video.desc;
-		tpl.getElementById('likeCount').textContent = video.likes || 0;
-		tpl.getElementById('dislikeCount').textContent = video.dislikes || 0;
-
-		// comments
-		const comments = load(STORAGE.comments)||[];
-		function renderComments(){
-			const list = tpl.getElementById('commentsList'); list.innerHTML='';
-			comments.filter(c=>c.videoId===id).sort((a,b)=>a.date-b.date).forEach(c=>{
-				const d = document.createElement('div'); d.className='small'; d.style.padding='6px 0'; d.innerHTML = `<strong>${getUserName(c.userId)}:</strong> ${c.text}`; list.appendChild(d);
-			});
-		}
-		renderComments();
-
-		tpl.getElementById('commentForm').addEventListener('submit', (e)=>{
-			e.preventDefault(); const text = tpl.getElementById('commentInput').value.trim(); if(!text) return;
-			const cur = getCurrentUser(); const com = {id:uid('c'),videoId:id,userId:cur.id,text,date:Date.now()};
-			comments.push(com); save(STORAGE.comments,comments); tpl.getElementById('commentInput').value=''; renderComments();
-		});
-
-		// likes/dislikes
-		tpl.getElementById('likeBtn').addEventListener('click', ()=>{
-			const cur = getCurrentUser(); const users = load(STORAGE.users)||[]; const u = users.find(x=>x.id===cur.id);
-			if(!u.likes) u.likes = [];
-			const idx = u.likes.indexOf(id);
-			if(idx===-1){ u.likes.push(id); video.likes = (video.likes||0)+1; }
-			else { u.likes.splice(idx,1); video.likes = Math.max(0,(video.likes||1)-1); }
-			save(STORAGE.users,users); save(STORAGE.videos,load(STORAGE.videos)); tpl.getElementById('likeCount').textContent = video.likes;
-		});
-
-		tpl.getElementById('dislikeBtn').addEventListener('click', ()=>{
-			const cur = getCurrentUser(); const users = load(STORAGE.users)||[]; const u = users.find(x=>x.id===cur.id);
-			if(!u.dislikes) u.dislikes = [];
-			const idx = u.dislikes.indexOf(id);
-			if(idx===-1){ u.dislikes.push(id); video.dislikes = (video.dislikes||0)+1; }
-			else { u.dislikes.splice(idx,1); video.dislikes = Math.max(0,(video.dislikes||1)-1); }
-			save(STORAGE.users,users); save(STORAGE.videos,load(STORAGE.videos)); tpl.getElementById('dislikeCount').textContent = video.dislikes;
-		});
-
-		// subscribe
-		tpl.getElementById('subscribeBtn').addEventListener('click', ()=>{
-			const cur = getCurrentUser(); const users = load(STORAGE.users)||[]; const u = users.find(x=>x.id===cur.id);
-			if(!u.subscriptions) u.subscriptions = [];
-			const author = video.author;
-			const i = u.subscriptions.indexOf(author);
-			if(i===-1){ u.subscriptions.push(author); }
-			else u.subscriptions.splice(i,1);
-			save(STORAGE.users,users); alert(i===-1? 'Подписка оформлена':'Отписка выполнена');
-		});
-
-		// view counter: increase after 30s of watch
-		let counted=false; player.addEventListener('timeupdate', ()=>{
-			if(!counted && player.currentTime>=30){ video.views=(video.views||0)+1; save(STORAGE.videos,load(STORAGE.videos)); counted=true; tpl.getElementById('videoMeta').textContent = `${getUserName(video.author)} • ${video.views} просмотров`; }
-		});
-
-		// save to history when start play
-		player.addEventListener('play', ()=>{
-			const h = load(STORAGE.history)||[]; h.push({userId:getCurrentUser().id,videoId:id,date:Date.now()}); save(STORAGE.history,h);
-		})
-
-		return tpl;
-	}
-
-	function pageChannel(params){
-		const tpl = document.getElementById('tpl-channel').content.cloneNode(true);
-		const id = params.id || load(STORAGE.current);
-		const users = load(STORAGE.users)||[]; const user = users.find(u=>u.id===id);
-		if(!user){ tpl.firstElementChild.innerHTML='<p>Канал не найден</p>'; return tpl }
-		tpl.getElementById('channelName').textContent = user.name;
-		tpl.getElementById('channelSubs').textContent = `${user.subs||0} подписчиков`;
-		tpl.getElementById('channelSubscribe').addEventListener('click', ()=>{
-			const cur = getCurrentUser(); if(cur.id===user.id){ alert('Это ваш канал'); return }
-			const us = load(STORAGE.users)||[]; const cu = us.find(x=>x.id===cur.id); if(!cu.subscriptions) cu.subscriptions=[];
-			const idx = cu.subscriptions.indexOf(user.id); if(idx===-1){ cu.subscriptions.push(user.id); alert('Подписались'); } else { cu.subscriptions.splice(idx,1); alert('Отписались'); }
-			save(STORAGE.users,us);
-		});
-		const videos = (load(STORAGE.videos)||[]).filter(v=>v.author===user.id).sort((a,b)=>b.created-a.created);
-		const grid = tpl.getElementById('channelGrid'); videos.forEach(v=>grid.appendChild(renderVideoCard(v)));
-		return tpl;
-	}
-
-	function pageUpload(){
-		const tpl = document.getElementById('tpl-upload').content.cloneNode(true);
-		tpl.getElementById('uploadForm').addEventListener('submit', async (e)=>{
-			e.preventDefault(); const title = tpl.getElementById('uploadTitle').value.trim(); if(!title) return alert('Введите название');
-			const desc = tpl.getElementById('uploadDesc').value.trim(); const url = tpl.getElementById('uploadUrl').value.trim();
-			const fileInput = tpl.getElementById('uploadFile'); const thumbInput = tpl.getElementById('uploadThumb');
-			let finalUrl = url;
-			if(!finalUrl && fileInput.files && fileInput.files[0]) { finalUrl = URL.createObjectURL(fileInput.files[0]); }
-			let thumb = '';
-			if(thumbInput.files && thumbInput.files[0]){
-				thumb = await fileToDataUrl(thumbInput.files[0]);
-			} else {
-				thumb = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="480" height="270"><rect width="100%" height="100%" fill="#ddd"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="20" fill="#666">'+(title||'Видео')+'</text></svg>');
-			}
-			if(!finalUrl) return alert('Укажите URL видео или файл');
-			const videos = load(STORAGE.videos)||[]; const id = uid('v'); const v = {id,title,desc,url:finalUrl,thumb,views:0,likes:0,dislikes:0,created:Date.now(),author:getCurrentUser().id}; videos.unshift(v); save(STORAGE.videos,videos); alert('Видео опубликовано'); navigate('#/watch?id='+id);
-		});
-		return tpl;
-	}
-
-	function pageSearch(params){
-		const tpl = document.getElementById('tpl-search').content.cloneNode(true);
-		const q = params.q || ''; tpl.getElementById('searchQuery').textContent = q;
-		const grid = tpl.getElementById('searchGrid'); const vids = (load(STORAGE.videos)||[]).filter(v=>v.title.toLowerCase().includes(q.toLowerCase())||v.desc.toLowerCase().includes(q.toLowerCase())); vids.forEach(v=>grid.appendChild(renderVideoCard(v)));
-		return tpl;
-	}
-
-	function pageList(kind){
-		const tpl = document.getElementById('tpl-simple-list').content.cloneNode(true);
-		tpl.getElementById('listTitle').textContent = kind;
-		const grid = tpl.getElementById('listGrid');
-		if(kind==='subscriptions'){
-			const cur = getCurrentUser(); const subs = cur.subscriptions||[]; const vids = (load(STORAGE.videos)||[]).filter(v=>subs.includes(v.author)); vids.forEach(v=>grid.appendChild(renderVideoCard(v)));
-		} else if(kind==='history'){
-			const h = load(STORAGE.history)||[]; const vids = load(STORAGE.videos)||[]; const userId = getCurrentUser().id; h.filter(x=>x.userId===userId).sort((a,b)=>b.date-a.date).forEach(hi=>{ const v = vids.find(x=>x.id===hi.videoId); if(v) grid.appendChild(renderVideoCard(v));});
-		} else if(kind==='playlists'){
-			const pls = load(STORAGE.playlists)||[]; pls.forEach(p=>{
-				const card = document.createElement('div'); card.className='card'; card.innerHTML = `<h4>${p.title}</h4><div class="small muted">${p.items.length} видео</div>`; grid.appendChild(card);
-			});
-		}
-		return tpl;
-	}
-
-	// --- Utilities ---
-	function parseHash(){
-		const raw = location.hash.slice(1) || '/';
-		const [pathPart, queryString] = raw.split('?');
-		const params = {};
-		if(queryString){
-			queryString.split('&').forEach(p=>{
-				const [k,v] = p.split('=');
-				params[k] = decodeURIComponent(v||'');
-			});
-		}
-
-		if(pathPart.startsWith('/watch')){
-			const qs = new URLSearchParams(location.hash.split('?')[1] || '');
-			return { route: 'watch', params: { id: qs.get('id') } };
-		}
-		if(pathPart.startsWith('/channel')){
-			const qs = new URLSearchParams(location.hash.split('?')[1] || '');
-			return { route: 'channel', params: { id: qs.get('id') } };
-		}
-		if(pathPart.startsWith('/search')) return { route: 'search', params: { q: params.q || '' } };
-		if(pathPart.startsWith('/upload')) return { route: 'upload', params: {} };
-		if(pathPart.startsWith('/subscriptions')) return { route: 'subscriptions', params: {} };
-		if(pathPart.startsWith('/history')) return { route: 'history', params: {} };
-		if(pathPart.startsWith('/playlists')) return { route: 'playlists', params: {} };
-		if(pathPart === '/' || pathPart.startsWith('/trending')) return { route: 'home', params: {} };
-		if(pathPart.startsWith('/mychannel')) return { route: 'channel', params: { id: load(STORAGE.current) } };
-		return { route: 'home', params: {} };
-	}
-
-	async function router(){
-		const target = document.getElementById('app'); target.innerHTML=''; const r = parseHash(); let node;
-		if(r.route==='home') node = await pageHome();
-		else if(r.route==='watch') node = await pageWatch(r.params);
-		else if(r.route==='channel') node = await pageChannel(r.params);
-		else if(r.route==='upload') node = await pageUpload();
-		else if(r.route==='search') node = await pageSearch(r.params);
-		else if(r.route==='subscriptions') node = await pageList('subscriptions');
-		else if(r.route==='history') node = await pageList('history');
-		else if(r.route==='playlists') node = await pageList('playlists');
-		target.appendChild(node);
-		renderUserArea();
-	}
-
-	function fileToDataUrl(file){ return new Promise((res,rej)=>{ const r = new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); }) }
-
-	// --- UI wiring ---
-	function renderUserArea(){ const ua = document.getElementById('userArea'); const cur = getCurrentUser(); ua.innerHTML = `<div class="flex"><div class="small">${cur.name}</div><button class="btn" id="switchUser">Сменить</button></div>`; document.getElementById('switchUser').addEventListener('click', ()=>{ const users = load(STORAGE.users)||[]; const sel = prompt('Введите id пользователя для входа:\n' + users.map(u=>u.id+' ('+u.name+')').join('\n')); if(!sel) return; if(!users.find(u=>u.id===sel)) return alert('Пользователь не найден'); save(STORAGE.current,sel); router(); }); }
-
-	document.addEventListener('click', (e)=>{ const a = e.target.closest('[data-link]'); if(a){ e.preventDefault(); const h = a.getAttribute('data-link'); navigate(h); } });
-	document.getElementById('searchBtn').addEventListener('click', ()=>{ const q = document.getElementById('searchInput').value.trim(); navigate('#/search?q='+encodeURIComponent(q)); });
-
-	// Initialize
-	seed(); window.addEventListener('hashchange', router); window.addEventListener('load', router);
-	</script>
 </body>
 </html>
