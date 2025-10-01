@@ -1,278 +1,103 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BlackTube</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #111; color: #eee; margin: 0; padding: 0;}
+  header { background: #000; padding: 10px; text-align: center; font-size: 24px; font-weight: bold;}
+  .container { padding: 20px; max-width: 800px; margin: auto;}
+  .video-card { background: #222; padding: 10px; margin-bottom: 15px; border-radius: 8px;}
+  .video-card img { width: 100%; border-radius: 8px;}
+  .video-info { margin-top: 10px;}
+  input, textarea, button { margin-top: 5px; display: block; width: 100%; padding: 5px; border-radius: 5px;}
+  button { cursor: pointer; background: #444; color: #fff; border: none;}
+</style>
+</head>
+<body>
+
+<header>BlackTube</header>
+<div class="container">
+
+  <h2>Добавить видео</h2>
+  <input type="text" id="videoTitle" placeholder="Название видео">
+  <input type="text" id="videoThumbnail" placeholder="Ссылка на обложку (URL)">
+  <input type="text" id="videoFile" placeholder="Ссылка на видео (URL)">
+  <input type="number" id="videoViews" placeholder="Просмотры">
+  <input type="number" id="videoLikes" placeholder="Лайки">
+  <input type="number" id="videoComments" placeholder="Комментариев">
+  <input type="text" id="videoTime" placeholder="Время назад (например, 2 часа назад)">
+  <button onclick="addVideo()">Добавить видео</button>
+
+  <h2>Видео</h2>
+  <div id="videoList"></div>
+
+</div>
+
 <script>
-    // Хранилище для видео
-    let videos = JSON.parse(localStorage.getItem('mytube_videos')) || [];
-    let currentVideoId = null;
+let videos = JSON.parse(localStorage.getItem('blacktubeVideos')) || [];
 
-    // DOM элементы
-    const uploadBtn = document.getElementById('uploadBtn');
-    const uploadModal = document.getElementById('uploadModal');
-    const closeModal = document.getElementById('closeModal');
-    const cancelUpload = document.getElementById('cancelUpload');
-    const uploadForm = document.getElementById('uploadForm');
-    const videosGrid = document.getElementById('videosGrid');
-    const homeView = document.getElementById('homeView');
-    const videoView = document.getElementById('videoView');
-    const backBtn = document.getElementById('backBtn');
-    const videoPlayer = document.getElementById('videoPlayer');
-    const videoTitleLarge = document.getElementById('videoTitleLarge');
-    const videoStats = document.getElementById('videoStats');
-    const likesCount = document.getElementById('likesCount');
-    const videoDescription = document.getElementById('videoDescription');
-    const editStatsBtn = document.getElementById('editStatsBtn');
-    const statsEditForm = document.getElementById('statsEditForm');
-    const saveStatsBtn = document.getElementById('saveStatsBtn');
-    const editViews = document.getElementById('editViews');
-    const editLikes = document.getElementById('editLikes');
-    const editComments = document.getElementById('editComments');
+function saveVideos() {
+    localStorage.setItem('blacktubeVideos', JSON.stringify(videos));
+    renderVideos();
+}
 
-    const likeBtn = document.getElementById('likeBtn');
+function addVideo() {
+    const title = document.getElementById('videoTitle').value;
+    const thumbnail = document.getElementById('videoThumbnail').value;
+    const file = document.getElementById('videoFile').value;
+    const views = document.getElementById('videoViews').value;
+    const likes = document.getElementById('videoLikes').value;
+    const comments = document.getElementById('videoComments').value;
+    const time = document.getElementById('videoTime').value;
 
-    // Прогресс загрузки
-    const videoProgressBar = document.getElementById('videoProgressBar');
-    const videoProgress = document.getElementById('videoProgress');
-    const videoStatus = document.getElementById('videoStatus');
-    const thumbnailProgressBar = document.getElementById('thumbnailProgressBar');
-    const thumbnailProgress = document.getElementById('thumbnailProgress');
-    const thumbnailStatus = document.getElementById('thumbnailStatus');
+    videos.push({ title, thumbnail, file, views, likes, comments, time });
+    saveVideos();
 
-    // Открытие/закрытие модального окна
-    uploadBtn.addEventListener('click', () => uploadModal.style.display = 'flex');
-    closeModal.addEventListener('click', closeUploadModal);
-    cancelUpload.addEventListener('click', closeUploadModal);
+    document.getElementById('videoTitle').value = '';
+    document.getElementById('videoThumbnail').value = '';
+    document.getElementById('videoFile').value = '';
+    document.getElementById('videoViews').value = '';
+    document.getElementById('videoLikes').value = '';
+    document.getElementById('videoComments').value = '';
+    document.getElementById('videoTime').value = '';
+}
 
-    function closeUploadModal() {
-        uploadModal.style.display = 'none';
-        resetUploadForm();
-    }
-
-    function resetUploadForm() {
-        uploadForm.reset();
-        videoProgressBar.style.display = 'none';
-        videoStatus.style.display = 'none';
-        thumbnailProgressBar.style.display = 'none';
-        thumbnailStatus.style.display = 'none';
-    }
-
-    // Загрузка видео
-    uploadForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const videoFile = document.getElementById('videoFile').files[0];
-        const thumbnailFile = document.getElementById('thumbnailFile').files[0];
-        const title = document.getElementById('videoTitle').value;
-        const description = document.getElementById('videoDescriptionInput').value;
-        const views = parseInt(document.getElementById('initialViews').value) || 0;
-        const likes = parseInt(document.getElementById('initialLikes').value) || 0;
-        const comments = parseInt(document.getElementById('initialComments').value) || 0;
-        const uploadDateInput = document.getElementById('uploadDate').value;
-        const uploadDate = uploadDateInput ? new Date(uploadDateInput).toISOString() : new Date().toISOString();
-
-        if (!videoFile) {
-            alert('Пожалуйста, выберите видеофайл');
-            return;
-        }
-
-        try {
-            // Создаем объект видео
-            const newVideo = {
-                id: Date.now().toString(),
-                title,
-                description,
-                views,
-                likes,
-                comments,
-                uploadDate
-            };
-
-            // Загрузка видео
-            videoProgressBar.style.display = 'block';
-            videoStatus.style.display = 'block';
-            videoStatus.textContent = 'Загрузка видео...';
-            newVideo.videoUrl = await readFileWithProgress(videoFile, (p) => {
-                videoProgress.style.width = `${p}%`;
-                videoStatus.textContent = `Загрузка видео: ${Math.round(p)}%`;
-            });
-            videoStatus.textContent = 'Видео загружено!';
-
-            // Загрузка превью
-            if (thumbnailFile) {
-                thumbnailProgressBar.style.display = 'block';
-                thumbnailStatus.style.display = 'block';
-                thumbnailStatus.textContent = 'Загрузка превью...';
-                newVideo.thumbnailUrl = await readFileWithProgress(thumbnailFile, (p) => {
-                    thumbnailProgress.style.width = `${p}%`;
-                    thumbnailStatus.textContent = `Загрузка превью: ${Math.round(p)}%`;
-                });
-                thumbnailStatus.textContent = 'Превью загружено!';
-            } else {
-                newVideo.thumbnailUrl = null;
-            }
-
-            // Сохраняем видео
-            videos.push(newVideo);
-            localStorage.setItem('mytube_videos', JSON.stringify(videos));
-            renderVideos();
-
-            setTimeout(() => {
-                closeUploadModal();
-            }, 500);
-
-        } catch (err) {
-            console.error(err);
-            alert('Ошибка загрузки файла');
-        }
-    });
-
-    // Чтение файла с прогрессом
-    function readFileWithProgress(file, callback) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadstart = () => callback(0);
-            reader.onprogress = (e) => {
-                if (e.lengthComputable) {
-                    callback((e.loaded / e.total) * 100);
-                }
-            };
-            reader.onload = (e) => resolve(e.target.result);
-            reader.onerror = () => reject('Ошибка чтения файла');
-            reader.readAsDataURL(file);
-        });
-    }
-
-    // Рендер сетки видео
-    function renderVideos() {
-        if (videos.length === 0) {
-            videosGrid.innerHTML = `
-                <div class="empty-state">
-                    <i>📹</i>
-                    <h3>Нет загруженных видео</h3>
-                    <p>Начните с загрузки своего первого видео</p>
-                </div>
-            `;
-            return;
-        }
-
-        videosGrid.innerHTML = videos.map(video => `
-            <div class="video-card" data-id="${video.id}">
-                <div class="thumbnail-container">
-                    <img src="${video.thumbnailUrl || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDMyMCAxODAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMjAiIGhlaWdodD0iMTgwIiBmaWxsPSIjMjgyODI4Ii8+CjxwYXRoIGQ9Ik0xMzQgODcuNUwxMTIgOTlWNzZMMTM0IDg3LjVaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K'}" alt="${video.title}" class="thumbnail">
-                    <div class="video-duration">10:00</div>
-                </div>
-                <div class="video-info">
-                    <div class="channel-icon">М</div>
-                    <div class="video-details">
-                        <div class="video-title">${video.title}</div>
-                        <div class="video-stats">
-                            <div>Мой канал</div>
-                            <div>${formatNumber(video.views)} просмотров • ${formatDate(video.uploadDate)}</div>
-                        </div>
-                    </div>
-                </div>
+function renderVideos() {
+    const list = document.getElementById('videoList');
+    list.innerHTML = '';
+    videos.forEach((v, index) => {
+        const card = document.createElement('div');
+        card.className = 'video-card';
+        card.innerHTML = `
+            <img src="${v.thumbnail}" alt="${v.title}">
+            <div class="video-info">
+                <b>${v.title}</b><br>
+                Просмотры: <input type="number" value="${v.views}" onchange="updateVideo(${index}, 'views', this.value)">
+                Лайки: <input type="number" value="${v.likes}" onchange="updateVideo(${index}, 'likes', this.value)">
+                Комментарии: <input type="number" value="${v.comments}" onchange="updateVideo(${index}, 'comments', this.value)">
+                Время назад: <input type="text" value="${v.time}" onchange="updateVideo(${index}, 'time', this.value)">
+                <button onclick="deleteVideo(${index})">Удалить видео</button>
             </div>
-        `).join('');
-
-        document.querySelectorAll('.video-card').forEach(card => {
-            card.addEventListener('click', () => playVideo(card.dataset.id));
-        });
-    }
-
-    // Воспроизведение видео
-    function playVideo(videoId) {
-        const video = videos.find(v => v.id === videoId);
-        if (!video) return;
-        currentVideoId = videoId;
-
-        // Увеличиваем просмотры
-        video.views++;
-        localStorage.setItem('mytube_videos', JSON.stringify(videos));
-
-        // Переключаем вид
-        homeView.style.display = 'none';
-        videoView.style.display = 'block';
-
-        videoPlayer.innerHTML = `<video controls autoplay><source src="${video.videoUrl}" type="video/mp4">Ваш браузер не поддерживает видео тег.</video>`;
-        videoTitleLarge.textContent = video.title;
-        updateVideoStats(video);
-        videoDescription.textContent = video.description || 'Описание отсутствует';
-        likesCount.textContent = video.likes;
-    }
-
-    // Обновление статистики
-    function updateVideoStats(video) {
-        videoStats.innerHTML = `<div>${formatNumber(video.views)} просмотров • ${formatDate(video.uploadDate)}</div>`;
-    }
-
-    // Формат числа
-    function formatNumber(num) {
-        if (num >= 1_000_000) return (num / 1_000_000).toFixed(1) + ' млн';
-        if (num >= 1_000) return (num / 1_000).toFixed(1) + ' тыс';
-        return num.toString();
-    }
-
-    // Формат даты "x минут/часов/дней назад"
-    function formatDate(dateString) {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffMs = now - date;
-        const diffMinutes = Math.floor(diffMs / (1000 * 60));
-        const diffHours = Math.floor(diffMinutes / 60);
-        const diffDays = Math.floor(diffHours / 24);
-
-        if (diffMinutes < 60) return `${diffMinutes} минут назад`;
-        if (diffHours < 24) return `${diffHours} часов назад`;
-        if (diffDays < 7) return `${diffDays} дней назад`;
-        if (diffDays < 30) return `${Math.floor(diffDays / 7)} недель назад`;
-        return `${Math.floor(diffDays / 30)} месяцев назад`;
-    }
-
-    // Кнопка назад
-    backBtn.addEventListener('click', () => {
-        videoView.style.display = 'none';
-        homeView.style.display = 'block';
-        renderVideos();
+        `;
+        list.appendChild(card);
     });
+}
 
-    // Редактирование статистики
-    editStatsBtn.addEventListener('click', () => {
-        const isVisible = statsEditForm.style.display === 'block';
-        statsEditForm.style.display = isVisible ? 'none' : 'block';
-        if (!isVisible) {
-            const video = videos.find(v => v.id === currentVideoId);
-            if (video) {
-                editViews.value = video.views;
-                editLikes.value = video.likes;
-                editComments.value = video.comments;
-            }
-        }
-    });
+function updateVideo(index, field, value) {
+    videos[index][field] = value;
+    saveVideos();
+}
 
-    saveStatsBtn.addEventListener('click', () => {
-        const video = videos.find(v => v.id === currentVideoId);
-        if (video) {
-            video.views = parseInt(editViews.value) || 0;
-            video.likes = parseInt(editLikes.value) || 0;
-            video.comments = parseInt(editComments.value) || 0;
+function deleteVideo(index) {
+    videos.splice(index, 1);
+    saveVideos();
+}
 
-            localStorage.setItem('mytube_videos', JSON.stringify(videos));
-            updateVideoStats(video);
-            likesCount.textContent = video.likes;
-            statsEditForm.style.display = 'none';
-            renderVideos();
-        }
-    });
-
-    // Лайк видео
-    likeBtn.addEventListener('click', () => {
-        const video = videos.find(v => v.id === currentVideoId);
-        if (video) {
-            video.likes++;
-            localStorage.setItem('mytube_videos', JSON.stringify(videos));
-            likesCount.textContent = video.likes;
-            renderVideos();
-        }
-    });
-
-    // Инициализация при загрузке страницы
-    document.addEventListener('DOMContentLoaded', renderVideos);
+renderVideos();
 </script>
+
+</body>
+</html>
 
