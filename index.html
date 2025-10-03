@@ -39,6 +39,24 @@
             font-size: 24px;
             font-weight: bold;
             color: #1a73e8;
+            display: flex;
+            align-items: center;
+        }
+
+        .ai-text {
+            background: linear-gradient(90deg, #1a73e8, #34a853, #fbbc05, #ea4335, #1a73e8);
+            background-size: 400% 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: gradientShift 3s ease-in-out infinite;
+            margin-left: 5px;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         .settings-btn {
@@ -78,6 +96,13 @@
             padding: 10px;
             border-radius: 8px;
             max-width: 80%;
+            opacity: 0;
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .user-message {
@@ -89,6 +114,41 @@
         .bot-message {
             background-color: #2d2d2d;
             border: 1px solid #1a73e8;
+        }
+
+        .typing-indicator {
+            display: inline-block;
+            margin-left: 5px;
+        }
+
+        .typing-dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: #1a73e8;
+            margin: 0 2px;
+            opacity: 0;
+            animation: typingAnimation 1.5s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typingAnimation {
+            0%, 60%, 100% {
+                opacity: 0.3;
+                transform: translateY(0);
+            }
+            30% {
+                opacity: 1;
+                transform: translateY(-5px);
+            }
         }
 
         .input-container {
@@ -103,6 +163,13 @@
             border-radius: 4px;
             background-color: #1e1e1e;
             color: #e0e0e0;
+            transition: border-color 0.3s;
+        }
+
+        .message-input:focus {
+            outline: none;
+            border-color: #0d62d9;
+            box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
         }
 
         .send-btn {
@@ -130,6 +197,12 @@
             z-index: 2000;
             align-items: center;
             justify-content: center;
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         .modal-content {
@@ -141,6 +214,13 @@
             padding: 20px;
             max-height: 80vh;
             overflow-y: auto;
+            transform: scale(0.9);
+            animation: modalScaleIn 0.3s ease forwards;
+        }
+
+        @keyframes modalScaleIn {
+            from { transform: scale(0.9); }
+            to { transform: scale(1); }
         }
 
         .modal-header {
@@ -158,6 +238,11 @@
             color: #e0e0e0;
             font-size: 24px;
             cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .close-btn:hover {
+            color: #1a73e8;
         }
 
         .training-section {
@@ -183,6 +268,12 @@
             border-radius: 4px;
             background-color: #2d2d2d;
             color: #e0e0e0;
+            transition: border-color 0.3s;
+        }
+
+        .training-input:focus {
+            outline: none;
+            border-color: #0d62d9;
         }
 
         .add-training-btn {
@@ -226,6 +317,12 @@
             align-items: center;
             padding: 8px;
             border-bottom: 1px solid #3d3d3d;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
         }
 
         .training-item:last-child {
@@ -237,6 +334,11 @@
             border: none;
             color: #ff5252;
             cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .delete-training:hover {
+            transform: scale(1.2);
         }
 
         .save-btn {
@@ -258,7 +360,7 @@
 <body>
     <!-- Верхняя панель с размытием -->
     <div class="top-bar">
-        <div class="logo">Gamelton AI</div>
+        <div class="logo">Gamelton <span class="ai-text">AI</span></div>
         <button class="settings-btn" id="settingsBtn">Настроить</button>
     </div>
 
@@ -322,6 +424,7 @@
 
         // Хранилище данных
         let trainingData = [];
+        let isBotTyping = false;
 
         // Загрузка данных из localStorage при загрузке страницы
         document.addEventListener('DOMContentLoaded', () => {
@@ -352,17 +455,55 @@
         // Отправка сообщения
         function sendMessage() {
             const message = messageInput.value.trim();
-            if (message === '') return;
+            if (message === '' || isBotTyping) return;
 
             // Добавление сообщения пользователя
             addMessage(message, 'user');
             messageInput.value = '';
 
-            // Ответ бота
+            // Имитация набора текста ботом
+            isBotTyping = true;
+            showTypingIndicator();
+            
+            // Ответ бота с задержкой
             setTimeout(() => {
                 const response = generateResponse(message);
+                hideTypingIndicator();
                 addMessage(response, 'bot');
-            }, 500);
+                isBotTyping = false;
+            }, 1000 + Math.random() * 1000);
+        }
+
+        // Показать индикатор набора текста
+        function showTypingIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.classList.add('message', 'bot-message');
+            typingDiv.id = 'typingIndicator';
+            
+            const typingText = document.createElement('span');
+            typingText.textContent = 'Бот печатает';
+            
+            const typingDots = document.createElement('span');
+            typingDots.classList.add('typing-indicator');
+            
+            for (let i = 0; i < 3; i++) {
+                const dot = document.createElement('span');
+                dot.classList.add('typing-dot');
+                typingDots.appendChild(dot);
+            }
+            
+            typingDiv.appendChild(typingText);
+            typingDiv.appendChild(typingDots);
+            chatMessages.appendChild(typingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Скрыть индикатор набора текста
+        function hideTypingIndicator() {
+            const typingIndicator = document.getElementById('typingIndicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
         }
 
         // Обработчик нажатия кнопки отправки
