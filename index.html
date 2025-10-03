@@ -81,29 +81,6 @@
             padding: 20px;
         }
 
-        .thinking-container {
-            margin-bottom: 15px;
-            padding: 10px;
-            border: 1px solid #1a73e8;
-            border-radius: 8px;
-            background-color: #1e1e1e;
-            max-height: 150px;
-            overflow-y: auto;
-            display: none;
-        }
-
-        .thinking-title {
-            color: #1a73e8;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .thinking-content {
-            font-size: 0.9em;
-            color: #a0a0a0;
-            line-height: 1.4;
-        }
-
         .chat-messages {
             flex: 1;
             overflow-y: auto;
@@ -139,9 +116,638 @@
             border: 1px solid #1a73e8;
         }
 
+        .thinking-message {
+            background-color: #1a1a2e;
+            border: 1px solid #0d47a1;
+            font-style: italic;
+            color: #a0a0a0;
+        }
+
+        .thinking-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            color: #64b5f6;
+            font-weight: bold;
+        }
+
+        .thinking-dots {
+            display: inline-block;
+            margin-left: 5px;
+        }
+
+        .thinking-dot {
+            display: inline-block;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background-color: #64b5f6;
+            margin: 0 1px;
+            opacity: 0;
+            animation: thinkingAnimation 1.5s infinite;
+        }
+
+        .thinking-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .thinking-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes thinkingAnimation {
+            0%, 60%, 100% {
+                opacity: 0.3;
+                transform: translateY(0);
+            }
+            30% {
+                opacity: 1;
+                transform: translateY(-2px);
+            }
+        }
+
+        .thinking-content {
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        .thinking-step {
+            margin-bottom: 5px;
+            padding-left: 10px;
+            border-left: 2px solid #0d47a1;
+        }
+
         .image-container {
             margin-top: 10px;
             text-align: center;
+        }
+
+        .generated-image {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            border: 1px solid #1a73e8;
+        }
+
+        .image-caption {
+            margin-top: 5px;
+            font-size: 0.9em;
+            color: #a0a0a0;
+        }
+
+        .typing-indicator {
+            display: inline-block;
+            margin-left: 5px;
+        }
+
+        .typing-dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: #1a73e8;
+            margin: 0 2px;
+            opacity: 0;
+            animation: typingAnimation 1.5s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typingAnimation {
+            0%, 60%, 100% {
+                opacity: 0.3;
+                transform: translateY(0);
+            }
+            30% {
+                opacity: 1;
+                transform: translateY(-5px);
+            }
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #1a73e8;
+            border-radius: 4px;
+            background-color: #1e1e1e;
+            color: #e0e0e0;
+            transition: border-color 0.3s;
+        }
+
+        .message-input:focus {
+            outline: none;
+            border-color: #0d62d9;
+            box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+        }
+
+        .send-btn {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            padding: 0 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .send-btn:hover {
+            background-color: #0d62d9;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: #1e1e1e;
+            width: 90%;
+            max-width: 600px;
+            border-radius: 8px;
+            border: 1px solid #1a73e8;
+            padding: 20px;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9);
+            animation: modalScaleIn 0.3s ease forwards;
+        }
+
+        @keyframes modalScaleIn {
+            from { transform: scale(0.9); }
+            to { transform: scale(1); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #1a73e8;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #e0e0e0;
+            font-size: 24px;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .close-btn:hover {
+            color: #1a73e8;
+        }
+
+        .settings-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #1a73e8;
+            border-radius: 8px;
+            background-color: #2d2d2d;
+        }
+
+        .settings-title {
+            margin-bottom: 10px;
+            color: #1a73e8;
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .toggle-label {
+            margin-left: 10px;
+            cursor: pointer;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #555;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: #1a73e8;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+
+        .training-section {
+            margin-bottom: 20px;
+        }
+
+        .training-title {
+            margin-bottom: 10px;
+            color: #1a73e8;
+        }
+
+        .training-example {
+            font-style: italic;
+            margin-bottom: 10px;
+            color: #a0a0a0;
+        }
+
+        .training-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #1a73e8;
+            border-radius: 4px;
+            background-color: #2d2d2d;
+            color: #e0e0e0;
+            transition: border-color 0.3s;
+        }
+
+        .training-input:focus {
+            outline: none;
+            border-color: #0d62d9;
+        }
+
+        .add-training-btn {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            transition: background-color 0.3s;
+        }
+
+        .add-training-btn:hover {
+            background-color: #0d62d9;
+        }
+
+        .file-upload-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #1a73e8;
+        }
+
+        .file-input {
+            margin-bottom: 10px;
+        }
+
+        .training-list {
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #1a73e8;
+            border-radius: 4px;
+            padding: 10px;
+            background-color: #2d2d2d;
+        }
+
+        .training-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid #3d3d3d;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .training-item:last-child {
+            border-bottom: none;
+        }
+
+        .delete-training {
+            background: none;
+            border: none;
+            color: #ff5252;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .delete-training:hover {
+            transform: scale(1.2);
+        }
+
+        .save-btn {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+
+        .save-btn:hover {
+            background-color: #0d62d9;
+        }
+    </style>
+</head>
+<body>
+    <!-- Верхняя панель с размытием -->
+    <div class="top-bar">
+        <div class="logo">Gamelton <span class="ai-text">AI</span></div>
+        <button class="settings-btn" id="settingsBtn">Настроить</button>
+    </div>
+
+    <!-- Основной контейнер чата -->
+    <div class="chat-container">
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot-message">
+                Привет! Я Gamelton AI. Настрой меня, чтобы я лучше понимал тебя!<br>
+                Также я могу генерировать изображения. Просто напиши "сгенерируй картину [описание]"<br>
+                Включи режим "Точное мышление" в настройках, чтобы видеть мой мыслительный процесс.
+            </div>
+        </div>
+        <div class="input-container">
+            <input type="text" class="message-input" id="messageInput" placeholder="Введите сообщение...">
+            <button class="send-btn" id="sendBtn">Отправить</button>
+        </div>
+    </div>
+
+    <!-- Модальное окно настроек -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Настройки бота</h2>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            
+            <div class="settings-section">
+                <h3 class="settings-title">Режим работы</h3>
+                <div class="toggle-container">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="thinkingToggle">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="toggle-label">Точное мышление</span>
+                </div>
+                <p class="training-example">При включении этого режима бот будет показывать процесс формирования ответа в чате</p>
+            </div>
+            
+            <div class="training-section">
+                <h3 class="training-title">Обучение бота</h3>
+                <p class="training-example">Формат: "вопрос > ответ" (например: "привет > Привет!")</p>
+                <input type="text" class="training-input" id="trainingInput" placeholder="Введите шаблон обучения...">
+                <button class="add-training-btn" id="addTrainingBtn">Добавить</button>
+                
+                <div class="training-list" id="trainingList">
+                    <!-- Здесь будут отображаться добавленные шаблоны -->
+                </div>
+            </div>
+            
+            <div class="file-upload-section">
+                <h3 class="training-title">Обучение из файла</h3>
+                <p class="training-example">Загрузите текстовый файл с шаблонами в формате "вопрос > ответ"</p>
+                <input type="file" class="file-input" id="trainingFile" accept=".txt">
+                <button class="add-training-btn" id="uploadFileBtn">Загрузить</button>
+            </div>
+            
+            <button class="save-btn" id="saveSettingsBtn">Сохранить настройки</button>
+        </div>
+    </div>
+
+    <script>
+        // Элементы DOM
+        const settingsBtn = document.getElementById('settingsBtn');
+        const closeModal = document.getElementById('closeModal');
+        const settingsModal = document.getElementById('settingsModal');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const chatMessages = document.getElementById('chatMessages');
+        const trainingInput = document.getElementById('trainingInput');
+        const addTrainingBtn = document.getElementById('addTrainingBtn');
+        const trainingList = document.getElementById('trainingList');
+        const trainingFile = document.getElementById('trainingFile');
+        const uploadFileBtn = document.getElementById('uploadFileBtn');
+        const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+        const thinkingToggle = document.getElementById('thinkingToggle');
+
+        // Хранилище данных
+        let trainingData = [];
+        let isBotTyping = false;
+        let isThinkingMode = false;
+        let thinkingMessage = null;
+
+        // Загрузка данных из localStorage при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedData = localStorage.getItem('gameltonTrainingData');
+            if (savedData) {
+                trainingData = JSON.parse(savedData);
+                updateTrainingList();
+            }
+            
+            // Загрузка состояния режима мышления
+            const savedThinkingMode = localStorage.getItem('gameltonThinkingMode');
+            if (savedThinkingMode === 'true') {
+                isThinkingMode = true;
+                thinkingToggle.checked = true;
+            }
+        });
+
+        // Открытие модального окна настроек
+        settingsBtn.addEventListener('click', () => {
+            settingsModal.style.display = 'flex';
+        });
+
+        // Закрытие модального окна настроек
+        closeModal.addEventListener('click', () => {
+            settingsModal.style.display = 'none';
+        });
+
+        // Закрытие модального окна при клике вне его
+        window.addEventListener('click', (e) => {
+            if (e.target === settingsModal) {
+                settingsModal.style.display = 'none';
+            }
+        });
+
+        // Переключение режима точного мышления
+        thinkingToggle.addEventListener('change', () => {
+            isThinkingMode = thinkingToggle.checked;
+        });
+
+        // Отправка сообщения
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (message === '' || isBotTyping) return;
+
+            // Добавление сообщения пользователя
+            addMessage(message, 'user');
+            messageInput.value = '';
+
+            // Проверка на команду генерации изображения
+            if (message.toLowerCase().startsWith('сгенерируй картину')) {
+                const query = message.substring('сгенерируй картину'.length).trim();
+                if (query) {
+                    isBotTyping = true;
+                    
+                    if (isThinkingMode) {
+                        showThinkingMessage();
+                        addThinkingStep(`Пользователь запросил генерацию изображения: "${query}"`);
+                        addThinkingStep(`Использую Unsplash API для поиска изображения по запросу...`);
+                    } else {
+                        showTypingIndicator();
+                    }
+                    
+                    setTimeout(() => {
+                        if (isThinkingMode) {
+                            hideThinkingMessage();
+                        } else {
+                            hideTypingIndicator();
+                        }
+                        generateImage(query);
+                        isBotTyping = false;
+                    }, 1500);
+                    return;
+                }
+            }
+
+            // Имитация набора текста ботом
+            isBotTyping = true;
+            
+            if (isThinkingMode) {
+                showThinkingMessage();
+                simulateThinkingProcess(message);
+            } else {
+                showTypingIndicator();
+            }
+            
+            // Ответ бота с задержкой
+            setTimeout(() => {
+                const response = generateResponse(message);
+                
+                if (isThinkingMode) {
+                    addThinkingStep(`Формирую финальный ответ...`);
+                    setTimeout(() => {
+                        hideThinkingMessage();
+                        addMessage(response, 'bot');
+                        isBotTyping = false;
+                    }, 800);
+                } else {
+                    hideTypingIndicator();
+                    addMessage(response, 'bot');
+                    isBotTyping = false;
+                }
+            }, 1000 + Math.random() * 1000);
+        }
+
+        // Показать сообщение о процессе мышления
+        function showThinkingMessage() {
+            thinkingMessage = document.createElement('div');
+            thinkingMessage.classList.add('message', 'bot-message', 'thinking-message');
+            thinkingMessage.id = 'thinkingMessage';
+            
+            const header = document.createElement('div');
+            header.classList.add('thinking-header');
+            header.textContent = 'Думаю';
+            
+            const dots = document.createElement('span');
+            dots.classList.add('thinking-dots');
+            
+            for (let i = 0; i < 3; i++) {
+                const dot = document.createElement('span');
+                dot.classList.add('thinking-dot');
+                dots.appendChild(dot);
+            }
+            
+            header.appendChild(dots);
+            
+            const content = document.createElement('div');
+            content.classList.add('thinking-content');
+            content.id = 'thinkingContent';
+            
+            thinkingMessage.appendChild(header);
+            thinkingMessage.appendChild(content);
+            chatMessages.appendChild(thinkingMessage);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Скрыть сообщение о процессе мышления
+        function hideThinkingMessage() {
+            if (thinkingMessage) {
+                thinkingMessage.remove();
+                thinkingMessage = null;
+            }
+        }
+
+        // Симуляция процесса мышления
+        async function simulateThinkingProcess(message) {
+            addThinkingStep(`Пользователь написал: "${message}"`);
+            await delay(400);
+            
+            // Различные варианты процесса мышления для разнообразия
+            const thinkingProcesses = [
+                async () => {
+                    addThinkingStep(`Анализирую запрос пользователя...`);
+                    await delay(500);
+                    addThinkingStep(`Ищу подходящий ответ в базе знаний...`);
+                    await delay(600);
+                    
+                    // Поиск в шаблонах
+                    let foundTemplate = null;            text-align: center;
         }
 
         .generated-image {
