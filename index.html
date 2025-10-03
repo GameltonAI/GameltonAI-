@@ -116,6 +116,24 @@
             border: 1px solid #1a73e8;
         }
 
+        .image-container {
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .generated-image {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            border: 1px solid #1a73e8;
+        }
+
+        .image-caption {
+            margin-top: 5px;
+            font-size: 0.9em;
+            color: #a0a0a0;
+        }
+
         .typing-indicator {
             display: inline-block;
             margin-left: 5px;
@@ -368,7 +386,8 @@
     <div class="chat-container">
         <div class="chat-messages" id="chatMessages">
             <div class="message bot-message">
-                Привет! Я Gamelton AI. Настрой меня, чтобы я лучше понимал тебя!
+                Привет! Я Gamelton AI. Настрой меня, чтобы я лучше понимал тебя!<br>
+                Также я могу генерировать изображения. Просто напиши "сгенерируй картину [описание]"
             </div>
         </div>
         <div class="input-container">
@@ -461,6 +480,22 @@
             addMessage(message, 'user');
             messageInput.value = '';
 
+            // Проверка на команду генерации изображения
+            if (message.toLowerCase().startsWith('сгенерируй картину')) {
+                const query = message.substring('сгенерируй картину'.length).trim();
+                if (query) {
+                    isBotTyping = true;
+                    showTypingIndicator();
+                    
+                    setTimeout(() => {
+                        hideTypingIndicator();
+                        generateImage(query);
+                        isBotTyping = false;
+                    }, 1500);
+                    return;
+                }
+            }
+
             // Имитация набора текста ботом
             isBotTyping = true;
             showTypingIndicator();
@@ -472,6 +507,43 @@
                 addMessage(response, 'bot');
                 isBotTyping = false;
             }, 1000 + Math.random() * 1000);
+        }
+
+        // Генерация изображения
+        function generateImage(query) {
+            // Используем Unsplash API для получения изображения по запросу
+            const accessKey = 'YOUR_UNSPLASH_ACCESS_KEY'; // Замените на ваш ключ
+            const apiUrl = `https://api.unsplash.com/photos/random?query=${encodeURIComponent(query)}&client_id=${accessKey}`;
+            
+            // Для демонстрации используем заглушку, так как нужен реальный API ключ
+            // В реальном приложении нужно получить ключ на unsplash.com/developers
+            const placeholderUrl = `https://source.unsplash.com/featured/400x300/?${encodeURIComponent(query)}`;
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', 'bot-message');
+            
+            const textDiv = document.createElement('div');
+            textDiv.textContent = `Вот изображение по запросу "${query}":`;
+            
+            const imageContainer = document.createElement('div');
+            imageContainer.classList.add('image-container');
+            
+            const img = document.createElement('img');
+            img.classList.add('generated-image');
+            img.src = placeholderUrl;
+            img.alt = query;
+            
+            const caption = document.createElement('div');
+            caption.classList.add('image-caption');
+            caption.textContent = 'Изображение сгенерировано через Unsplash API';
+            
+            imageContainer.appendChild(img);
+            imageContainer.appendChild(caption);
+            
+            messageDiv.appendChild(textDiv);
+            messageDiv.appendChild(imageContainer);
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
         // Показать индикатор набора текста
@@ -538,7 +610,8 @@
             const defaultResponses = [
                 "Я еще не знаю, как ответить на это. Обучи меня в настройках!",
                 "Интересный вопрос! Добавь этот шаблон в мои настройки.",
-                "Пока я не могу ответить на это. Настрой меня лучше!"
+                "Пока я не могу ответить на это. Настрой меня лучше!",
+                "Чтобы сгенерировать изображение, напиши: 'сгенерируй картину [описание]'"
             ];
             
             return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
