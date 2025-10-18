@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Vertical 9:16 Offline Game v2</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Loading -->
+    <section id="screen-loading" class="screen">
+      <img id="loading-bg" src="assets/Loading.png" alt="Loading" />
+      <div class="loading-overlay">
+        <div id="loading-bar" class="loading-bar"><div id="loading-bar-fill"></div></div>
+        <div id="loading-text">Загрузка... 0%</div>
+      </div>
+    </section>
+
+    <!-- Menu -->
+    <section id="screen-menu" class="screen hidden">
+      <img class="screen-bg" src="assets/Menu.png" alt="Menu" />
+      <div class="ui">
+        <div class="top-row">
+          <div class="profile-mini">
+            <div class="nick" id="ui-nick">Игрок</div>
+            <div class="meta small">Уровень: <span id="ui-level">1</span></div>
+            <div class="meta small">Кубки: <span id="ui-cups">0</span></div>
+          </div>
+          <div class="resources">
+            <div class="res">₽ <span id="ui-money">0</span></div>
+            <div class="res">💎 <span id="ui-diamonds">0</span></div>
+            <div class="res">🔴 <span id="ui-rubies">0</span></div>
+          </div>
+        </div>
+
+        <div class="rank-block">
+          <div id="ui-rank-name">—</div>
+          <div class="rank-progress"><div id="ui-rank-progress-fill"></div></div>
+          <div id="ui-rank-points">0 / 0</div>
+        </div>
+
+        <div class="buttons">
+          <button class="btn" id="btn-play">Играть</button>
+          <button class="btn" id="btn-shop">Магазин</button>
+          <button class="btn" id="btn-inventory">Инвентарь</button>
+          <button class="btn" id="btn-stats">Статистика</button>
+          <button class="btn" id="btn-profile">Профиль</button>
+        </div>
+
+        <div class="small-actions">
+          <button class="btn small" id="btn-change-nick">Изменить ник</button>
+          <button class="btn small" id="btn-reset">Сброс данных</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Mode Select -->
+    <section id="screen-mode" class="screen hidden">
+      <img class="screen-bg" src="assets/Play.png" alt="Play" />
+      <div class="ui">
+        <h1>Выберите режим</h1>
+        <div class="mode-buttons">
+          <button class="btn big" id="btn-normal">Обычные сражения</button>
+          <button class="btn big" id="btn-ranked">Рейтинговые сражения</button>
+        </div>
+        <button class="btn" id="btn-back-to-menu">Назад</button>
+      </div>
+    </section>
+
+    <!-- Battle -->
+    <section id="screen-battle" class="screen hidden">
+      <img class="screen-bg" src="assets/Battle.png" alt="Battle" />
+      <div class="ui">
+        <h2 id="battle-mode-title">Сражение</h2>
+        <div class="battle-area">
+          <div class="hero">
+            <img id="hero-img" src="assets/characters/Slime.png" alt="hero" onerror="this.style.display='none'">
+            <div id="hero-name">Ваше</div>
+          </div>
+          <div class="vs">VS</div>
+          <div class="enemy">
+            <img id="enemy-img" src="assets/characters/Hunter.png" alt="enemy" onerror="this.style.display='none'">
+            <div id="enemy-name">Противник</div>
+          </div>
+        </div>
+
+        <div id="battle-log" class="battle-log">Нажмите "Начать бой".</div>
+
+        <div class="buttons">
+          <button class="btn" id="btn-start-battle">Начать бой</button>
+          <button class="btn" id="btn-battle-quit">Выйти</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Shop -->
+    <section id="screen-shop" class="screen hidden">
+      <img class="screen-bg" src="assets/Shop.png" alt="Shop" />
+      <div class="ui">
+        <h1>Магазин — Пакеты</h1>
+        <div id="shop-list" class="shop-list"></div>
+        <button class="btn" id="btn-shop-back">Назад</button>
+      </div>
+    </section>
+
+    <!-- Inventory -->
+    <section id="screen-inventory" class="screen hidden">
+      <img class="screen-bg" src="assets/Menu.png" alt="Inv BG" />
+      <div class="ui">
+        <h1>Инвентарь</h1>
+        <div class="inventory-tabs">
+          <button class="btn small" id="tab-monsters">Монстры</button>
+          <button class="btn small" id="tab-medals">Медали</button>
+          <button class="btn small" id="tab-statuses">Статусы</button>
+        </div>
+
+        <div id="inv-content" class="inv-content"></div>
+
+        <div class="buttons">
+          <button class="btn" id="btn-inv-back">Назад</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Profile -->
+    <section id="screen-profile" class="screen hidden">
+      <img class="screen-bg" src="assets/Menu.png" alt="Profile" />
+      <div class="ui">
+        <h1>Профиль</h1>
+        <div class="profile-card">
+          <div class="pc-row"><strong>Ник:</strong> <span id="p-nick"></span></div>
+          <div class="pc-row"><strong>Уровень:</strong> <span id="p-level"></span></div>
+          <div class="pc-row"><strong>Кубки:</strong> <span id="p-cups"></span></div>
+          <div class="pc-row"><strong>Баланс:</strong> ₽ <span id="p-money"></span></div>
+          <div class="pc-row"><strong>Алмазы:</strong> 💎 <span id="p-diamonds"></span></div>
+          <div class="pc-row"><strong>Рубины:</strong> 🔴 <span id="p-rubies"></span></div>
+          <div class="pc-row"><strong>Звание:</strong> <span id="p-rank"></span></div>
+          <div class="pc-row"><strong>Активная медаль:</strong> <span id="p-medal">—</span></div>
+          <div class="pc-row"><strong>Активный статус:</strong> <span id="p-status">—</span></div>
+          <div class="pc-row"><strong>Последний вход:</strong> <span id="p-last">—</span></div>
+        </div>
+        <div class="buttons">
+          <button class="btn" id="btn-profile-back">Назад</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats -->
+    <section id="screen-stats" class="screen hidden">
+      <img class="screen-bg" src="assets/Menu.png" alt="Stats" />
+      <div class="ui">
+        <h1>Статистика</h1>
+        <div id="stats-list" class="stats-list"></div>
+        <div class="buttons">
+          <button class="btn" id="btn-stats-back">Назад</button>
+        </div>
+      </div>
+    </section>
+
+    <div id="notify" class="notify hidden"></div>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>
+                                                                                                                                                                                              

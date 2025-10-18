@@ -1,0 +1,75 @@
+:root{
+  --width:360px; --height:640px;
+  --glass: rgba(255,255,255,0.06);
+}
+*{box-sizing:border-box;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
+html,body{height:100%;margin:0;background:#0b1220;}
+#app{width:100%;height:100%;display:flex;align-items:center;justify-content:center;padding:10px;}
+
+.screen{position:relative;width:var(--width);height:var(--height);border-radius:18px;overflow:hidden;box-shadow:0 30px 60px rgba(0,0,0,0.6);background:#111;}
+.screen img.screen-bg,#loading-bg{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;}
+
+/* overlay content */
+.ui{position:relative;z-index:3;padding:14px;color:#fff;display:flex;flex-direction:column;height:100%;gap:10px;}
+
+/* loading */
+.loading-overlay{position:absolute;left:0;right:0;bottom:28px;display:flex;flex-direction:column;align-items:center;gap:8px;z-index:4;}
+.loading-bar{width:80%;height:18px;background:rgba(255,255,255,0.12);border-radius:9px;overflow:hidden;}
+.loading-bar div{height:100%;width:0;background:linear-gradient(90deg,#ffd166,#ef476f);transition:width .3s;}
+#loading-text{font-weight:700}
+
+/* layout */
+.top-row{display:flex;justify-content:space-between;align-items:flex-start;}
+.profile-mini{display:flex;flex-direction:column;gap:4px;}
+.nick{font-size:18px;font-weight:800;}
+.meta.small{font-size:12px;opacity:0.9;}
+.resources{display:flex;gap:8px;}
+.res{background:var(--glass);padding:8px 10px;border-radius:10px;font-weight:700;font-size:14px;}
+
+/* buttons */
+.buttons{display:flex;flex-direction:column;gap:10px;margin-top:6px;}
+.btn{padding:12px;border-radius:12px;border:none;font-weight:800;font-size:15px;background:linear-gradient(180deg,#ffffff12,#00000030);color:#fff;cursor:pointer;box-shadow:0 6px 14px rgba(0,0,0,0.4);}
+.btn.big{padding:16px;font-size:16px;}
+.btn.small{padding:8px;font-size:13px;border-radius:10px;}
+.mode-buttons{display:flex;flex-direction:column;gap:10px;}
+
+/* rank */
+.rank-block{padding:10px;background:rgba(0,0,0,0.35);border-radius:12px;text-align:center;}
+.rank-progress{width:100%;height:12px;background:rgba(255,255,255,0.08);border-radius:8px;overflow:hidden;margin:8px 0;}
+#ui-rank-progress-fill{height:100%;width:0;background:linear-gradient(90deg,#ffd166,#ef476f);transition:width .4s;}
+
+/* shop list */
+.shop-list{display:flex;flex-direction:column;gap:10px;overflow:auto;padding-right:6px;max-height:420px;}
+.shop-card{display:flex;flex-direction:column;background:rgba(0,0,0,0.45);padding:10px;border-radius:12px;}
+.shop-title{font-weight:800;margin-bottom:6px;}
+.shop-rewards{font-size:13px;opacity:0.95;margin-bottom:8px;}
+.shop-bottom{display:flex;justify-content:space-between;align-items:center;}
+
+/* inv */
+.inventory-tabs{display:flex;gap:8px;margin-bottom:8px;}
+.inv-content{flex:1;overflow:auto;background:rgba(0,0,0,0.2);padding:8px;border-radius:10px;}
+.inv-item{display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:8px;background:rgba(255,255,255,0.03);margin-bottom:8px;}
+.inv-item .meta{font-size:13px;opacity:0.95;}
+.inv-actions{display:flex;gap:6px;}
+
+/* profile card */
+.profile-card{background:rgba(0,0,0,0.35);padding:10px;border-radius:10px;display:flex;flex-direction:column;gap:6px;}
+.pc-row{display:flex;justify-content:space-between;}
+
+/* battle */
+.battle-area{display:flex;align-items:center;justify-content:space-around;margin:6px 0;}
+.hero img,.enemy img{width:96px;height:96px;border-radius:12px;object-fit:cover;background:rgba(255,255,255,0.04);}
+.vs{font-weight:900;font-size:28px;}
+.battle-log{background:rgba(0,0,0,0.45);padding:8px;border-radius:8px;height:130px;overflow:auto;font-size:13px;}
+
+/* stats */
+.stats-list{display:flex;flex-direction:column;gap:8px;}
+
+/* notify */
+.notify{position:fixed;left:50%;transform:translateX(-50%);bottom:36px;padding:10px 14px;border-radius:12px;background:rgba(0,0,0,0.8);color:#fff;z-index:999;}
+.hidden{display:none;}
+
+/* responsive scale */
+@media (min-aspect-ratio:9/16){
+  #app .screen{transform: scale(calc(min( (100vh - 20px) / var(--height), (100vw - 20px) / var(--width))));}
+}
