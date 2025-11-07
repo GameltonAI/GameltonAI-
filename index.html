@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gamelton AI Chat</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .chat-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .chat-area {
+            height: 500px;
+            overflow-y: auto;
+            padding: 25px;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            justify-content: flex-end;
+        }
+
+        .bot-message {
+            justify-content: flex-start;
+        }
+
+        .message-bubble {
+            max-width: 70%;
+            padding: 15px 20px;
+            border-radius: 20px;
+            position: relative;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .user-message .message-bubble {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .bot-message .message-bubble {
+            background: white;
+            color: #2c3e50;
+            border: 1px solid #e1e5e9;
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .message-time {
+            font-size: 0.8em;
+            opacity: 0.7;
+            margin-top: 5px;
+            text-align: right;
+        }
+
+        .search-results {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px 0;
+            font-size: 0.9em;
+        }
+
+        .search-results h4 {
+            color: #856404;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .search-result-item {
+            margin: 8px 0;
+            padding: 8px;
+            background: white;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+        }
+
+        .input-area {
+            padding: 25px;
+            background: white;
+            border-top: 1px solid #e1e5e9;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e1e5e9;
+            border-radius: 25px;
+            font-size: 1em;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .message-input:focus {
+            border-color: #667eea;
+        }
+
+        .send-button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+        .send-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .send-button:active {
+            transform: translateY(0);
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .api-status {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 15px 20px;
+            background: white;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #e1e5e9;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #667eea;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+
+        @media (max-width: 768px) {
+            .message-bubble {
+                max-width: 85%;
+            }
+            
+            .input-area {
+                flex-direction: column;
+            }
+            
+            .message-input {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="header">
+            <h1>🎮 Gamelton AI</h1>
+            <p>Ваш умный помощник с поиском в интернете</p>
+        </div>
+
+        <div class="chat-area" id="chatArea">
+            <div class="api-status" id="apiStatus"></div>
+            
+            <div class="message bot-message">
+                <div class="message-bubble">
+                    Привет! Я Gamelton AI 🤖<br>
+                    Готов помочь с любыми вопросами! Могу искать информацию в интернете 🔍
+                    <div class="message-time" id="currentTime"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="typing-indicator" id="typingIndicator">
+            <div class="typing-dots">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <div class="controls">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="useSearch">
+                    🔍 Использовать поиск
+                </label>
+            </div>
+            <input type="text" id="messageInput" class="message-input" placeholder="Введите ваше сообщение..." autocomplete="off">
+            <button class="send-button" onclick="sendMessage()">Отправить</button>
+        </div>
+    </div>
+
+    <script>
+        // Конфигурация API
+        const API_KEY = 'gam_ENmCMZIu1nJylOPaHjiORz1Jkrlkru0jBFt5kR_Mly0';
+        const API_URL = 'http://192.168.0.8:5000/api/v1/chat'; // Ваш IP
+
+        // Элементы DOM
+        const chatArea = document.getElementById('chatArea');
+        const messageInput = document.getElementById('messageInput');
+        const useSearch = document.getElementById('useSearch');
+        const typingIndicator = document.getElementById('typingIndicator');
+        const apiStatus = document.getElementById('apiStatus');
+
+        // Показать текущее время
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('currentTime').textContent = 
+                now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+        }
+        updateTime();
+        setInterval(updateTime, 60000);
+
+        // Добавить сообщение в чат
+        function addMessage(text, isUser = false, searchResults = null) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+            
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.className = 'message-bubble';
+            bubbleDiv.innerHTML = text.replace(/\n/g, '<br>');
+            
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'message-time';
+            timeDiv.textContent = new Date().toLocaleTimeString('ru-RU', { 
+                hour: '2-digit', minute: '2-digit' 
+            });
+            
+            bubbleDiv.appendChild(timeDiv);
+            messageDiv.appendChild(bubbleDiv);
+            
+            chatArea.appendChild(messageDiv);
+            
+            // Добавить результаты поиска если есть
+            if (searchResults && searchResults.length > 0) {
+                addSearchResults(searchResults);
+            }
+            
+            // Прокрутка вниз
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        // Добавить результаты поиска
+        function addSearchResults(results) {
+            const resultsDiv = document.createElement('div');
+            resultsDiv.className = 'search-results';
+            
+            let html = '<h4>🔍 Найдено в интернете:</h4>';
+            results.slice(0, 3).forEach(result => {
+                html += `
+                    <div class="search-result-item">
+                        <strong>${result.title || 'Без названия'}</strong><br>
+                        ${result.snippet ? result.snippet.substring(0, 100) + '...' : 'Описание отсутствует'}
+                    </div>
+                `;
+            });
+            
+            resultsDiv.innerHTML = html;
+            chatArea.appendChild(resultsDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        // Показать индикатор набора
+        function showTyping() {
+            typingIndicator.style.display = 'block';
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        // Скрыть индикатор набора
+        function hideTyping() {
+            typingIndicator.style.display = 'none';
+        }
+
+        // Отправить сообщение
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            
+            if (!message) {
+                messageInput.focus();
+                return;
+            }
+
+            // Очищаем поле ввода
+            messageInput.value = '';
+            
+            // Показываем сообщение пользователя
+            addMessage(message, true);
+            
+            // Показываем индикатор набора
+            showTyping();
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${API_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        search: useSearch.checked
+                    })
+                });
+
+                const data = await response.json();
+
+                // Скрываем индикатор набора
+                hideTyping();
+
+                if (data.error) {
+                    addMessage(`❌ Ошибка: ${data.error}`);
+                } else {
+                    addMessage(data.response, false, data.search_results);
+                    
+                    // Показываем статус использования
+                    showApiStatus(data);
+                }
+
+            } catch (error) {
+                hideTyping();
+                addMessage('❌ Ошибка соединения с сервером. Проверьте подключение.');
+                console.error('API Error:', error);
+            }
+        }
+
+        // Показать статус API
+        function showApiStatus(data) {
+            apiStatus.textContent = `✅ Запрос выполнен • Поиск: ${data.search_used ? 'ВКЛ' : 'ВЫКЛ'}`;
+            apiStatus.style.display = 'block';
+            
+            // Скрыть через 5 секунд
+            setTimeout(() => {
+                apiStatus.style.display = 'none';
+            }, 5000);
+        }
+
+        // Отправка по Enter
+        messageInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Фокус на поле ввода при загрузке
+        messageInput.focus();
+
+        // Проверка доступности API при загрузке
+        async function checkApiHealth() {
+            try {
+                const response = await fetch('http://192.168.0.8:5000/health');
+                const data = await response.json();
+                if (data.status === 'ok') {
+                    console.log('✅ API сервер доступен');
+                }
+            } catch (error) {
+                console.warn('⚠️ API сервер недоступен');
+            }
+        }
+
+        checkApiHealth();
+    </script>
+</body>
+</html>
